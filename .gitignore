@@ -96,7 +96,7 @@ local.properties
 # Gradle
 .idea/**/gradle.xml
 .idea/**/libraries
-가.gradle
+.gradle
 build/
 
 # Gradle and Maven with auto-import
