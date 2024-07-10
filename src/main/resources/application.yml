@@ -5,3 +5,4 @@ server:
 spring:
   application:
     name: Camp_Reserve
+
