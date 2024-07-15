@@ -9,5 +9,5 @@ public class CampReserveApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(CampReserveApplication.class, args);
 	}
-
 }
+

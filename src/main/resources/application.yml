@@ -6,3 +6,23 @@ spring:
   application:
     name: Camp_Reserve
 
+  datasource:
+    url: jdbc:mysql://localhost:3306/your_database
+    username: root
+    password: admin1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+gocamping:
+  api:
+    basedList: https://apis.data.go.kr/B551011/GoCamping/basedList
+    key: CCrcDuRi7tgcgUp%2BZMSsGUecDNc5GEzj7cEmcLb9HyaNl73FYjzv9kw7xzTwPIvzQI7FxAzwF2AM9NR0jO9HKA%3D%3D
+
+logging:
+  level:
+    root: INFO
+    com.commit.camp_reserve: DEBUG
+
+
+
+
+

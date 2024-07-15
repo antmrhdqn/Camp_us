@@ -24,17 +24,15 @@ repositories {
 }
 
 dependencies {
-	implementation 'org.springframework.boot:spring-boot-starter-web'
 	compileOnly 'org.projectlombok:lombok'
-	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	annotationProcessor 'org.projectlombok:lombok'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
-	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	implementation 'com.google.code.gson:gson:2.8.8'
 }
 
-tasks.named('bootJar') {
-	mainClass.set('com.commit.camp_reserve.CampReserveApplication')
-}
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
