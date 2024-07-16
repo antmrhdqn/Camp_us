@@ -1,52 +1,66 @@
 package com.commit.camp_reserve.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name="user")
 @Getter
-@Setter
+@Builder
 @ToString
-public class User {
+@NoArgsConstructor
+public class User implements Serializable {
 
     @Id
-    @Column
+    @Column(name = "userId", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int userId;
+    private Long userId;
 
-    @Column
+    @Column(name = "email", nullable = false)
     private String email;
 
-    @Column
+    @Column(name = "password", nullable = false)
     private String password;
 
-    @Column
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @Column
+    @Column(name = "nickname", nullable = false)
     private String nickname;
 
-    @Column
+    @Column(name = "birth_day")
     private String birthDay;
 
-    @Column
-    private String registrationDate;
+    @Column(name = "registration_date")
+    private LocalDateTime registrationDate;
 
-    @Column
-    private String withdrawDate;
+    @Column(name = "enroll_date")
+    private LocalDateTime enrollDate;
 
-    @Column
-    private String withdrawStatus;
-
-    @Column
+    @Column(name = "phone_number")
     private String phoneNumber;
 
-    @Column
+    @Column(name = "user_addr")
     private String userAddr;
 
-    @Column
+    @Column(name = "profile_image_url")
     private String profileImageUrl;
+
+    @Builder
+    public User(Long userId, String email, String password, String name, String nickname, String birthDay, LocalDateTime registrationDate, LocalDateTime enrollDate, String phoneNumber, String userAddr, String profileImageUrl) {
+        this.userId = userId;
+        this.email = email;
+        this.password = password;
+        this.name = name;
+        this.nickname = nickname;
+        this.birthDay = birthDay;
+        this.registrationDate = registrationDate;
+        this.enrollDate = enrollDate;
+        this.phoneNumber = phoneNumber;
+        this.userAddr = userAddr;
+        this.profileImageUrl = profileImageUrl;
+    }
 }
