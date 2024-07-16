@@ -1,8 +1,8 @@
 package com.commit.camp_reserve.service;
 
 
-import com.commit.camp_reserve.dto.SignUpUserInfo;
+import com.commit.camp_reserve.dto.SignUpUserRequest;
 
 public interface UserService {
-    void signUpUser(SignUpUserInfo userInfo);
+    void signUpUser(SignUpUserRequest userRequest);
 }
