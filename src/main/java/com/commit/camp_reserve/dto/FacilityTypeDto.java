@@ -1,14 +1,9 @@
 package com.commit.camp_reserve.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
+@Getter
 @Builder
-@AllArgsConstructor
-@NoArgsConstructor
 public class FacilityTypeDto {
     private int facsTypeId;     // 시설 유형 식별키
     private String facilityName;// 시설명

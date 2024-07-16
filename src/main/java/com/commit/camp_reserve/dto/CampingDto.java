@@ -1,14 +1,9 @@
 package com.commit.camp_reserve.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data
+@Getter
 @Builder
-@AllArgsConstructor
-@NoArgsConstructor
 public class CampingDto {
     private int campId;         // 캠핑장 ID
     private String factNm;      // 야영장명
