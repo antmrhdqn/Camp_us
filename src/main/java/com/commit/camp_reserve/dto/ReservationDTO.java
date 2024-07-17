@@ -5,6 +5,6 @@ import lombok.Getter;
 
 @Getter
 @Builder
-public class ReviewHistoryDTO {
+public class ReservationDTO {
 
 }
