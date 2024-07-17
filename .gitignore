@@ -16,6 +16,7 @@ local.properties
 
 # yml 파일
 *.yml
+**/application.yml
 
 # External tool builders
 .externalToolBuilders/
