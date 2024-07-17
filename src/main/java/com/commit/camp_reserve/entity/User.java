@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class User implements Serializable {
 
     @Id
-    @Column(name = "userId", nullable = false)
+    @Column(name = "user_id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
 
@@ -49,8 +49,11 @@ public class User implements Serializable {
     @Column(name = "profile_image_url")
     private String profileImageUrl;
 
+    @Column(name = "role")
+    private String role;
+
     @Builder
-    public User(Long userId, String email, String password, String name, String nickname, String birthDay, LocalDateTime registrationDate, LocalDateTime enrollDate, String phoneNumber, String userAddr, String profileImageUrl) {
+    public User(Long userId, String email, String password, String name, String nickname, String birthDay, LocalDateTime registrationDate, LocalDateTime enrollDate, String phoneNumber, String userAddr, String profileImageUrl, String role) {
         this.userId = userId;
         this.email = email;
         this.password = password;
@@ -62,5 +65,6 @@ public class User implements Serializable {
         this.phoneNumber = phoneNumber;
         this.userAddr = userAddr;
         this.profileImageUrl = profileImageUrl;
+        this.role = role;
     }
 }
