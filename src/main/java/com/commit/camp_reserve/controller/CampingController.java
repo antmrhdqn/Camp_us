@@ -1,11 +1,9 @@
 package com.commit.camp_reserve.controller;
 
-import com.commit.camp_reserve.dto.CampingDto;
+import com.commit.camp_reserve.dto.CampingDTO;
 import com.commit.camp_reserve.service.CampingService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -13,15 +11,16 @@ import java.util.List;
 @RequestMapping("/v1/campings")
 public class CampingController {
 
-    private final CampingService campingService;
-
     @Autowired
-    public CampingController(CampingService campingService) {
-        this.campingService = campingService;
+    private CampingService campingService;
+
+    @GetMapping
+    public List<CampingDTO> getAllCampings() {
+        return campingService.getAllCampings();
     }
 
-    @GetMapping("/basedList")
-    public List<CampingDto> getBasedList() {
-        return campingService.getBasedList();
+    @PostMapping
+    public CampingDTO createCamping(@RequestBody CampingDTO campingDTO) {
+        return campingService.createCamping(campingDTO);
     }
 }
