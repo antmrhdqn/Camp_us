@@ -14,11 +14,11 @@ local.properties
 .loadpath
 .recommenders
 
-# 모든 .yml 파일 무시
-*.yml
+# idea파일
+.idea
 
-# 모든 디렉토리의 application.yml 파일 무시
-**/application.yml
+# yml 파일
+*.yml
 
 # External tool builders
 .externalToolBuilders/
