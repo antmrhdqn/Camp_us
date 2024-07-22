@@ -2,7 +2,11 @@ package com.commit.campus.service.impl;
 
 import com.commit.campus.dto.SignUpUserRequest;
 import com.commit.campus.entity.User;
+import com.commit.campus.entity.UserStatusHistory;
+import com.commit.campus.entity.UserStatusType;
 import com.commit.campus.repository.UserRepository;
+import com.commit.campus.repository.UserStatusHistoryRepository;
+import com.commit.campus.repository.UserStatusTypeRepository;
 import com.commit.campus.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -25,12 +29,16 @@ import java.util.List;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final UserStatusTypeRepository userStatusTypeRepository;
+    private final UserStatusHistoryRepository userStatusHistoryRepository;
     private final ModelMapper modelMapper;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository, ModelMapper modelMapper, BCryptPasswordEncoder bCryptPasswordEncoder) {
+    public UserServiceImpl(UserRepository userRepository, UserStatusTypeRepository userStatusTypeRepository, UserStatusHistoryRepository userStatusHistoryRepository, ModelMapper modelMapper, BCryptPasswordEncoder bCryptPasswordEncoder) {
         this.userRepository = userRepository;
+        this.userStatusTypeRepository = userStatusTypeRepository;
+        this.userStatusHistoryRepository = userStatusHistoryRepository;
         this.modelMapper = modelMapper;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
     }
@@ -72,6 +80,22 @@ public class UserServiceImpl implements UserService {
                 user.getPassword(),
                 getAuthorities(user)
         );
+    }
+
+    @Override
+    public void withdrawUser(Long userId) {
+
+        LocalDateTime currentTime = LocalDateTime.now();
+        UserStatusType userStatusType = userStatusTypeRepository.findById(2).orElseThrow(IllegalArgumentException::new);
+        User user = userRepository.findById(userId).orElseThrow(IllegalArgumentException::new);
+
+        UserStatusHistory userStatusHistory = UserStatusHistory.builder()
+                .modifiedDate(currentTime)
+                .userStatusType(userStatusType)
+                .user(user)
+                .build();
+
+        userStatusHistoryRepository.save(userStatusHistory);
     }
 
     private Collection<? extends GrantedAuthority> getAuthorities(User user) {
