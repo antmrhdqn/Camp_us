@@ -1,8 +1,7 @@
-package com.commit.campus.config;
+package com.commit.campus.common.config;
 
 import com.commit.campus.service.UserService;
 import io.jsonwebtoken.*;
-import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
@@ -15,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.security.Key;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
@@ -31,8 +31,8 @@ public class JwtUtil {
             @Value("${token.expiration_time}") long accessTokenExpTime,
             UserService userService
     ) {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
-        this.key = Keys.hmacShaKeyFor(keyBytes);
+        byte[] decodedKey = Base64.getUrlDecoder().decode(secretKey);
+        this.key = Keys.hmacShaKeyFor(decodedKey);
         this.accessTokenExpTime = accessTokenExpTime;
         this.userService = userService;
     }
