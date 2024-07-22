@@ -1,4 +1,4 @@
-package com.commit.camp_reserve;
+package com.commit.campus;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.boot.SpringApplication;
