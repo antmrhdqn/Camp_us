@@ -1,6 +1,6 @@
-package com.commit.camp_reserve.config;
+package com.commit.campus.config;
 
-import com.commit.camp_reserve.service.UserService;
+import com.commit.campus.service.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

@@ -1,7 +1,7 @@
-package com.commit.camp_reserve.controller;
+package com.commit.campus.controller;
 
-import com.commit.camp_reserve.dto.SignUpUserRequest;
-import com.commit.camp_reserve.service.UserService;
+import com.commit.campus.dto.SignUpUserRequest;
+import com.commit.campus.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;

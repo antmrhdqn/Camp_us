@@ -1,4 +1,4 @@
-package com.commit.camp_reserve;
+package com.commit.campus;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

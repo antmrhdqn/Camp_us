@@ -1,7 +1,7 @@
-package com.commit.camp_reserve.config;
+package com.commit.campus.config;
 
-import com.commit.camp_reserve.dto.LoginRequest;
-import com.commit.camp_reserve.service.UserService;
+import com.commit.campus.dto.LoginRequest;
+import com.commit.campus.service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

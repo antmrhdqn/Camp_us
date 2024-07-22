@@ -1,4 +1,4 @@
-package com.commit.camp_reserve.entity;
+package com.commit.campus.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
