@@ -1,4 +1,4 @@
-package com.commit.camp_reserve.dto;
+package com.commit.campus.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

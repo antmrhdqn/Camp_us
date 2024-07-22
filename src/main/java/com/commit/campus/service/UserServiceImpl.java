@@ -1,8 +1,8 @@
-package com.commit.camp_reserve.service;
+package com.commit.campus.service;
 
-import com.commit.camp_reserve.dto.SignUpUserRequest;
-import com.commit.camp_reserve.entity.User;
-import com.commit.camp_reserve.repository.UserRepository;
+import com.commit.campus.dto.SignUpUserRequest;
+import com.commit.campus.entity.User;
+import com.commit.campus.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;

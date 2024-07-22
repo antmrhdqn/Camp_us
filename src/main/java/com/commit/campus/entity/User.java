@@ -1,25 +1,71 @@
 package com.commit.campus.entity;
 
-import lombok.Getter;
 import jakarta.persistence.*;
-import java.util.Date;
+import lombok.*;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
 
 @Entity
+@Table(name="user")
 @Getter
-public class User {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userId;  // key
+@Builder
+@ToString
+@NoArgsConstructor
+public class User implements Serializable {
 
-    private String email;  // 이메일
-    private String password;  // 비밀번호
-    private String name;  // 이름
-    private String nickname;  // 닉네임
-    private Date birthDay;  // 생일
-    private String phoneNumber;  // 전화번호
-    private String userAddr;  // 주소
-    private String profileImageUrl;  // 프로필 이미지 URL
-    private Date enrollDate;  // 등록 날짜
-    private Date registrationDate;  // 가입 날짜
-    private String role;  // 역할
+    @Id
+    @Column(name = "user_id", nullable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long userId;
+
+    @Column(name = "email", nullable = false)
+    private String email;
+
+    @Column(name = "password", nullable = false)
+    private String password;
+
+    @Column(name = "name", nullable = false)
+    private String name;
+
+    @Column(name = "nickname", nullable = false)
+    private String nickname;
+
+    @Column(name = "birth_day")
+    private String birthDay;
+
+    @Column(name = "registration_date")
+    private LocalDateTime registrationDate;
+
+    @Column(name = "enroll_date")
+    private LocalDateTime enrollDate;
+
+    @Column(name = "phone_number")
+    private String phoneNumber;
+
+    @Column(name = "user_addr")
+    private String userAddr;
+
+    @Column(name = "profile_image_url")
+    private String profileImageUrl;
+
+    @Column(name = "role")
+    private String role;
+
+    @Builder
+    public User(Long userId, String email, String password, String name, String nickname, String birthDay, LocalDateTime registrationDate, LocalDateTime enrollDate, String phoneNumber, String userAddr, String profileImageUrl, String role) {
+        this.userId = userId;
+        this.email = email;
+        this.password = password;
+        this.name = name;
+        this.nickname = nickname;
+        this.birthDay = birthDay;
+        this.registrationDate = registrationDate;
+        this.enrollDate = enrollDate;
+        this.phoneNumber = phoneNumber;
+        this.userAddr = userAddr;
+        this.profileImageUrl = profileImageUrl;
+        this.role = role;
+    }
 }
+

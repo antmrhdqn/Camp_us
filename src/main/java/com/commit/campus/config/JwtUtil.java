@@ -1,6 +1,6 @@
-package com.commit.camp_reserve.config;
+package com.commit.campus.config;
 
-import com.commit.camp_reserve.service.UserService;
+import com.commit.campus.service.UserService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
