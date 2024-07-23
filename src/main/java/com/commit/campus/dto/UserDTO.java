@@ -22,9 +22,10 @@ public class UserDTO {
     private LocalDateTime enrollDate;
     private LocalDateTime registrationDate;
     private String role;
+    private int status;
 
     @Builder
-    public UserDTO(Long userId, String email, String password, String name, String nickname, String birthDay, String phoneNumber, String userAddr, String profileImageUrl, LocalDateTime enrollDate, LocalDateTime registrationDate, String role) {
+    public UserDTO(Long userId, String email, String password, String name, String nickname, String birthDay, String phoneNumber, String userAddr, String profileImageUrl, LocalDateTime enrollDate, LocalDateTime registrationDate, String role, int status) {
         this.userId = userId;
         this.email = email;
         this.password = password;
@@ -37,5 +38,6 @@ public class UserDTO {
         this.enrollDate = enrollDate;
         this.registrationDate = registrationDate;
         this.role = role;
+        this.status = status;
     }
 }
