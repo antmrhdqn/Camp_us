@@ -59,6 +59,7 @@ public class UserServiceImpl implements UserService {
                 .phoneNumber(userRequest.getPhoneNumber())
                 .userAddr(userRequest.getUserAddr())
                 .role("ROLE_USER")
+                .status(1)
                 .build();
         userRepository.save(user);
     }
@@ -96,6 +97,17 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         userStatusHistoryRepository.save(userStatusHistory);
+
+        User updateUser = User.builder()
+                .userId(user.getUserId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .password(user.getPassword())
+                .nickname(user.getNickname())
+                .status(2)
+                .build();
+
+        userRepository.save(updateUser);
     }
 
     private Collection<? extends GrantedAuthority> getAuthorities(User user) {
