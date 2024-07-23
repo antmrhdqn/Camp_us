@@ -55,10 +55,10 @@ public class User implements Serializable {
     private String role;
 
     @Column(name = "status")
-    private Integer status;
+    private int status;
 
     @Builder
-    public User(Long userId, String email, String password, String name, String nickname, String birthDay, LocalDateTime registrationDate, LocalDateTime enrollDate, String phoneNumber, String userAddr, String profileImageUrl, String role, Integer status) {
+    public User(Long userId, String email, String password, String name, String nickname, String birthDay, LocalDateTime registrationDate, LocalDateTime enrollDate, String phoneNumber, String userAddr, String profileImageUrl, String role, int status) {
         this.userId = userId;
         this.email = email;
         this.password = password;
