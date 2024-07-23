@@ -1,6 +1,7 @@
-package com.commit.camp_reserve.config;
+package com.commit.campus.config;
 
-import com.commit.camp_reserve.service.UserService;
+import com.commit.campus.service.OauthService;
+import com.commit.campus.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,13 +24,15 @@ public class SecurityConfig {
     private final Environment environment;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
     private final JwtUtil jwtUtil;
+    private final OauthService oauthService;
 
     @Autowired
-    public SecurityConfig(UserService userService, Environment environment, BCryptPasswordEncoder bCryptPasswordEncoder, JwtUtil jwtUtil) {
+    public SecurityConfig(UserService userService, Environment environment, BCryptPasswordEncoder bCryptPasswordEncoder, JwtUtil jwtUtil, OauthService oauthService) {
         this.userService = userService;
         this.environment = environment;
         this.bCryptPasswordEncoder = bCryptPasswordEncoder;
         this.jwtUtil = jwtUtil;
+        this.oauthService = oauthService;
     }
 
     @Bean
@@ -39,6 +42,8 @@ public class SecurityConfig {
                 http.getSharedObject(AuthenticationManagerBuilder.class);
         authenticationManagerBuilder.userDetailsService(userService).passwordEncoder(bCryptPasswordEncoder);
         AuthenticationManager authenticationManager = authenticationManagerBuilder.build();
+
+        oauthService.setAuthenticationManager(authenticationManager);
 
         http.csrf((csrf) -> csrf.disable());
 
