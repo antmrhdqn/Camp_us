@@ -8,6 +8,5 @@ public interface UserService extends UserDetailsService {
 
     User findUserByEmail(String email);
     void signUpUser(SignUpUserRequest userRequest);
-
     void withdrawUser(Long userId);
 }
