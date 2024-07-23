@@ -1,4 +1,4 @@
-package com.commit.campus.config;
+package com.commit.campus.common.config;
 
 import com.commit.campus.service.UserService;
 import jakarta.servlet.FilterChain;

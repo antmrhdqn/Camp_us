@@ -1,15 +1,29 @@
 package com.commit.campus.entity;
 
+import lombok.Builder;
 import lombok.Getter;
 import jakarta.persistence.*;
-import java.util.Date;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
+import java.io.Serializable;
+import java.time.LocalDateTime;
 
 @Entity
+@Table(name="user_status_history")
 @Getter
-public class UserStatusHistory {
+@Builder
+@ToString
+@NoArgsConstructor
+public class UserStatusHistory implements Serializable {
+
     @Id
+    @Column(name = "history_id", nullable = false)
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long historyId;  // 이력 ID
+
+    @Column(name = "modified_date", nullable = false)
+    private LocalDateTime modifiedDate;  // 수정 날짜
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -19,5 +33,11 @@ public class UserStatusHistory {
     @JoinColumn(name = "status_type_id")
     private UserStatusType userStatusType;  // 상태 유형 ID
 
-    private Date modifiedDate;  // 수정 날짜
+    @Builder
+    public UserStatusHistory(Long historyId, LocalDateTime modifiedDate, User user, UserStatusType userStatusType) {
+        this.historyId = historyId;
+        this.modifiedDate = modifiedDate;
+        this.user = user;
+        this.userStatusType = userStatusType;
+    }
 }

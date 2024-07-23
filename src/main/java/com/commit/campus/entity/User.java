@@ -2,6 +2,7 @@ package com.commit.campus.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -12,6 +13,7 @@ import java.time.LocalDateTime;
 @Builder
 @ToString
 @NoArgsConstructor
+@DynamicUpdate
 public class User implements Serializable {
 
     @Id
@@ -52,8 +54,11 @@ public class User implements Serializable {
     @Column(name = "role")
     private String role;
 
+    @Column(name = "status")
+    private int status;
+
     @Builder
-    public User(Long userId, String email, String password, String name, String nickname, String birthDay, LocalDateTime registrationDate, LocalDateTime enrollDate, String phoneNumber, String userAddr, String profileImageUrl, String role) {
+    public User(Long userId, String email, String password, String name, String nickname, String birthDay, LocalDateTime registrationDate, LocalDateTime enrollDate, String phoneNumber, String userAddr, String profileImageUrl, String role, int status) {
         this.userId = userId;
         this.email = email;
         this.password = password;
@@ -66,6 +71,7 @@ public class User implements Serializable {
         this.userAddr = userAddr;
         this.profileImageUrl = profileImageUrl;
         this.role = role;
+        this.status = status;
     }
 }
 
