@@ -40,22 +40,22 @@ public class ReviewController {
 
     // 리뷰 등록
     @PostMapping
-    public ResponseEntity<Review> createReview(@RequestBody ReviewRequest reviewRequest) {
+    public ResponseEntity<Void> createReview(@RequestBody ReviewRequest reviewRequest) {
 
         ReviewDTO reviewDTO = modelMapper.map(reviewRequest, ReviewDTO.class);
-        Review createdReview = reviewService.createReview(reviewDTO);
+        reviewService.createReview(reviewDTO);
 
-        return new ResponseEntity<>(createdReview, HttpStatus.CREATED);
+        return ResponseEntity.noContent().build();
     }
 
     // 리뷰 수정
     @PutMapping("/{reviewId}")
-    public ResponseEntity<Review> updateReview(@PathVariable String reviewId, @RequestBody ReviewRequest reviewRequest) {
+    public ResponseEntity<Void> updateReview(@PathVariable String reviewId, @RequestBody ReviewRequest reviewRequest) {
 
         ReviewDTO reviewDTO = modelMapper.map(reviewRequest, ReviewDTO.class);
-        Review updatedReview = reviewService.updateReview(reviewId, reviewDTO);
+        reviewService.updateReview(reviewId, reviewDTO);
 
-        return ResponseEntity.ok(updatedReview);
+        return ResponseEntity.noContent().build();
     }
 
     // 리뷰 삭제
