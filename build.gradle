@@ -53,6 +53,9 @@ dependencies {
 
 	//json
 	implementation 'com.google.code.gson:gson:2.8.7'
+
+	// DynamoDB
+	implementation 'software.amazon.awssdk:dynamodb-enhanced:2.26.19'
 }
 
 tasks.named('bootJar') {
