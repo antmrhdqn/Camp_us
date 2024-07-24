@@ -56,6 +56,9 @@ dependencies {
 
 	// DynamoDB
 	implementation 'software.amazon.awssdk:dynamodb-enhanced:2.26.19'
+
+	// modelmapper
+	implementation 'org.modelmapper:modelmapper:3.1.1'
 }
 
 tasks.named('bootJar') {
