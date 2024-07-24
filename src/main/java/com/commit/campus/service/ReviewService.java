@@ -1,4 +1,4 @@
 package com.commit.campus.service;
 
-public class ReviewService {
+public interface ReviewService {
 }
