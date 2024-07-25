@@ -7,7 +7,7 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 @DynamoDbBean
 @Getter
 @Setter
-public class CampingInfo {
+public class CampingForDynamoDB {
     private Long campId;  // 캠핑장 ID
     private String factNm;  // 시설 이름
     private String lineIntro;  // 한 줄 소개

@@ -1,6 +1,6 @@
 package com.commit.campus.entity;
 
-import com.commit.campus.dto.CampingInfo;
+import com.commit.campus.dto.CampingForDynamoDB;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
@@ -17,7 +17,7 @@ public class Bookmark {
     private String campId;
     private String campInfo;
     private String createdBookmarkDate;
-    private CampingInfo campingInfo;
+    private CampingForDynamoDB campingForDynamoDB;
 
     @DynamoDbPartitionKey
     @DynamoDbAttribute("user_id")
@@ -47,7 +47,7 @@ public class Bookmark {
         this.campInfo = campInfo;
         if (campInfo != null) {
             try {
-                this.campingInfo = OBJECT_MAPPER.readValue(campInfo, CampingInfo.class);
+                this.campingForDynamoDB = OBJECT_MAPPER.readValue(campInfo, CampingForDynamoDB.class);
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }
@@ -64,21 +64,21 @@ public class Bookmark {
     }
 
     @DynamoDbIgnore
-    public CampingInfo getCampingInfo() {
-        if (campingInfo == null && campInfo != null) {
+    public CampingForDynamoDB getCampingInfo() {
+        if (campingForDynamoDB == null && campInfo != null) {
             try {
-                this.campingInfo = OBJECT_MAPPER.readValue(campInfo, CampingInfo.class);
+                this.campingForDynamoDB = OBJECT_MAPPER.readValue(campInfo, CampingForDynamoDB.class);
             } catch (JsonProcessingException e) {
                 e.printStackTrace();
             }
         }
-        return campingInfo;
+        return campingForDynamoDB;
     }
 
-    public void setCampingInfo(CampingInfo campingInfo) {
-        this.campingInfo = campingInfo;
+    public void setCampingInfo(CampingForDynamoDB campingForDynamoDB) {
+        this.campingForDynamoDB = campingForDynamoDB;
         try {
-            this.campInfo = OBJECT_MAPPER.writeValueAsString(campingInfo);
+            this.campInfo = OBJECT_MAPPER.writeValueAsString(campingForDynamoDB);
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }

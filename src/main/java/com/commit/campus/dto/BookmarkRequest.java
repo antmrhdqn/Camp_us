@@ -7,7 +7,7 @@ public class BookmarkRequest {
 
     private String userId;
     private String campId;
-    private CampingInfo campInfo;
+    private CampingForDynamoDB campInfo;
     private String createdBookmarkDate;
 
 }
