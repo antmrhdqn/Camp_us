@@ -8,9 +8,9 @@ import org.springframework.data.domain.Pageable;
 public interface ReviewService {
     Page<ReviewDTO> getReviewsByCampId(String campingSiteId, Pageable pageable);
 
-    Review createReview(ReviewDTO reviewDTO);
+    void createReview(ReviewDTO reviewDTO);
 
-    Review updateReview(String reviewId, ReviewDTO reviewDTO);
+    void updateReview(String reviewId, ReviewDTO reviewDTO);
 
     void deleteReview(String reviewId);
 }
