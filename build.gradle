@@ -52,7 +52,14 @@ dependencies {
 	implementation 'org.springframework.security:spring-security-oauth2-jose'
 
 	//json
-	implementation 'com.google.code.gson:gson:2.8.7'
+	implementation 'com.google.code.gson:gson:2.8.9'
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.0'
+	implementation 'com.fasterxml.jackson.core:jackson-core:2.14.0'
+	implementation 'com.fasterxml.jackson.core:jackson-annotations:2.14.0'
+
+	//Dynamo
+	implementation 'software.amazon.awssdk:dynamodb-enhanced:2.26.19'
+
 }
 
 tasks.named('bootJar') {
