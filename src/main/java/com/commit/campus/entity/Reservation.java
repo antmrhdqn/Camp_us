@@ -23,5 +23,5 @@ public class Reservation {
     private Date entryDate;  // 입실 날짜
     private Date leavingDate;  // 퇴실 날짜
     private String reservationStatus;  // 예약 상태
-    private String equipmentRentalStatus;  // 장비 대여 상태
+    private String geqrRentalStatus;  // 장비 대여 상태
 }
