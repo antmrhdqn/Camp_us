@@ -1,15 +1,40 @@
 package com.commit.campus.entity;
 
-import lombok.Getter;
-import jakarta.persistence.*;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 
-@Entity
-@Getter
+@DynamoDbBean
 public class RatingSummary {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long campId;  // 캠핑장 ID
+    private long campId;
+    private int totalRating;
+    private int countRating;
 
-    private double totalRating;  // 총 평점
-    private int countRating;  // 평점 수
+    @DynamoDbPartitionKey
+    @DynamoDbAttribute("camp_id")
+    public long getCampId() {
+        return campId;
+    }
+
+    public void setCampId(long campId) {
+        this.campId = campId;
+    }
+
+    @DynamoDbAttribute("total_rating")
+    public int getTotalRating() {
+        return totalRating;
+    }
+
+    public void setTotalRating(int totalRating) {
+        this.totalRating = totalRating;
+    }
+
+    @DynamoDbAttribute("count_rating")
+    public int getCountRating() {
+        return countRating;
+    }
+
+    public void setCountRating(int countRating) {
+        this.countRating = countRating;
+    }
 }
