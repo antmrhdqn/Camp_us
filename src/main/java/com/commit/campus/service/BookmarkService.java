@@ -1,4 +1,8 @@
 package com.commit.campus.service;
 
-public class BookmarkService {
+import com.commit.campus.dto.BookmarkRequest;
+
+public interface BookmarkService {
+
+    void saveBookmark(BookmarkRequest bookmarkRequest);
 }
