@@ -1,6 +1,5 @@
 package com.commit.campus.dto;
 
-import com.commit.campus.entity.CampingInfo;
 import lombok.Getter;
 
 @Getter
