@@ -1,25 +1,23 @@
 package com.commit.campus.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "riview")
+@Table(name = "review")
 @Builder
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
+@ToString
 public class Review {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "review_id")
-    private Long reviewId;
+    private long reviewId;
 
     @Column(name = "camp_id", nullable = false)
     private long campId;
@@ -31,12 +29,12 @@ public class Review {
     private String reviewContent;
 
     @Column(name = "rating")
-    private Byte rating;
+    private byte rating;
 
-    @Column(name = "review_created_date", nullable = false, updatable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
+    @Column(name = "review_created_date", updatable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime reviewCreatedDate;
 
-    @Column(name = "review_modification_date", nullable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
+    @Column(name = "review_modification_date", columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP")
     private LocalDateTime reviewModificationDate;
 
     @Column(name = "review_image_url", length = 255)
