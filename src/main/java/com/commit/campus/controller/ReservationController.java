@@ -36,9 +36,8 @@ public class ReservationController {
     @PutMapping
     public ResponseEntity<Void> modifyReservation(@RequestBody List<Reservation> reservations) {
 
-        // 예약 변경은 날짜만 가능하도록 설정
-        // 캠핑장 or 시설 변경을 원할 시에는 예약 취소후 재 예약
-        // 기존 날짜의 예약 가능 건수 차감한 것을 되돌리고, 새로운 날짜의 예약 가능 건수를 차감
+        // 예약 변경은 예약자가 입력한 정보만 가능하도록 설정(성함, 연락처, 인원수, 장비대여여부 등)
+        // 날짜 or 시설 변경을 원할 시에는 예약 취소후 재 예약
 
         return ResponseEntity.ok().build();
     }
@@ -49,6 +48,7 @@ public class ReservationController {
 
         // 기존 날짜의 예약 가능 건수 차감한 것을 되돌림
         // 예약 히스토리의 상태값 변경
+
         return ResponseEntity.ok().build();
     }
 }
