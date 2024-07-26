@@ -8,10 +8,10 @@ import java.time.LocalDateTime;
 
 @Data
 public class ReviewDTO {
-    private Long reviewId;
-    private Long campId;
+    private long campId;
+    private long userId;
     private String reviewContent;
-    private int rating;
+    private byte rating;
     private LocalDateTime reviewCreatedDate;
     private LocalDateTime reviewModificationDate;
     private String reviewImageUrl;
