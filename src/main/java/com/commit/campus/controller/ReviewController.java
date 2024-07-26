@@ -1,21 +1,21 @@
 package com.commit.campus.controller;
 
-import com.commit.campus.common.view.ReviewView;
+import com.commit.campus.view.ReviewView;
 import com.commit.campus.dto.ReviewDTO;
 import com.commit.campus.dto.ReviewRequest;
-import com.commit.campus.entity.Review;
 import com.commit.campus.service.ReviewService;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/v1/reviews")
+@Slf4j
 public class ReviewController {
 
     private final ReviewService reviewService;
@@ -42,7 +42,12 @@ public class ReviewController {
     @PostMapping
     public ResponseEntity<Void> createReview(@RequestBody ReviewRequest reviewRequest) {
 
+        long userId = 1; // TODO: 토큰에서 빼내야함
+
+        log.info("컨트롤러 확인 request {}", reviewRequest);
         ReviewDTO reviewDTO = modelMapper.map(reviewRequest, ReviewDTO.class);
+        reviewDTO.setUserId(userId);
+        log.info("컨트롤러 확인 DTO {}", reviewDTO);
         reviewService.createReview(reviewDTO);
 
         return ResponseEntity.noContent().build();
