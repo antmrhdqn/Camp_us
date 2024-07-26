@@ -1,23 +1,25 @@
 package com.commit.campus.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 
 @DynamoDbBean
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class RatingSummary {
-    private long campId;
+    private Long campId;
     private int totalRating;
     private int countRating;
 
     @DynamoDbPartitionKey
     @DynamoDbAttribute("camp_id")
-    public long getCampId() {
+    public Long getCampId() {
         return campId;
-    }
-
-    public void setCampId(long campId) {
-        this.campId = campId;
     }
 
     @DynamoDbAttribute("total_rating")
@@ -25,16 +27,9 @@ public class RatingSummary {
         return totalRating;
     }
 
-    public void setTotalRating(int totalRating) {
-        this.totalRating = totalRating;
-    }
-
     @DynamoDbAttribute("count_rating")
     public int getCountRating() {
         return countRating;
     }
 
-    public void setCountRating(int countRating) {
-        this.countRating = countRating;
-    }
 }
