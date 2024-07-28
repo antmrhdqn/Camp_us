@@ -62,6 +62,9 @@ dependencies {
 
 	// redis lettuce
 	implementation 'io.lettuce:lettuce-core:6.3.2.RELEASE'
+
+	// @Value 어노테이션 사용
+	implementation 'org.springframework.boot:spring-boot-configuration-processor'
 }
 
 tasks.named('bootJar') {
