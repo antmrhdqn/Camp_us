@@ -42,6 +42,11 @@ public class BookmarkServiceImpl implements BookmarkService {
         return bookmarkDTOS;
     }
 
+    @Override
+    public void deleteBookmark(Long userId, Long campId) {
+        bookmarkRepository.delete(userId, campId);
+    }
+
     private BookmarkDTO convertToDTO(Bookmark bookmark) {
         return BookmarkDTO.builder()
                 .userId(bookmark.getUserId())

@@ -10,4 +10,6 @@ public interface BookmarkService {
     void saveBookmark(BookmarkRequest bookmarkRequest);
 
     List<BookmarkDTO> getBookmark(Long userId);
+
+    void deleteBookmark(Long userId, Long campId);
 }

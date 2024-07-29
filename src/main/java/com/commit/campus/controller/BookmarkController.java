@@ -44,4 +44,10 @@ public class BookmarkController {
         return ResponseEntity.status(HttpStatus.OK).body(bookmarkViews);
     }
 
+    @DeleteMapping
+    public ResponseEntity<Void> deleteBookmarkByUserId(@RequestParam Long userId, @RequestParam Long campId) {
+        bookmarkService.deleteBookmark(userId, campId);
+        return ResponseEntity.ok().build();
+    }
+
 }

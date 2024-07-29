@@ -37,4 +37,12 @@ public class BookmarkRepository {
                 .stream()
                 .collect(Collectors.toList());
     }
+
+    public void delete(Long userId, Long campId) {
+        Key key = Key.builder()
+                .partitionValue(userId)
+                .sortValue(campId)
+                .build();
+        bookmarkDynamoDBTable.deleteItem(key);
+    }
 }
