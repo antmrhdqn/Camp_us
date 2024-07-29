@@ -5,7 +5,12 @@ import com.commit.campus.entity.Bookmark;
 import org.springframework.stereotype.Repository;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
+import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Repository
@@ -22,4 +27,14 @@ public class BookmarkRepository {
     }
 
 
+    public List<Bookmark> getBookmark(Long userId) {
+        Key key = Key.builder()
+                .partitionValue(userId)
+                .build();
+
+        return bookmarkDynamoDBTable.query(r -> r.queryConditional(QueryConditional.keyEqualTo(key)))
+                .items()
+                .stream()
+                .collect(Collectors.toList());
+    }
 }
