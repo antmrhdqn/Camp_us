@@ -2,6 +2,8 @@ package com.commit.campus.entity;
 
 import lombok.Getter;
 import jakarta.persistence.*;
+
+import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
@@ -19,9 +21,9 @@ public class Reservation {
     @JoinColumn(name = "user_id")
     private User user;  // 사용자 ID
 
-    private Date reservationDate;  // 예약 날짜
+    private LocalDateTime reservationDate;  // 예약 날짜
     private Date entryDate;  // 입실 날짜
     private Date leavingDate;  // 퇴실 날짜
     private String reservationStatus;  // 예약 상태
-    private String geqrRentalStatus;  // 장비 대여 상태
+    private String gearRentalStatus;  // 장비 대여 상태
 }
