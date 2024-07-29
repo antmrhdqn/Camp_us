@@ -1,4 +1,6 @@
 package com.commit.campus.service;
 
-public class ReservationService {
+import org.springframework.stereotype.Service;
+
+public interface ReservationService {
 }

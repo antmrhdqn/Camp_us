@@ -9,7 +9,7 @@ import java.util.Date;
 public class Reservation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long reservationId;  // 예약 ID
+    private int reservationId;  // 예약 ID
 
     @ManyToOne
     @JoinColumn(name = "camp_facs_id")
