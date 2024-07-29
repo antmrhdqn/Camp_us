@@ -1,86 +1,47 @@
 package com.commit.campus.entity;
 
-import com.commit.campus.dto.CampingForDynamoDB;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
-import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbIgnore;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey;
+
+import java.time.LocalDateTime;
 
 @DynamoDbBean
 public class Bookmark {
 
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-    private String userId;
-    private String campId;
-    private String campInfo;
-    private String createdBookmarkDate;
-    private CampingForDynamoDB campingForDynamoDB;
+    private Long userId;
+    private Long campId;
+    private LocalDateTime createdBookmarkDate;
 
     @DynamoDbPartitionKey
     @DynamoDbAttribute("user_id")
-    public String getUserId() {
+    public Long getUserId() {
         return userId;
     }
 
-    public void setUserId(String userId) {
+    public void setUserId(Long userId) {
         this.userId = userId;
     }
 
+    @DynamoDbSortKey
     @DynamoDbAttribute("camp_id")
-    public String getCampId() {
+    public Long getCampId() {
         return campId;
     }
 
-    public void setCampId(String campId) {
+    public void setCampId(Long campId) {
         this.campId = campId;
     }
 
-    @DynamoDbAttribute("camp_info")
-    public String getCampInfo() {
-        return campInfo;
-    }
-
-    public void setCampInfo(String campInfo) {
-        this.campInfo = campInfo;
-        if (campInfo != null) {
-            try {
-                this.campingForDynamoDB = OBJECT_MAPPER.readValue(campInfo, CampingForDynamoDB.class);
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-            }
-        }
-    }
 
     @DynamoDbAttribute("created_bookmark_date")
-    public String getCreatedBookmarkDate() {
+    public LocalDateTime getCreatedBookmarkDate() {
         return createdBookmarkDate;
     }
 
-    public void setCreatedBookmarkDate(String createdBookmarkDate) {
+    public void setCreatedBookmarkDate(LocalDateTime createdBookmarkDate) {
         this.createdBookmarkDate = createdBookmarkDate;
-    }
-
-    @DynamoDbIgnore
-    public CampingForDynamoDB getCampingInfo() {
-        if (campingForDynamoDB == null && campInfo != null) {
-            try {
-                this.campingForDynamoDB = OBJECT_MAPPER.readValue(campInfo, CampingForDynamoDB.class);
-            } catch (JsonProcessingException e) {
-                e.printStackTrace();
-            }
-        }
-        return campingForDynamoDB;
-    }
-
-    public void setCampingInfo(CampingForDynamoDB campingForDynamoDB) {
-        this.campingForDynamoDB = campingForDynamoDB;
-        try {
-            this.campInfo = OBJECT_MAPPER.writeValueAsString(campingForDynamoDB);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
     }
 }
