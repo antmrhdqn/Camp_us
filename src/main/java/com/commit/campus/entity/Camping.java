@@ -1,116 +1,109 @@
 package com.commit.campus.entity;
 
+import lombok.Getter;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Setter;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
-@Table(name = "camping")
-@Builder
 @Getter
-@NoArgsConstructor
-@AllArgsConstructor
-@ToString
-public class Camping {
-
+@Setter
+public class Camping implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "camp_id")
-    private Long campId;
+    private long campId;
 
-    @Column(name = "camp_name")
+    @Column(name = "content_id")
+    private int contentId;
+
+    @Column(name = "camp_name", length = 100)
     private String campName;
 
-    @Column(name = "line_intro")
+    @Column(name = "line_intro", length = 255)
     private String lineIntro;
 
-    @Column(name = "intro", columnDefinition = "TEXT")
+    @Column(name = "intro", columnDefinition = "MEDIUMTEXT")
     private String intro;
 
-    @Column(name = "do_name")
+    @Column(name = "do_name", length = 50)
     private String doName;
 
-    @Column(name = "sigungu_name")
+    @Column(name = "sigungu_name", length = 50)
     private String sigunguName;
 
-    @Column(name = "post_code")
+    @Column(name = "post_code", length = 10)
     private String postCode;
 
-    @Column(name = "feature_summary", columnDefinition = "TEXT")
+    @Column(name = "feature_summary", columnDefinition = "MEDIUMTEXT")
     private String featureSummary;
 
-    @Column(name = "induty")
+    @Column(name = "induty", length = 50)
     private String induty;
 
-    @Column(name = "addr")
+    @Column(name = "addr", length = 100)
     private String addr;
 
-    @Column(name = "addr_details")
+    @Column(name = "addr_details", length = 100)
     private String addrDetails;
 
     @Column(name = "mapX")
-    private Double mapX;
+    private double mapX;
 
     @Column(name = "mapY")
-    private Double mapY;
+    private double mapY;
 
-    @Column(name = "tel")
+    @Column(name = "tel", length = 50)
     private String tel;
 
     @Column(name = "homepage")
     private String homepage;
 
-    @Column(name = "staff_cnt")
-    private int staffCnt;
+    @Column(name = "staff_count")
+    private int staffCount;
 
     @Column(name = "general_site_cnt")
-    private int generalSiteCnt;
+    private Integer generalSiteCnt;
 
     @Column(name = "car_site_cnt")
-    private int carSiteCnt;
+    private Integer carSiteCnt;
 
     @Column(name = "glamping_site_cnt")
-    private int glampingSiteCnt;
+    private Integer glampingSiteCnt;
 
     @Column(name = "caravan_site_cnt")
-    private int caravanSiteCnt;
+    private Integer caravanSiteCnt;
 
     @Column(name = "personal_caravan_site_cnt")
-    private int personalCaravanSiteCnt;
+    private Integer personalCaravanSiteCnt;
 
-    @Column(name = "support_facilities")
-    private String supportFacilities; // 부대시설(편의시설)
-
-    @Column(name = "outdoor_activities")
-    private String outdoorActivities; // 주변시설
-
-    @Column(name = "pet_access")
-    private String petAccess; // 반려동물 출입 여부
-
-    @Column(name = "rental_gear_list")
-    private String rentalGearList; // 대여 장비 목록
-
-    @Column(name = "operation_day")
-    private String operationDay; // 운영일
-
-    @Column(name = "first_image_url")
-    private String firstImageUrl; // 대표이미지
-
-    @Column(name = "created_date", updatable = false)
+    @Column(name = "created_date")
     private LocalDateTime createdDate;
 
-    @Column(name = "modified_date")
-    private LocalDateTime modifiedDate;
+    @Column(name = "last_modified_date")
+    private LocalDateTime lastModifiedDate;
 
-    @PrePersist
-    protected void onCreate() {
-        createdDate = LocalDateTime.now();
-    }
+    @Column(name = "support_facilities")
+    private String supportFacilities;
 
-    @PreUpdate
-    protected void onUpdate() {
-        modifiedDate = LocalDateTime.now();
-    }
+    @Column(name = "outdoor_activities")
+    private String outdoorActivities;
 
+    @Column(name = "pet_access")
+    private String petAccess;
+
+    @Column(name = "rental_gear_list")
+    private String rentalGearList;
+
+    @Column(name = "operation_day")
+    private String operationDay;
+
+    @Column(name = "first_image_url")
+    private String firstImageUrl;
+
+    @OneToMany(mappedBy = "campingEntity", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CampingFacilities> campingFacilities;
 }
