@@ -1,6 +1,7 @@
 package com.commit.campus.service.impl;
 
 import com.commit.campus.common.exceptions.ReviewNotFoundException;
+import com.commit.campus.dto.CampingDTO;
 import com.commit.campus.dto.MyReviewDTO;
 import com.commit.campus.dto.ReviewDTO;
 import com.commit.campus.entity.MyReview;
@@ -40,15 +41,17 @@ public class MyReviewServiceImpl implements MyReviewService {
                 .orElseThrow(() -> new ReviewNotFoundException("작성된 리뷰가 존재하지 않습니다."));
 
         List<Long> reviewIds = myReview.getReviewIds();
-        log.info("reviewIds type: " + reviewIds.getClass().getName());
-        log.info("reviewIds content: " + reviewIds);
 
-        log.info("진행 확인");
         Page<Review> reviewPage = reviewRepository.findByReviewIdIn(reviewIds, pageable);
 
-        log.info("진행 확인2");
         Page<ReviewDTO> dtoPage = reviewPage.map(review -> modelMapper.map(review, ReviewDTO.class));
 
         return dtoPage;
+    }
+
+    @Override
+    public Page<CampingDTO> getReviewedCampings(long userId, Pageable pageable) {
+
+        return null;
     }
 }
