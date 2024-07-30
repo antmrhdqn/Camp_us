@@ -38,37 +38,42 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
 	// 스프링 시큐리티
-//	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
-//	implementation 'org.springframework.boot:spring-boot-starter-security'
-//	testImplementation 'org.springframework.security:spring-security-test'
-//
-//	// JWT 토큰
-//	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-//	implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
-//	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
-//
-//	// OAuth2
-//	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-//	implementation 'org.springframework.security:spring-security-oauth2-jose'
+	implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	testImplementation 'org.springframework.security:spring-security-test'
+
+	// JWT 토큰
+	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+	implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
+	// OAuth2
+	implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+	implementation 'org.springframework.security:spring-security-oauth2-jose'
 
 	//json
 	implementation 'com.google.code.gson:gson:2.8.7'
+
+	// DynamoDB
+	implementation 'software.amazon.awssdk:dynamodb-enhanced:2.26.19'
+
+	// openFeign
+	implementation platform("org.springframework.cloud:spring-cloud-dependencies:2023.0.2")
+	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
 	// jackson
 	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.17.2'
 	implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.17.2'
 
-	// DynamoDB
-	implementation 'software.amazon.awssdk:dynamodb-enhanced:2.26.19'
+    // Spring data redis
+    implementation('org.springframework.boot:spring-boot-starter-data-redis')
 
-	// Spring data redis
-	implementation('org.springframework.boot:spring-boot-starter-data-redis')
+    // redis lettuce
+    implementation 'io.lettuce:lettuce-core:6.3.2.RELEASE'
 
-	// redis lettuce
-	implementation 'io.lettuce:lettuce-core:6.3.2.RELEASE'
+    // @Value 어노테이션 사용
+    implementation 'org.springframework.boot:spring-boot-configuration-processor'
 
-	// @Value 어노테이션 사용
-	implementation 'org.springframework.boot:spring-boot-configuration-processor'
 }
 
 tasks.named('bootJar') {

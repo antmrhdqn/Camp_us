@@ -18,7 +18,6 @@ public class ObjectMapperConfig {
         ObjectMapper objectMapper = new ObjectMapper();
 
         JavaTimeModule module = new JavaTimeModule();
-        // LocalDateTime 형식(yyyy-MM-ddTHH:mm:ss)을 yyyy-MM-dd HH:mm:ss로 변경
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         module.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer(formatter));
         module.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer(formatter));
