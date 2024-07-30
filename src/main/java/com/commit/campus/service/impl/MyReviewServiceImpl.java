@@ -4,8 +4,10 @@ import com.commit.campus.common.exceptions.ReviewNotFoundException;
 import com.commit.campus.dto.CampingDTO;
 import com.commit.campus.dto.MyReviewDTO;
 import com.commit.campus.dto.ReviewDTO;
+import com.commit.campus.entity.Camping;
 import com.commit.campus.entity.MyReview;
 import com.commit.campus.entity.Review;
+import com.commit.campus.repository.CampingRepository;
 import com.commit.campus.repository.MyReviewRepository;
 import com.commit.campus.repository.ReviewRepository;
 import com.commit.campus.service.MyReviewService;
@@ -26,11 +28,13 @@ public class MyReviewServiceImpl implements MyReviewService {
 
     private final MyReviewRepository myReviewRepository;
     private final ReviewRepository reviewRepository;
+    private final CampingRepository campingRepository;
     private final ModelMapper modelMapper;
 
-    public MyReviewServiceImpl(MyReviewRepository myReviewRepository, ReviewRepository reviewRepository, ModelMapper modelMapper) {
+    public MyReviewServiceImpl(MyReviewRepository myReviewRepository, ReviewRepository reviewRepository, CampingRepository campingRepository, ModelMapper modelMapper) {
         this.myReviewRepository = myReviewRepository;
         this.reviewRepository = reviewRepository;
+        this.campingRepository = campingRepository;
         this.modelMapper = modelMapper;
     }
 
@@ -50,8 +54,22 @@ public class MyReviewServiceImpl implements MyReviewService {
     }
 
     @Override
-    public Page<CampingDTO> getReviewedCampings(long userId, Pageable pageable) {
+    public Page<CampingDTO> getReviewedCampings(long userId, Pageable pageable) throws ReviewNotFoundException {
 
-        return null;
+        MyReview myReview = myReviewRepository.findById(userId)
+                .orElseThrow(() -> new ReviewNotFoundException("작성된 리뷰가 존재하지 않습니다."));
+
+        List<Long> reviewIds = myReview.getReviewIds();
+
+        List<Review> reviews = reviewRepository.findByReviewIdIn(reviewIds);
+
+        List<Long> reviewedCampIds =  reviews.stream()
+                .map(Review::getCampId)
+                .toList();
+
+        Page<Camping> campingPage = campingRepository.findByCampIdIn(reviewedCampIds, pageable);
+        Page<CampingDTO> dtoPage = campingPage.map(camping -> modelMapper.map(camping, CampingDTO.class));
+
+        return dtoPage;
     }
 }
