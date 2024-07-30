@@ -45,7 +45,7 @@ public class MyReviewController {
     // 리뷰 작성한 캠핑장 조회
     @GetMapping("/campings")
     public ResponseEntity<Page<ReviewedCampingView>> getReviewedCampings(
-            @PageableDefault(sort = "reviewCreatedDate") Pageable pageable) {
+            @PageableDefault(sort = "campId") Pageable pageable) {
 
         long userId = 1; // TODO: 토큰에서 빼야 함
 
