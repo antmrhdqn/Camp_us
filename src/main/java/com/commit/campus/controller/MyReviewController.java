@@ -29,7 +29,7 @@ public class MyReviewController {
         this.modelMapper = modelMapper;
     }
 
-    // 내 리뷰 정보 조회
+    // 내 리뷰 정보 조회 TODO:레디스 캐시 사용
     @GetMapping
     public ResponseEntity<Page<MyReviewView>> getMyReview(
             @PageableDefault(sort = "reviewCreatedDate") Pageable pageable) {
