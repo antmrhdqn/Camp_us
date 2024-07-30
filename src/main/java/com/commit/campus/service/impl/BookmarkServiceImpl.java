@@ -23,11 +23,11 @@ public class BookmarkServiceImpl implements BookmarkService {
     }
 
     @Override
-    public void saveBookmark(BookmarkRequest bookmarkRequest) {
+    public void saveBookmark(BookmarkRequest bookmarkRequest, Long userId) {
         LocalDateTime currentTime = LocalDateTime.now();
 
         Bookmark bookmark = new Bookmark();
-        bookmark.setUserId(bookmarkRequest.getUserId());
+        bookmark.setUserId(userId);
         bookmark.setCampId(bookmarkRequest.getCampId());
         bookmark.setCreatedBookmarkDate(currentTime);
         bookmarkRepository.save(bookmark);

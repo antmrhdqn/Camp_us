@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface BookmarkService {
 
-    void saveBookmark(BookmarkRequest bookmarkRequest);
+    void saveBookmark(BookmarkRequest bookmarkRequest, Long userId);
 
     List<BookmarkDTO> getBookmark(Long userId);
 

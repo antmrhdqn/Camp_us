@@ -7,7 +7,6 @@ import java.time.LocalDateTime;
 @Getter
 public class BookmarkRequest {
 
-    private Long userId;
     private Long campId;
 
 }

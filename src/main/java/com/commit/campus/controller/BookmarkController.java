@@ -1,7 +1,9 @@
 package com.commit.campus.controller;
 
+import com.commit.campus.common.CustomResolver;
 import com.commit.campus.dto.BookmarkDTO;
 import com.commit.campus.dto.BookmarkRequest;
+import com.commit.campus.entity.User;
 import com.commit.campus.service.BookmarkService;
 import com.commit.campus.view.BookmarkView;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,13 +26,17 @@ public class BookmarkController {
     }
 
     @PostMapping
-    public ResponseEntity<Void> saveBookmark(@RequestBody BookmarkRequest bookmarkRequest) {
-        bookmarkService.saveBookmark(bookmarkRequest);
+    public ResponseEntity<Void> saveBookmark(@RequestBody BookmarkRequest bookmarkRequest, @CustomResolver User authenticationUser) {
+        Long userId = authenticationUser.getUserId();
+
+        bookmarkService.saveBookmark(bookmarkRequest, userId);
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<List<BookmarkView>> getBookmarkByUserId(@PathVariable Long userId) {
+    @GetMapping
+    public ResponseEntity<List<BookmarkView>> getBookmarkByUserId(@CustomResolver User authenticationUser) {
+        Long userId = authenticationUser.getUserId();
+
         List<BookmarkDTO> sortedBookmarkDTOs = bookmarkService.getBookmark(userId).stream()
                 .sorted((b1, b2) -> b2.getCreatedBookmarkDate().compareTo(b1.getCreatedBookmarkDate()))
                 .collect(Collectors.toList());
@@ -45,7 +51,9 @@ public class BookmarkController {
     }
 
     @DeleteMapping
-    public ResponseEntity<Void> deleteBookmarkByUserId(@RequestParam Long userId, @RequestParam Long campId) {
+    public ResponseEntity<Void> deleteBookmarkByUserId(@CustomResolver User authenticationUser, @RequestParam Long campId) {
+        Long userId = authenticationUser.getUserId();
+
         bookmarkService.deleteBookmark(userId, campId);
         return ResponseEntity.ok().build();
     }
