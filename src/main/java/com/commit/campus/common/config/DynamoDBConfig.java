@@ -26,13 +26,13 @@ public class DynamoDBConfig {
     @Value("${aws.dynamodb.secret-key}")
     private String secretKey;
 
+
     @Bean
     public DynamoDbClient dynamoDbClient() {
         return DynamoDbClient.builder()
-                .region(Region.of(region))  // 사용할 지역 설정
-                .credentialsProvider(ProfileCredentialsProvider.create())
-                .endpointOverride(URI.create("http://localhost:8000"))
-//                .endpointOverride(URI.create("http://54.180.206.213:8000")) // EC2 연결용
+                .region(Region.AP_NORTHEAST_2)
+                .credentialsProvider(DefaultCredentialsProvider.create())
+                .endpointOverride(URI.create("http://localhost:8000")) // AWS DynamoDB 연결 시 제거
                 .build();
     }
 
@@ -42,5 +42,4 @@ public class DynamoDBConfig {
                 .dynamoDbClient(dynamoDbClient)
                 .build();
     }
-
 }
