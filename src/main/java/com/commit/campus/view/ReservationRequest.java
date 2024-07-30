@@ -1,9 +1,14 @@
 package com.commit.campus.view;
 
+import lombok.Getter;
+import lombok.ToString;
+
 import java.time.LocalDateTime;
 import java.util.Date;
 
-public class ReservationView {
+@Getter
+@ToString
+public class ReservationRequest {
     private int userId;
     private long campId;
     private long campFacsId;
