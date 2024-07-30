@@ -31,7 +31,7 @@ public class MyReviewController {
 
     // 내 리뷰 정보 조회 TODO:레디스 캐시 사용
     @GetMapping
-    public ResponseEntity<Page<MyReviewView>> getMyReview(
+    public ResponseEntity<Page<MyReviewView>> getMyReviews(
             @PageableDefault(sort = "reviewCreatedDate") Pageable pageable) {
 
         long userId = 1; // TODO: 토큰에서 빼야 함
@@ -43,4 +43,5 @@ public class MyReviewController {
     }
 
     // 내 리뷰 정보 삭제
+
 }
