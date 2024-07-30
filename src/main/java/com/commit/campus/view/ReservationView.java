@@ -1,19 +1,9 @@
-package com.commit.campus.dto;
-
-import com.commit.campus.entity.User;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+package com.commit.campus.view;
 
 import java.time.LocalDateTime;
 import java.util.Date;
 
-@Getter
-@Setter
-@ToString
-public class ReservationDTO {
-
+public class ReservationView {
     private int userId;
     private long campId;
     private long campFacsId;
