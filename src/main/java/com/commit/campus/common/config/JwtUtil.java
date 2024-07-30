@@ -13,10 +13,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Collection;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Slf4j
 @Component
@@ -42,14 +39,14 @@ public class JwtUtil {
 
         Claims claims = parseClaims(token);
 
-        if (claims.get("auth") == null) {
+        // role 필드가 존재하지 않으면 예외 발생
+        if (claims.get("role") == null) {
             throw new RuntimeException("권한 정보가 없는 토큰입니다.");
         }
 
-        Collection<? extends GrantedAuthority> authorities =
-                Arrays.stream(claims.get("auth").toString().replace("[", "").replace("]", "").split(", "))	// ex: "ROLE_ADMIN"이랑 "ROLE_MEMBER"같은 문자열이 들어있는 문자열 배열
-                        .map(role -> new SimpleGrantedAuthority(role))   				// 문자열 배열에 들어있는 권한 문자열 마다 SimpleGrantedAuthority 객체로 만듦
-                        .collect(Collectors.toList());
+        // role 필드에서 권한 정보를 가져와서 SimpleGrantedAuthority 객체로 변환
+        String role = claims.get("role").toString();
+        List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(role));
 
         return new UsernamePasswordAuthenticationToken(userDetails, "", authorities);
     }
