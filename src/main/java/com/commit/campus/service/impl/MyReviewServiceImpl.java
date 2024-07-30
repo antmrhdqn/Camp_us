@@ -34,7 +34,7 @@ public class MyReviewServiceImpl implements MyReviewService {
     }
 
     @Override
-    public Page<ReviewDTO> getUserReviews(long userId, Pageable pageable) throws ReviewNotFoundException {
+    public Page<ReviewDTO> getMyReviews(long userId, Pageable pageable) throws ReviewNotFoundException {
 
         MyReview myReview = myReviewRepository.findById(userId)
                 .orElseThrow(() -> new ReviewNotFoundException("작성된 리뷰가 존재하지 않습니다."));

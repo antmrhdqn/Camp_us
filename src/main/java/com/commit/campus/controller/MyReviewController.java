@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/v1/myReview")
 public class MyReviewController {
@@ -36,7 +34,7 @@ public class MyReviewController {
 
         long userId = 1; // TODO: 토큰에서 빼야 함
 
-        Page<ReviewDTO> dtoPage = myReviewService.getUserReviews(userId, pageable);
+        Page<ReviewDTO> dtoPage = myReviewService.getMyReviews(userId, pageable);
 
         Page<MyReviewView> viewPage = dtoPage.map(reviewDTO -> modelMapper.map(reviewDTO, MyReviewView.class));
         return ResponseEntity.ok(viewPage);
