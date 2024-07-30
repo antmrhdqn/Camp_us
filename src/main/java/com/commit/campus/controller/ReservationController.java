@@ -3,10 +3,7 @@ package com.commit.campus.controller;
 import com.commit.campus.dto.ReservationDTO;
 import com.commit.campus.entity.Reservation;
 import com.commit.campus.service.ReservationService;
-import com.commit.campus.view.ReservationView;
-import io.lettuce.core.RedisClient;
-import io.lettuce.core.api.StatefulRedisConnection;
-import io.lettuce.core.api.sync.RedisCommands;
+import com.commit.campus.view.ReservationRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -33,17 +30,31 @@ public class ReservationController {
 
     // 예약 등록
     @PostMapping("/create")
-    public ResponseEntity<Void> createReservation(@RequestBody ReservationDTO reservationData) {
+    public ResponseEntity<Void> createReservation(@RequestBody ReservationRequest reservationRequest) {
 
-        String reservationKey = "reservation:someKey";
+        ReservationDTO reservationDTO = mapToReservationDTO(reservationRequest);
 
-        reservationService.createReservation(reservationData);
+        reservationService.createReservation(reservationDTO);
 
         // 고객이 예약 페이지에 접속한 시점에 예약 가능 현황을 하나 차감
         // 만료 시간을 설정하여 만료 전까지 예약 확정 요청이 들어오지 않으면 자동 취소(자동으로 예약 취소 api 요청 호출)
         // 만료 시간은 1일로 설정
 
         return ResponseEntity.ok().build();
+    }
+
+    private ReservationDTO mapToReservationDTO(ReservationRequest reservationRequest) {
+
+        ReservationDTO reservationDTO = new ReservationDTO();
+        reservationDTO.setUserId(reservationRequest.getUserId());
+        reservationDTO.setCampId(reservationRequest.getCampId());
+        reservationDTO.setCampFacsId(reservationRequest.getCampFacsId());
+        reservationDTO.setReservationDate(reservationRequest.getReservationDate());
+        reservationDTO.setEntryDate(reservationRequest.getEntryDate());
+        reservationDTO.setLeavingDate(reservationRequest.getLeavingDate());
+        reservationDTO.setGearRentalStatus(reservationRequest.getGearRentalStatus());
+
+        return reservationDTO;
     }
 
     // 예약 확정(결제)
