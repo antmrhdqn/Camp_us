@@ -248,7 +248,7 @@ public class OauthServiceImpl implements OauthService {
                     .compact();
             log.info("token:" + token);
             HttpServletResponse response = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
-            response.addHeader("token", token);
+            response.addHeader("Authorization", "Bearer " + token);
             response.addHeader("userId", userDetails.getUsername());
         }
     }
