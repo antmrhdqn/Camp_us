@@ -1,7 +1,9 @@
 package com.commit.campus.controller;
 
+import com.commit.campus.dto.ReservationDTO;
 import com.commit.campus.entity.Reservation;
 import com.commit.campus.service.ReservationService;
+import com.commit.campus.view.ReservationView;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
@@ -30,8 +32,12 @@ public class ReservationController {
     }
 
     // 예약 등록
-    @PostMapping("/")
-    public ResponseEntity<Void> createReservation() {
+    @PostMapping("/create")
+    public ResponseEntity<Void> createReservation(@RequestBody ReservationDTO reservationData) {
+
+        String reservationKey = "reservation:someKey";
+
+        reservationService.createReservation(reservationData);
 
         // 고객이 예약 페이지에 접속한 시점에 예약 가능 현황을 하나 차감
         // 만료 시간을 설정하여 만료 전까지 예약 확정 요청이 들어오지 않으면 자동 취소(자동으로 예약 취소 api 요청 호출)

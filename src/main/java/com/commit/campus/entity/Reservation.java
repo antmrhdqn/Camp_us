@@ -3,12 +3,13 @@ package com.commit.campus.entity;
 import lombok.Getter;
 import jakarta.persistence.*;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Date;
 
 @Entity
 @Getter
-public class Reservation {
+public class Reservation implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int reservationId;  // 예약 ID
