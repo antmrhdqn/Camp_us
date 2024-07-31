@@ -3,8 +3,10 @@ package com.commit.campus.controller;
 import com.commit.campus.common.CustomResolver;
 import com.commit.campus.dto.BookmarkDTO;
 import com.commit.campus.dto.BookmarkRequest;
+import com.commit.campus.dto.BookmarkedCampingDTO;
 import com.commit.campus.entity.User;
 import com.commit.campus.service.BookmarkService;
+import com.commit.campus.service.CampingService;
 import com.commit.campus.view.BookmarkView;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -19,10 +22,12 @@ import java.util.stream.Collectors;
 public class BookmarkController {
 
     private final BookmarkService bookmarkService;
+    private final CampingService campingService;
 
     @Autowired
-    public BookmarkController(BookmarkService bookmarkService) {
+    public BookmarkController(BookmarkService bookmarkService, CampingService campingService) {
         this.bookmarkService = bookmarkService;
+        this.campingService = campingService;
     }
 
     @PostMapping
@@ -42,11 +47,20 @@ public class BookmarkController {
                 .collect(Collectors.toList());
 
         List<BookmarkView> bookmarkViews = sortedBookmarkDTOs.stream()
-                .map(bookmarkDTO -> BookmarkView.builder()
-                                                .userId(bookmarkDTO.getUserId())
-                                                .campId(bookmarkDTO.getCampId())
-                                                .build())
+                .map(bookmarkDTO -> {
+                    BookmarkedCampingDTO campingData = campingService.getBookmarkedCamping(bookmarkDTO.getCampId());
+                    return BookmarkView.builder()
+                            .campName(Optional.ofNullable(campingData.getCampName()).orElse(""))
+                            .doName(campingData.getDoName())
+                            .sigunguName(campingData.getSigunguName())
+                            .postCode(campingData.getPostCode())
+                            .induty(Optional.ofNullable(campingData.getInduty()).orElse(""))
+                            .firstImageUrl(Optional.ofNullable(campingData.getFirstImageUrl()).orElse(""))
+                            .build();
+                })
                 .collect(Collectors.toList());
+
+
         return ResponseEntity.status(HttpStatus.OK).body(bookmarkViews);
     }
 
