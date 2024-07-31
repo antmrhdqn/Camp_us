@@ -42,7 +42,8 @@ public class ReservationController {
 
             이처럼 requestBody에 DTO를 사용하지 않고 별도의 클래스를 정의하여 사용해도 괜찮은지 궁금합니다.
         */
-        ReservationDTO reservationDTO = mapToReservationDTO(reservationRequest);
+        LocalDateTime reservationDate = LocalDateTime.now();
+        ReservationDTO reservationDTO = mapToReservationDTO(reservationDate, reservationRequest);
 
         String reservationId = reservationService.createReservation(reservationDTO);
 
@@ -79,9 +80,7 @@ public class ReservationController {
     }
 
 
-    private ReservationDTO mapToReservationDTO(ReservationRequest reservationRequest) {
-
-        LocalDateTime reservationDate = LocalDateTime.now();
+    private ReservationDTO mapToReservationDTO(LocalDateTime reservationDate, ReservationRequest reservationRequest) {
 
         ReservationDTO reservationDTO = new ReservationDTO();
         reservationDTO.setUserId(reservationRequest.getUserId());
