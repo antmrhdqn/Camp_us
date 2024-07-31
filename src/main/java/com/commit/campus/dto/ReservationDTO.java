@@ -1,7 +1,5 @@
 package com.commit.campus.dto;
 
-import com.commit.campus.entity.User;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -14,6 +12,7 @@ import java.util.Date;
 @ToString
 public class ReservationDTO {
 
+    private String reservationId;
     private int userId;
     private long campId;
     private long campFacsId;
