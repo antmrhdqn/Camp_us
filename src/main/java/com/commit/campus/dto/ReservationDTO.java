@@ -13,9 +13,9 @@ import java.util.Date;
 public class ReservationDTO {
 
     private String reservationId;
-    private int userId;
-    private long campId;
-    private long campFacsId;
+    private Integer userId;
+    private Long campId;
+    private Long campFacsId;
     private LocalDateTime reservationDate;
     private Date entryDate;
     private Date leavingDate;
