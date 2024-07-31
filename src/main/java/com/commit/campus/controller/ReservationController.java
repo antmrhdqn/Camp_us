@@ -23,11 +23,6 @@ public class ReservationController {
         this.reservationService = reservationService;
     }
 
-    @GetMapping("/redis")
-    public void connectToRedis() {
-
-    }
-
     // 예약 등록
     @PostMapping("/create")
     public ResponseEntity<Void> createReservation(@RequestBody ReservationRequest reservationRequest) {
@@ -41,20 +36,6 @@ public class ReservationController {
         // 만료 시간은 1일로 설정
 
         return ResponseEntity.ok().build();
-    }
-
-    private ReservationDTO mapToReservationDTO(ReservationRequest reservationRequest) {
-
-        ReservationDTO reservationDTO = new ReservationDTO();
-        reservationDTO.setUserId(reservationRequest.getUserId());
-        reservationDTO.setCampId(reservationRequest.getCampId());
-        reservationDTO.setCampFacsId(reservationRequest.getCampFacsId());
-        reservationDTO.setReservationDate(reservationRequest.getReservationDate());
-        reservationDTO.setEntryDate(reservationRequest.getEntryDate());
-        reservationDTO.setLeavingDate(reservationRequest.getLeavingDate());
-        reservationDTO.setGearRentalStatus(reservationRequest.getGearRentalStatus());
-
-        return reservationDTO;
     }
 
     // 예약 확정(결제)
@@ -86,5 +67,20 @@ public class ReservationController {
         // 예약 히스토리의 상태값 변경
 
         return ResponseEntity.ok().build();
+    }
+
+
+    private ReservationDTO mapToReservationDTO(ReservationRequest reservationRequest) {
+
+        ReservationDTO reservationDTO = new ReservationDTO();
+        reservationDTO.setUserId(reservationRequest.getUserId());
+        reservationDTO.setCampId(reservationRequest.getCampId());
+        reservationDTO.setCampFacsId(reservationRequest.getCampFacsId());
+        reservationDTO.setReservationDate(reservationRequest.getReservationDate());
+        reservationDTO.setEntryDate(reservationRequest.getEntryDate());
+        reservationDTO.setLeavingDate(reservationRequest.getLeavingDate());
+        reservationDTO.setGearRentalStatus(reservationRequest.getGearRentalStatus());
+
+        return reservationDTO;
     }
 }
