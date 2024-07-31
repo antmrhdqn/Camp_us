@@ -14,7 +14,6 @@ public class BookmarkView {
     private String induty;
     private String firstImageUrl;
 
-    @Builder
     public BookmarkView(String campName, String doName, String sigunguName, String postCode, String induty, String firstImageUrl) {
         this.campName = campName;
         this.doName = doName;

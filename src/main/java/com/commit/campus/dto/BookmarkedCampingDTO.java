@@ -14,7 +14,6 @@ public class BookmarkedCampingDTO {
     private String induty;
     private String firstImageUrl;
 
-    @Builder
     public BookmarkedCampingDTO(String campName, String doName, String sigunguName, String postCode, String induty, String firstImageUrl) {
         this.campName = campName;
         this.doName = doName;
