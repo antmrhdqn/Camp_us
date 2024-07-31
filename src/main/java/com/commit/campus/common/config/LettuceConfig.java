@@ -32,8 +32,16 @@ public class LettuceConfig {
     }
 
     @Bean
+    // stateful vs stateless 차이 정리
+    // https://velog.io/@adc0612/stateful%EA%B3%BC-stateless-%EC%B0%A8%EC%9D%B4-7tfkp7a4
     public RedisAsyncCommands<String, String> redisAsyncCommands(StatefulRedisConnection<String, String> connection) {
         // 비동기 명령어 객체 생성
         return connection.async();      // 동기인 경우 connection.sync();
+    }
+
+    @Bean
+    public RedisCommands<String, String> redissyncCommands(StatefulRedisConnection<String, String> connection) {
+        // 동기 명령어 객체 생성
+        return connection.sync();
     }
 }
