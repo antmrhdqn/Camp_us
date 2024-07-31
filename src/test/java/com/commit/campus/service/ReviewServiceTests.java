@@ -19,8 +19,10 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,9 +51,9 @@ class ReviewServiceTests {
         LocalDateTime now = LocalDateTime.now();
 
         review = Review.builder()
-                .reviewId(1L)  // Long 타입으로 지정
-                .campId(1L)  // Long 타입으로 지정
-                .userId(101L)  // Long 타입으로 지정
+                .reviewId(1L)
+                .campId(1L)
+                .userId(101L)
                 .reviewContent("리뷰 테스트")
                 .rating((byte) 5)
                 .reviewCreatedDate(now)
@@ -60,9 +62,9 @@ class ReviewServiceTests {
                 .build();
 
         reviewDTO = new ReviewDTO();
-        reviewDTO.setReviewId(1L);  // Long 타입으로 지정
-        reviewDTO.setCampId(1L);  // Long 타입으로 지정
-        reviewDTO.setUserId(101L);  // Long 타입으로 지정
+        reviewDTO.setReviewId(1L);
+        reviewDTO.setCampId(1L);
+        reviewDTO.setUserId(101L);
         reviewDTO.setReviewContent("리뷰 테스트");
         reviewDTO.setRating((byte) 5);
         reviewDTO.setReviewImageUrl("image1.jpg");
@@ -71,22 +73,25 @@ class ReviewServiceTests {
     @Test
     void 캠핑장_리뷰_조회() {
         // Given
-        var pageable = PageRequest.of(0, 10);
-        var reviewPage = new PageImpl<>(List.of(review), pageable, 1);
+        var pageable = mock(Pageable.class);
+        var reviewPage = new PageImpl<>(Arrays.asList(review));
 
-        when(reviewRepository.findByCampId(1L, pageable)).thenReturn(reviewPage);  // Long 타입으로 지정
+        when(reviewRepository.findByCampId(1L, pageable)).thenReturn(reviewPage);
         when(modelMapper.map(any(Review.class), eq(ReviewDTO.class))).thenReturn(reviewDTO);
-        when(userRepository.findNicknameByUserId(anyLong())).thenReturn("User1");
+        when(userRepository.findNicknameByUserId(anyLong())).thenReturn("nickname");
 
         // When
-        Page<ReviewDTO> result = reviewService.getReviewsByCampId(1L, pageable);  // Long 타입으로 지정
+        Page<ReviewDTO> result = reviewService.getReviewsByCampId(1L, pageable);
 
         // Then
         assertThat(result).isNotNull();
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0))
                 .extracting("reviewId", "campId", "userId", "reviewContent", "rating", "reviewImageUrl", "userNickname")
-                .containsExactly(1L, 1L, 101L, "리뷰 테스트", (byte) 5, "image1.jpg", "User1");  // Long 타입으로 지정
+                .containsExactly(1L, 1L, 101L, "리뷰 테스트", (byte) 5, "image1.jpg", "nickname");
+
+        verify(reviewRepository).findByCampId(1L, pageable);
+        verify(userRepository).findNicknameByUserId(1L);
     }
 
     @Test
@@ -95,10 +100,10 @@ class ReviewServiceTests {
         var pageable = PageRequest.of(0, 10);
         var reviewPage = new PageImpl<Review>(List.of(), pageable, 0);
 
-        when(reviewRepository.findByCampId(1L, pageable)).thenReturn(reviewPage);  // Long 타입으로 지정
+        when(reviewRepository.findByCampId(1L, pageable)).thenReturn(reviewPage);
 
         // When
-        Page<ReviewDTO> result = reviewService.getReviewsByCampId(1L, pageable);  // Long 타입으로 지정
+        Page<ReviewDTO> result = reviewService.getReviewsByCampId(1L, pageable);
 
         // Then
         assertThat(result).isNotNull();
