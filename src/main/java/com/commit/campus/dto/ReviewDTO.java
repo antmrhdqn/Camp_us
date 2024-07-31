@@ -11,6 +11,7 @@ public class ReviewDTO {
     private long reviewId;
     private long campId;
     private long userId;
+    private String userNickname;
     private String reviewContent;
     private byte rating;
     private LocalDateTime reviewCreatedDate;

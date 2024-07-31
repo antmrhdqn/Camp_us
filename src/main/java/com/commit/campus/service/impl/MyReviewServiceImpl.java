@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,7 +43,7 @@ public class MyReviewServiceImpl implements MyReviewService {
     public Page<ReviewDTO> getMyReviews(long userId, Pageable pageable) throws ReviewNotFoundException {
 
         MyReview myReview = myReviewRepository.findById(userId)
-                .orElseThrow(() -> new ReviewNotFoundException("작성된 리뷰가 존재하지 않습니다."));
+                .orElseThrow(() -> new ReviewNotFoundException("작성된 리뷰가 존재하지 않습니다.", HttpStatus.NOT_FOUND));
 
         List<Long> reviewIds = myReview.getReviewIds();
 
@@ -57,7 +58,7 @@ public class MyReviewServiceImpl implements MyReviewService {
     public Page<CampingDTO> getReviewedCampings(long userId, Pageable pageable) throws ReviewNotFoundException {
 
         MyReview myReview = myReviewRepository.findById(userId)
-                .orElseThrow(() -> new ReviewNotFoundException("작성된 리뷰가 존재하지 않습니다."));
+                .orElseThrow(() -> new ReviewNotFoundException("작성된 리뷰가 존재하지 않습니다.", HttpStatus.NOT_FOUND));
 
         List<Long> reviewIds = myReview.getReviewIds();
 

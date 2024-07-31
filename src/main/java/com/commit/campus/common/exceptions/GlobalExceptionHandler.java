@@ -11,7 +11,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ReviewAlreadyExistsException.class)
     public ResponseEntity<String> handleReviewAlreadyExists(ReviewAlreadyExistsException ex) {
         return ResponseEntity
-                .status(HttpStatus.CONFLICT)
+                .status(ex.getStatus())
                 .body(ex.getMessage());
     }
 
