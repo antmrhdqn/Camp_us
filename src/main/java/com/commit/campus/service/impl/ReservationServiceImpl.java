@@ -8,6 +8,8 @@ import io.lettuce.core.api.async.RedisAsyncCommands;
 import io.lettuce.core.api.sync.RedisCommands;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -20,6 +22,7 @@ import java.util.Map;
 public class ReservationServiceImpl implements ReservationService {
 
     private final ReservationRepository reservationRepository;
+    private final RedisTemplate redisTemplate;
     private final RedisClient redisClient;
     private final RedisAsyncCommands redisAsyncCommands;
     private final RedisCommands redisCommands;
@@ -28,13 +31,34 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Autowired
     public ReservationServiceImpl(ReservationRepository reservationRepository,
+                                  RedisTemplate redisTemplate,
                                   RedisClient redisClient,
                                   RedisAsyncCommands redisAsyncCommands,
                                   RedisCommands redisCommands) {
         this.reservationRepository = reservationRepository;
+        this.redisTemplate = redisTemplate;
         this.redisClient = redisClient;
         this.redisAsyncCommands = redisAsyncCommands;
         this.redisCommands = redisCommands;
+    }
+
+    @Override
+    public String redisHealthCheck() {
+        try {
+            // 간단한 ping 명령을 사용하여 Redis와의 연결을 확인
+            ValueOperations<String, String> opsForValue = redisTemplate.opsForValue();
+            opsForValue.set("health_check", "OK");
+            String result = opsForValue.get("health_check");
+
+            if ("OK".equals(result)) {
+                return "레디스 실행중 ~,~";
+            } else {
+                return "레디스 서버 연결 실패!";
+            }
+
+        } catch (Exception e) {
+            return "연결 실패했따: " + e.getMessage();
+        }
     }
 
     @Override
@@ -78,15 +102,15 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public ReservationDTO confirmReservation(String reservationId) {
 
-//        String key = "reservationInfo:" + reservationId;
-//
-//        Map<String, String> reservationInfo = redisCommands.hgetall(key);
-//
-//        if (reservationInfo == null) {
-//            return null;
-//        }
-//
-//        reservationInfo.forEach((k, value) -> System.out.println("Key: " + k + ", Value: " + value));
+        String key = "reservationInfo:" + reservationId;
+
+        Map<String, String> reservationInfo = redisCommands.hgetall(key);
+
+        if (reservationInfo == null) {
+            return null;
+        }
+
+        reservationInfo.forEach((k, value) -> System.out.println("Key: " + k + ", Value: " + value));
 
 //        ReservationDTO reservationDTO = new ReservationDTO();
 //        reservationDTO.setReservationId(reservationId);

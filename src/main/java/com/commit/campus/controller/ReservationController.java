@@ -7,6 +7,7 @@ import com.commit.campus.view.ReservationRequest;
 import com.commit.campus.view.ReservationResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,19 +25,24 @@ public class ReservationController {
         this.reservationService = reservationService;
     }
 
+    @GetMapping("/redis_check")
+    public String redisCheck() {
+        return reservationService.redisHealthCheck();
+    }
+
     // 예약 등록
     @PostMapping("/create")
-    public ResponseEntity<ReservationResponse> createReservation(@RequestBody ReservationRequest reservationRequest) {
+    public ResponseEntity<String> createReservation(@RequestBody ReservationRequest reservationRequest) {
 
         ReservationDTO reservationDTO = mapToReservationDTO(reservationRequest);
 
-        reservationService.createReservation(reservationDTO);
+        String reservationId = reservationService.createReservation(reservationDTO);
 
         // 고객이 예약 페이지에 접속한 시점에 예약 가능 현황을 하나 차감
         // 만료 시간을 설정하여 만료 전까지 예약 확정 요청이 들어오지 않으면 자동 취소(자동으로 예약 취소 api 요청 호출)
         // 만료 시간은 1일로 설정
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.CREATED).body(reservationId);
     }
 
     // 예약 확정(결제)
