@@ -15,11 +15,11 @@ public class Reservation implements Serializable {
     private int reservationId;  // 예약 ID
 
     @ManyToOne
-    @JoinColumn(name = "camp_facs_id")
+    @JoinColumn(name = "camp_facs_id", insertable = false, updatable = false)
     private CampingFacilities campingFacilities;  // 캠핑장 시설 ID
 
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
     private User user;  // 사용자 ID
 
     private LocalDateTime reservationDate;  // 예약 날짜
