@@ -21,4 +21,8 @@ public class CampReserveApplication {
 		return new ModelMapper();
 	}
 
+	@Bean
+	public static BCryptPasswordEncoder bCryptPasswordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
 }
