@@ -40,6 +40,7 @@ public class ReservationServiceImpl implements ReservationService {
 
         String key = "reservation:" + reservationId;
 
+        // 저장 실패한 경우 예외 처리 추가하기
         redisAsyncCommands.hset(key, "reservationId", reservationId);
         redisAsyncCommands.hset(key, "user", reservationDTO.getUserId());
         redisAsyncCommands.hset(key, "campId", reservationDTO.getCampId());
