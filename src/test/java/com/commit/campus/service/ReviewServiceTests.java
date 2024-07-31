@@ -68,5 +68,55 @@ class ReviewServiceTests {
         reviewDTO.setReviewImageUrl("image1.jpg");
     }
 
+    @Test
+    void 캠핑장_리뷰_조회() {
+        // Given
+        var pageable = PageRequest.of(0, 10);
+        var reviewPage = new PageImpl<>(List.of(review), pageable, 1);
 
+        when(reviewRepository.findByCampId(1L, pageable)).thenReturn(reviewPage);  // Long 타입으로 지정
+        when(modelMapper.map(any(Review.class), eq(ReviewDTO.class))).thenReturn(reviewDTO);
+        when(userRepository.findNicknameByUserId(anyLong())).thenReturn("User1");
+
+        // When
+        Page<ReviewDTO> result = reviewService.getReviewsByCampId(1L, pageable);  // Long 타입으로 지정
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(1);
+        assertThat(result.getContent().get(0))
+                .extracting("reviewId", "campId", "userId", "reviewContent", "rating", "reviewImageUrl", "userNickname")
+                .containsExactly(1L, 1L, 101L, "리뷰 테스트", (byte) 5, "image1.jpg", "User1");  // Long 타입으로 지정
+    }
+
+    @Test
+    void 캠핑장_정상_등록() {
+        // Given
+        var pageable = PageRequest.of(0, 10);
+        var reviewPage = new PageImpl<Review>(List.of(), pageable, 0);
+
+        when(reviewRepository.findByCampId(1L, pageable)).thenReturn(reviewPage);  // Long 타입으로 지정
+
+        // When
+        Page<ReviewDTO> result = reviewService.getReviewsByCampId(1L, pageable);  // Long 타입으로 지정
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).isEmpty();
+    }
+
+    @Test
+    void 캠핑장_리뷰_이미_존재_예외() {
+        // Given
+        when(reviewRepository.existsByUserIdAndCampId(reviewDTO.getUserId(), reviewDTO.getCampId())).thenReturn(true);
+
+        // When & Then
+        assertThatThrownBy(() -> reviewService.createReview(reviewDTO))
+                .isInstanceOf(ReviewAlreadyExistsException.class)
+                .hasMessageContaining("이미 이 캠핑장에 대한 리뷰를 작성하셨습니다.");
+
+        verify(reviewRepository, never()).save(any(Review.class));
+        verify(myReviewRepository, never()).save(any(MyReview.class));
+        verify(ratingSummaryRepository, never()).ratingUpdate(anyLong(), anyByte());
+    }
 }
