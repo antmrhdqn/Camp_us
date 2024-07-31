@@ -3,8 +3,6 @@ package com.commit.campus.service.impl;
 import com.commit.campus.dto.ReservationDTO;
 import com.commit.campus.repository.ReservationRepository;
 import com.commit.campus.service.ReservationService;
-import io.lettuce.core.RedisClient;
-import io.lettuce.core.api.async.RedisAsyncCommands;
 import io.lettuce.core.api.sync.RedisCommands;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashMap;
 import java.util.Map;
 
 @Slf4j
@@ -23,8 +20,6 @@ public class ReservationServiceImpl implements ReservationService {
 
     private final ReservationRepository reservationRepository;
     private final RedisTemplate redisTemplate;
-    private final RedisClient redisClient;
-    private final RedisAsyncCommands redisAsyncCommands;
     private final RedisCommands redisCommands;
 
     private static long index = 1;
@@ -32,20 +27,15 @@ public class ReservationServiceImpl implements ReservationService {
     @Autowired
     public ReservationServiceImpl(ReservationRepository reservationRepository,
                                   RedisTemplate redisTemplate,
-                                  RedisClient redisClient,
-                                  RedisAsyncCommands redisAsyncCommands,
                                   RedisCommands redisCommands) {
         this.reservationRepository = reservationRepository;
         this.redisTemplate = redisTemplate;
-        this.redisClient = redisClient;
-        this.redisAsyncCommands = redisAsyncCommands;
         this.redisCommands = redisCommands;
     }
 
     @Override
     public String redisHealthCheck() {
         try {
-            // 간단한 ping 명령을 사용하여 Redis와의 연결을 확인
             ValueOperations<String, String> opsForValue = redisTemplate.opsForValue();
             opsForValue.set("health_check", "OK");
             String result = opsForValue.get("health_check");
@@ -95,6 +85,9 @@ public class ReservationServiceImpl implements ReservationService {
 
             log.info("redis에 예약 내역 저장 완료");
 
+            // 만료 시간 2시간 (= 7200초)
+            redisCommands.expire(key, 7200);
+
         } catch (RuntimeException e) {
             throw new RuntimeException("redis에 저장이 되지 않음");
         }
@@ -131,7 +124,7 @@ public class ReservationServiceImpl implements ReservationService {
     // redis에 해쉬 키로 저장할 예약아이디 생성 (예약일자 + 6자리 인덱스값)
     private synchronized String createReservationId(LocalDateTime reservationDate) {
 
-        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyyMMdd");
+        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyyMMddhhmmss");
         String formattedDate = reservationDate.format(dateFormat);
 
         String indexCode = String.format("%06d", index);
