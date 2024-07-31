@@ -1,15 +1,15 @@
 package com.commit.campus.entity;
 
-import lombok.Getter;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import lombok.Getter;
 import lombok.Setter;
-
-import java.util.Date;
 
 @Entity
 @Getter
 @Setter
 public class CampingFacilities {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "camp_facs_id")
@@ -42,12 +42,13 @@ public class CampingFacilities {
     @Column(name = "personal_caravan_status")
     private String personalCaravanStatus;
 
-    // fk
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "camp_id", insertable = false, updatable = false)
+    @JsonBackReference
     private Camping campingEntity;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "facs_type_id", insertable = false, updatable = false)
     private FacilityType facilityTypeEntity;
 }
+
