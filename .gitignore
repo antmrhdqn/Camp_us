@@ -15,7 +15,7 @@ local.properties
 .recommenders
 
 # idea파일
-.idea
+.idea/
 
 # yml 파일
 *.yml

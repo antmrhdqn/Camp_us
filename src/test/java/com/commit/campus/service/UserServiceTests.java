@@ -4,6 +4,7 @@ import com.commit.campus.dto.SignUpUserRequest;
 import com.commit.campus.entity.User;
 import com.commit.campus.entity.UserStatusHistory;
 import com.commit.campus.repository.UserStatusHistoryRepository;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ public class UserServiceTests {
     public UserServiceTests(UserService userService, UserStatusHistoryRepository userStatusHistoryRepository) {
         this.userService = userService;
         this.userStatusHistoryRepository = userStatusHistoryRepository;
+
     }
 
     @Test
@@ -46,5 +48,24 @@ public class UserServiceTests {
         UserStatusHistory history = userStatusHistoryRepository.findTopByUserOrderByModifiedDateDesc(updatedUser);
         Assertions.assertNotNull(history);
         Assertions.assertEquals(history.getUserStatusType().getStatusTypeId(),2);
+    }
+
+
+    @Test
+    @Transactional
+    void 회원가입_테스트() {
+        //given
+        SignUpUserRequest userRequest = SignUpUserRequest.builder()
+                .email("testtest@naver.com")
+                .password("test1234")
+                .name("테스트")
+                .nickname("별명")
+                .build();
+
+        //when
+        userService.signUpUser(userRequest);
+
+        //then
+        Assertions.assertEquals(userRequest.getEmail(), userService.findUserByEmail("testtest@naver.com").getEmail());
     }
 }
