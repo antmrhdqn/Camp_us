@@ -27,10 +27,10 @@ public class ReviewController {
     }
 
     // 캠핑장 리뷰 조회
-    @GetMapping("/camping/{campId}")
+    @GetMapping()
     public ResponseEntity<Page<ReviewView>> getReviewsByCampId(
-            @PathVariable String campId,
-            @PageableDefault(sort = "reviewCreatedDate", direction = Sort.Direction.DESC)Pageable pageable) {
+            @RequestParam("campId") long campId,
+            @PageableDefault(sort = "reviewCreatedDate", direction = Sort.Direction.DESC) Pageable pageable) {
 
         Page<ReviewDTO> dtoPage = reviewService.getReviewsByCampId(campId, pageable);
         Page<ReviewView> viewPage = dtoPage.map(reviewDTO -> modelMapper.map(reviewDTO, ReviewView.class));
@@ -55,7 +55,7 @@ public class ReviewController {
 
     // 리뷰 수정
     @PutMapping("/{reviewId}")
-    public ResponseEntity<Void> updateReview(@PathVariable String reviewId, @RequestBody ReviewRequest reviewRequest) {
+    public ResponseEntity<Void> updateReview(@PathVariable long reviewId, @RequestBody ReviewRequest reviewRequest) {
 
         ReviewDTO reviewDTO = modelMapper.map(reviewRequest, ReviewDTO.class);
         reviewService.updateReview(reviewId, reviewDTO);
@@ -66,7 +66,7 @@ public class ReviewController {
     // 리뷰 삭제
     @DeleteMapping("/{reviewId}")
 
-    public ResponseEntity<Void> deleteReview(@PathVariable String reviewId) {
+    public ResponseEntity<Void> deleteReview(@PathVariable long reviewId) {
 
         reviewService.deleteReview(reviewId);
 

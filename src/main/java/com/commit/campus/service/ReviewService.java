@@ -6,11 +6,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface ReviewService {
-    Page<ReviewDTO> getReviewsByCampId(String campingSiteId, Pageable pageable);
+    Page<ReviewDTO> getReviewsByCampId(long campId, Pageable pageable);
 
     void createReview(ReviewDTO reviewDTO) throws ReviewAlreadyExistsException;
 
-    void updateReview(String reviewId, ReviewDTO reviewDTO);
+    void updateReview(long reviewId, ReviewDTO reviewDTO);
 
-    void deleteReview(String reviewId);
+    void deleteReview(long reviewId);
 }
