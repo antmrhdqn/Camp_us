@@ -18,7 +18,6 @@ import java.util.List;
 public class MyReview {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private long userId;
 
