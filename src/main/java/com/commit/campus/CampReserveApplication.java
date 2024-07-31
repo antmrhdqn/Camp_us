@@ -12,6 +12,7 @@ import org.springframework.context.annotation.Bean;
 public class CampReserveApplication {
 
 	public static void main(String[] args) {
+		System.setProperty("spring.devtools.restart.enabled", "false");
 		SpringApplication.run(CampReserveApplication.class, args);
 	}
 

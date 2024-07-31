@@ -1,5 +1,7 @@
 package com.commit.campus.common.config;
 
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.DefaultCredentialsProvider;
@@ -11,6 +13,19 @@ import java.net.URI;
 
 @Configuration
 public class DynamoDBConfig {
+
+    @Value("${aws.dynamodb.endpoint}")
+    private String endPoint;
+
+    @Value("${aws.region}")
+    private String region;
+
+    @Value("${aws.dynamodb.access-key}")
+    private String accessKey;
+
+    @Value("${aws.dynamodb.secret-key}")
+    private String secretKey;
+
 
     @Bean
     public DynamoDbClient dynamoDbClient() {
