@@ -4,6 +4,7 @@ import com.commit.campus.dto.ReservationDTO;
 import com.commit.campus.entity.Reservation;
 import com.commit.campus.service.ReservationService;
 import com.commit.campus.view.ReservationRequest;
+import com.commit.campus.view.ReservationResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +26,7 @@ public class ReservationController {
 
     // 예약 등록
     @PostMapping("/create")
-    public ResponseEntity<Void> createReservation(@RequestBody ReservationRequest reservationRequest) {
+    public ResponseEntity<ReservationResponse> createReservation(@RequestBody ReservationRequest reservationRequest) {
 
         ReservationDTO reservationDTO = mapToReservationDTO(reservationRequest);
 
@@ -39,8 +40,11 @@ public class ReservationController {
     }
 
     // 예약 확정(결제)
-    @PutMapping("/confirm")
-    public ResponseEntity<Void> finalizeReservation(@RequestBody Reservation reservation) {
+    @PostMapping("/confirm")
+    public ResponseEntity<ReservationResponse> finalizeReservation(@RequestParam String reservationId) {
+
+        reservationService.confirmReservation(reservationId);
+
 
         // 프론트에서 결제 버튼(기능은 구현x)을 누르면 예약 확정이 되며 만료 시간 해제됨.
         // 그밖에 변동 사항은 없음.
