@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -34,13 +35,16 @@ public class ReservationController {
     @PostMapping("/create")
     public ResponseEntity<String> createReservation(@RequestBody ReservationRequest reservationRequest) {
 
+        /* 질문.
+            코드 리뷰 중 RequestBody에 reservationDTO를 쓰지 않고 reservationRequest를 따로 생성해서 사용하는 이유가 있는지 질문이 들어왔는데,
+            request는 사용자가 전달해 주는 정보만 따로 담을 용도로 생성하였고,
+            reservationDTO에는 request 정보 + 예약 내역 관리를 위해 저장해야할 내용을 추가적으로 작성하였습니다.
+
+            이처럼 requestBody에 DTO를 사용하지 않고 별도의 클래스를 정의하여 사용해도 괜찮은지 궁금합니다.
+        */
         ReservationDTO reservationDTO = mapToReservationDTO(reservationRequest);
 
         String reservationId = reservationService.createReservation(reservationDTO);
-
-        // 고객이 예약 페이지에 접속한 시점에 예약 가능 현황을 하나 차감
-        // 만료 시간을 설정하여 만료 전까지 예약 확정 요청이 들어오지 않으면 자동 취소(자동으로 예약 취소 api 요청 호출)
-        // 만료 시간은 1일로 설정
 
         return ResponseEntity.status(HttpStatus.CREATED).body(reservationId);
     }
@@ -50,11 +54,6 @@ public class ReservationController {
     public ResponseEntity<ReservationResponse> finalizeReservation(@RequestParam String reservationId) {
 
         reservationService.confirmReservation(reservationId);
-
-
-        // 프론트에서 결제 버튼(기능은 구현x)을 누르면 예약 확정이 되며 만료 시간 해제됨.
-        // 그밖에 변동 사항은 없음.
-        // +) 추후 이 시점에 고객에게 예약 확정 알림 발송
 
         return ResponseEntity.ok().build();
     }
@@ -82,11 +81,13 @@ public class ReservationController {
 
     private ReservationDTO mapToReservationDTO(ReservationRequest reservationRequest) {
 
+        LocalDateTime reservationDate = LocalDateTime.now();
+
         ReservationDTO reservationDTO = new ReservationDTO();
         reservationDTO.setUserId(reservationRequest.getUserId());
         reservationDTO.setCampId(reservationRequest.getCampId());
         reservationDTO.setCampFacsId(reservationRequest.getCampFacsId());
-        reservationDTO.setReservationDate(reservationRequest.getReservationDate());
+        reservationDTO.setReservationDate(reservationDate);
         reservationDTO.setEntryDate(reservationRequest.getEntryDate());
         reservationDTO.setLeavingDate(reservationRequest.getLeavingDate());
         reservationDTO.setGearRentalStatus(reservationRequest.getGearRentalStatus());
