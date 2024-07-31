@@ -7,6 +7,7 @@ import com.commit.campus.entity.Review;
 import com.commit.campus.repository.MyReviewRepository;
 import com.commit.campus.repository.RatingSummaryRepository;
 import com.commit.campus.repository.ReviewRepository;
+import com.commit.campus.repository.UserRepository;
 import com.commit.campus.service.ReviewService;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -25,19 +26,35 @@ public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final MyReviewRepository myReviewRepository;
+    private final UserRepository userRepository;
     private final RatingSummaryRepository ratingSummaryRepository;
     private final ModelMapper modelMapper;
 
-    public ReviewServiceImpl(ReviewRepository reviewRepository, MyReviewRepository myReviewRepository, RatingSummaryRepository ratingSummaryRepository, ModelMapper modelMapper) {
+    public ReviewServiceImpl(ReviewRepository reviewRepository, MyReviewRepository myReviewRepository, UserRepository userRepository, RatingSummaryRepository ratingSummaryRepository, ModelMapper modelMapper) {
         this.reviewRepository = reviewRepository;
         this.myReviewRepository = myReviewRepository;
+        this.userRepository = userRepository;
         this.ratingSummaryRepository = ratingSummaryRepository;
         this.modelMapper = modelMapper;
     }
 
     @Override
-    public Page<ReviewDTO> getReviewsByCampId(String campingSiteId, Pageable pageable) {
-        return null;
+    public Page<ReviewDTO> getReviewsByCampId(long campId, Pageable pageable) {
+        log.info("서비스 진입");
+        Page<Review> reviewPage = reviewRepository.findByCampId(campId, pageable);
+        log.info("반환 확인: {}", reviewPage);
+
+        return reviewPage.map(review -> {
+            ReviewDTO reviewDTO = modelMapper.map(review, ReviewDTO.class);
+            log.info("DTO 확인: {}", reviewDTO);
+            long userId = review.getUserId();
+            log.info("id 확인: {}", userId);
+            String userNickname = userRepository.findNicknameByUserId(userId);
+            log.info("nickname 확인: {}", userNickname);
+            reviewDTO.setUserNickname(userNickname);
+            log.info("DTO 확인: {}", reviewDTO);
+            return reviewDTO;
+        });
     }
 
     @Override
@@ -73,11 +90,11 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public void updateReview(String reviewId, ReviewDTO reviewDTO) {
+    public void updateReview(long reviewId, ReviewDTO reviewDTO) {
     }
 
     @Override
-    public void deleteReview(String reviewId) {
+    public void deleteReview(long reviewId) {
 
     }
 }
