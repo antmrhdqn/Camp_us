@@ -1,4 +1,9 @@
 package com.commit.campus.service;
 
-public class ReservationService {
+import com.commit.campus.dto.ReservationDTO;
+
+public interface ReservationService {
+    String redisHealthCheck();
+    String createReservation(ReservationDTO reservationDTO);
+    ReservationDTO confirmReservation(String reservationId);
 }

@@ -1,7 +1,9 @@
 package com.commit.campus.entity;
 
+import lombok.AccessLevel;
 import lombok.Getter;
 import jakarta.persistence.*;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
@@ -11,6 +13,7 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
+//@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Camping implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

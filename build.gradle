@@ -53,29 +53,28 @@ dependencies {
 
 	//json
 	implementation 'com.google.code.gson:gson:2.8.9'
-//	implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.0'
-//	implementation 'com.fasterxml.jackson.core:jackson-core:2.14.0'
-//	implementation 'com.fasterxml.jackson.core:jackson-annotations:2.14.0'
 
 	// DynamoDB
 	implementation 'software.amazon.awssdk:dynamodb-enhanced:2.26.19'
 
-	// Spring data redis
-	implementation('org.springframework.boot:spring-boot-starter-data-redis')
-
-	// redis lettuce
-	implementation 'io.lettuce:lettuce-core:6.3.2.RELEASE'
-
-	// @Value 어노테이션 사용
-	implementation 'org.springframework.boot:spring-boot-configuration-processor'
-  
 	// openFeign
 	implementation platform("org.springframework.cloud:spring-cloud-dependencies:2023.0.2")
 	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
 
 	// jackson
+	// https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind/2.17.2
 	implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.17.2'
 	implementation group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.17.2'
+
+    // Spring data redis
+    implementation('org.springframework.boot:spring-boot-starter-data-redis')
+
+    // redis lettuce
+    implementation 'io.lettuce:lettuce-core:6.3.2.RELEASE'
+
+    // @Value 어노테이션 사용
+    implementation 'org.springframework.boot:spring-boot-configuration-processor'
+
 }
 
 tasks.named('bootJar') {

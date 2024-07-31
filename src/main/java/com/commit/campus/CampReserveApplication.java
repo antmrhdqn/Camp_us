@@ -25,5 +25,4 @@ public class CampReserveApplication {
 	public static BCryptPasswordEncoder bCryptPasswordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
-
 }
