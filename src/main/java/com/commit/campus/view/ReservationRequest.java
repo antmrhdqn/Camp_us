@@ -12,7 +12,6 @@ public class ReservationRequest {
     private int userId;
     private long campId;
     private long campFacsId;
-    private LocalDateTime reservationDate;
     private Date entryDate;
     private Date leavingDate;
     private String gearRentalStatus;
