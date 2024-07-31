@@ -1,9 +1,11 @@
 package com.commit.campus.controller;
 
+import com.commit.campus.dto.CampingDTO;
 import com.commit.campus.dto.ReviewDTO;
 import com.commit.campus.service.MyReviewService;
 import com.commit.campus.service.ReviewService;
 import com.commit.campus.view.MyReviewView;
+import com.commit.campus.view.ReviewedCampingView;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,6 +40,21 @@ public class MyReviewController {
 
         Page<MyReviewView> viewPage = dtoPage.map(reviewDTO -> modelMapper.map(reviewDTO, MyReviewView.class));
         return ResponseEntity.ok(viewPage);
+    }
+
+    // 리뷰 작성한 캠핑장 조회
+    @GetMapping("/campings")
+    public ResponseEntity<Page<ReviewedCampingView>> getReviewedCampings(
+            @PageableDefault(sort = "campId") Pageable pageable) {
+
+        long userId = 1; // TODO: 토큰에서 빼야 함
+
+        Page<CampingDTO> dtoPage = myReviewService.getReviewedCampings(userId, pageable);
+
+        Page<ReviewedCampingView> viewPage = dtoPage.map(campingDTO -> modelMapper.map(campingDTO, ReviewedCampingView.class));
+
+        return ResponseEntity.ok(viewPage);
+
     }
 
     // 내 리뷰 정보 삭제
