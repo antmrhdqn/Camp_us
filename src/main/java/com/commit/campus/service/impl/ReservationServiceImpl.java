@@ -81,13 +81,16 @@ public class ReservationServiceImpl implements ReservationService {
 
         // 동기식으로 데이터 저장
         try {
+
+            log.info("redis 저장 실행한다. key:" + key);
+
             redisCommands.hset(key, "reservationId", reservationId);
-            redisCommands.hset(key, "user", reservationDTO.getUserId());
-            redisCommands.hset(key, "campId", reservationDTO.getCampId());
-            redisCommands.hset(key, "campFacsId", reservationDTO.getCampFacsId());
-            redisCommands.hset(key, "reservationDate", reservationDTO.getReservationDate());
-            redisCommands.hset(key, "entryDate", reservationDTO.getEntryDate());
-            redisCommands.hset(key, "leavingDate", reservationDTO.getLeavingDate());
+            redisCommands.hset(key, "user", reservationDTO.getUserId().toString());
+            redisCommands.hset(key, "campId", reservationDTO.getCampId().toString());
+            redisCommands.hset(key, "campFacsId", reservationDTO.getCampFacsId().toString());
+            redisCommands.hset(key, "reservationDate", reservationDTO.getReservationDate().toString());
+            redisCommands.hset(key, "entryDate", reservationDTO.getEntryDate().toString());
+            redisCommands.hset(key, "leavingDate", reservationDTO.getLeavingDate().toString());
             redisCommands.hset(key, "gearRentalStatus", reservationDTO.getGearRentalStatus());
 
             log.info("redis에 예약 내역 저장 완료");
