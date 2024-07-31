@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface CampingRepository extends JpaRepository<Camping, Integer> {
+public interface CampingRepository extends JpaRepository<Camping, Long> {
+
     Page<Camping> findByCampIdIn(List<Long> reviewedCampIds, Pageable pageable);
+
 }
