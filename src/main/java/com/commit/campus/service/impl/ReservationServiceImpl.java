@@ -10,8 +10,11 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
 import java.util.Map;
 
 @Slf4j
@@ -60,30 +63,26 @@ public class ReservationServiceImpl implements ReservationService {
 
         String key = "reservationInfo:" + reservationId;
 
-        /* 궁금증.
-            비동기식으로 데이터를 저장한다고 하면, createReservation 요청이 동시에 여러개 날아왔을 때
-            redis에 요청 건 별로 데이터가 차곡차곡 저장되는 것이 아니라
-            별다른 순서 없이 뒤죽박죽 데이터가 쌓이게 되는 것인지??
+        log.info("key = " + key);
 
-            위 가정이 맞다면
-            데이터를 찾아올 때에는 해쉬키를 통해서 데이터를 찾아오게 되니 뒤죽박죽 저장되어도 상관 없는 것인지?
+        /* 궁금증.
+            - 비동기 방식으로 저장
+            redisAsyncCommands를 사용해 비동기식으로 데이터를 redis에 저장할 때,
+            요청이 동시에 여러개 날아와도 기본적으로 redis는 단일 스레드이므로 요청이 들어온 순서대로 저장이 이루어진다고 알고 있는데
+            그렇다면 동기 방식을 사용해 저장할 때와 어떤 차이가 있는것인지 궁금합니다.
         */
 
         // 동기식으로 데이터 저장
         try {
 
-            log.info("redis 저장 실행한다. key:" + key);
-
             redisCommands.hset(key, "reservationId", reservationId);
-            redisCommands.hset(key, "user", reservationDTO.getUserId().toString());
+            redisCommands.hset(key, "userId", reservationDTO.getUserId().toString());
             redisCommands.hset(key, "campId", reservationDTO.getCampId().toString());
             redisCommands.hset(key, "campFacsId", reservationDTO.getCampFacsId().toString());
             redisCommands.hset(key, "reservationDate", reservationDTO.getReservationDate().toString());
             redisCommands.hset(key, "entryDate", reservationDTO.getEntryDate().toString());
             redisCommands.hset(key, "leavingDate", reservationDTO.getLeavingDate().toString());
             redisCommands.hset(key, "gearRentalStatus", reservationDTO.getGearRentalStatus());
-
-            log.info("redis에 예약 내역 저장 완료");
 
             // 만료 시간 2시간 (= 7200초)
             redisCommands.expire(key, 7200);
@@ -100,23 +99,25 @@ public class ReservationServiceImpl implements ReservationService {
 
         String key = "reservationInfo:" + reservationId;
 
+        log.info("redis key = " + key);
+
+        // 예약 확정 요청이 들어오면 받아온 해시키로 캐시 데이터가 있는지 확인하여 만료 여부 판별
         Map<String, String> reservationInfo = redisCommands.hgetall(key);
 
-        if (reservationInfo == null) {
-            return null;
+        if (reservationInfo.isEmpty()) {
+            throw new RuntimeException("이미 만료된 예약입니다.");
         }
 
-        reservationInfo.forEach((k, value) -> System.out.println("Key: " + k + ", Value: " + value));
+        // 데이터 확인용 로그(나중에 삭제)
+        for (Map.Entry<String, String> entry : reservationInfo.entrySet()) {
+            log.info("Key: " + entry.getKey() + " / Value: " + entry.getValue());
+        }
 
-//        ReservationDTO reservationDTO = new ReservationDTO();
-//        reservationDTO.setReservationId(reservationId);
-//        reservationDTO.setUserId(reservationInfo.get());
-//        reservationDTO.setCampId(reservationDTO.getCampId());
-//        reservationDTO.setCampFacsId(reservationDTO.getCampFacsId());
-//        reservationDTO.setReservationDate(reservationDTO.getReservationDate());
-//        reservationDTO.setEntryDate(reservationDTO.getEntryDate());
-//        reservationDTO.setLeavingDate(reservationDTO.getLeavingDate());
-//        reservationDTO.getGearRentalStatus(reservationDTO.getGearRentalStatus());
+        // 데이터가 있는 경우 rds에 저장하고 예약 가능 건 수 차감, 예약 확정 멘트 보내주기
+        ReservationDTO reservationDTO = mapToReservationDTO(reservationInfo);
+
+        // 저장
+//        reservationRepository.saveAll(reservationDTO);
 
         return null;
     }
@@ -124,7 +125,7 @@ public class ReservationServiceImpl implements ReservationService {
     // redis에 해쉬 키로 저장할 예약아이디 생성 (예약일자 + 6자리 인덱스값)
     private synchronized String createReservationId(LocalDateTime reservationDate) {
 
-        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyyyMMddhhmmss");
+        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyMMddhhmmss");
         String formattedDate = reservationDate.format(dateFormat);
 
         String indexCode = String.format("%06d", index);
@@ -133,6 +134,64 @@ public class ReservationServiceImpl implements ReservationService {
         String reservationId = formattedDate + indexCode;
 
         return reservationId;
+    }
+
+    private ReservationDTO mapToReservationDTO(Map<String, String> reservationInfo) {
+
+        // redis에서 꺼내온 데이터 DTO에 매핑 하기
+
+//        long reservationId
+//        long user_id
+//        long campId
+//        long campFacsId
+//        LocalDateTime reservationDate
+//        Date entryDate
+//        Date leavingDate
+//        String reservationStatus
+//        String gearRentalStatus
+
+        Date entryDate = convertDateFormat(reservationInfo);
+
+        log.info("entryDate = " + entryDate);
+
+        ReservationDTO reservationDTO = new ReservationDTO();
+
+        reservationDTO.setReservationId(reservationInfo.get("reservationId"));
+        reservationDTO.setUserId(Long.valueOf(reservationInfo.get("userId")));
+        reservationDTO.setCampId(Long.valueOf(reservationInfo.get("campId")));
+        reservationDTO.setCampFacsId(Long.valueOf(reservationInfo.get("campFacsId")));
+        reservationDTO.setReservationDate(LocalDateTime.parse(reservationInfo.get("reservationDate")));
+//        reservationDTO.setEntryDate(dateFomatter.(reservationInfo.get("entryDate")));
+
+        return null;
+    }
+
+    private Date convertDateFormat(Map<String, String> reservationInfo) {
+
+        String rowDate = reservationInfo.get("entryDate");
+
+        SimpleDateFormat inputFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
+        SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd");
+
+        Date formattedDate = null;
+
+        try {
+            // 입력 문자열을 Date 객체로 변환
+            Date parsedDate = inputFormat.parse(rowDate);
+
+            // Date 객체를 원하는 형식의 문자열로 변환
+            String formattedDateString = outputFormat.format(parsedDate);
+
+            // 문자열을 다시 Date 객체로 변환
+            formattedDate = outputFormat.parse(formattedDateString);
+
+        } catch (ParseException e) {
+            // 오류 처리
+            System.err.println("Date parsing failed");
+            e.printStackTrace();
+        }
+
+        return formattedDate;
     }
 
     private String generateReservationKey(ReservationDTO reservationDTO) {

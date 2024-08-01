@@ -13,7 +13,7 @@ import java.util.Date;
 public class ReservationDTO {
 
     private String reservationId;
-    private Integer userId;
+    private Long userId;
     private Long campId;
     private Long campFacsId;
     private LocalDateTime reservationDate;
