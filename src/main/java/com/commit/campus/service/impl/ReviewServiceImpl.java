@@ -92,7 +92,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public void updateReview(long reviewId, ReviewDTO reviewDTO) {
+    public void updateReview(ReviewDTO reviewDTO, long userId) {
     }
 
     @Override

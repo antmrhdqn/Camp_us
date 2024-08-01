@@ -12,7 +12,7 @@ public interface ReviewService {
 
     void createReview(ReviewDTO reviewDTO) throws ReviewAlreadyExistsException;
 
-    void updateReview(long reviewId, ReviewDTO reviewDTO);
+    void updateReview(ReviewDTO reviewDTO, long userId);
 
     void deleteReview(long reviewId, long userId) throws ReviewNotFoundException, NotAuthorizedException;
 }

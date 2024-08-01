@@ -1,8 +1,9 @@
 package com.commit.campus.controller;
 
+import com.commit.campus.dto.UpdateReviewRequest;
 import com.commit.campus.view.ReviewView;
 import com.commit.campus.dto.ReviewDTO;
-import com.commit.campus.dto.ReviewRequest;
+import com.commit.campus.dto.CreateReviewRequest;
 import com.commit.campus.service.ReviewService;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -58,7 +59,7 @@ public class ReviewController {
     public ResponseEntity<Void> updateReview(@PathVariable long reviewId, @RequestBody ReviewRequest reviewRequest) {
 
         ReviewDTO reviewDTO = modelMapper.map(reviewRequest, ReviewDTO.class);
-        reviewService.updateReview(reviewId, reviewDTO);
+        reviewService.updateReview(reviewDTO, userId);
 
         return ResponseEntity.noContent().build();
     }
