@@ -4,14 +4,17 @@ import com.commit.campus.dto.ReservationDTO;
 import com.commit.campus.entity.Reservation;
 import com.commit.campus.service.ReservationService;
 import com.commit.campus.view.ReservationRequest;
-import com.commit.campus.view.ReservationResponse;
+import com.commit.campus.view.ReservationView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -33,7 +36,7 @@ public class ReservationController {
 
     // 예약 등록
     @PostMapping("/create")
-    public ResponseEntity<String> createReservation(@RequestBody ReservationRequest reservationRequest) {
+    public ResponseEntity<String> createReservation(@RequestBody ReservationRequest reservationRequest) throws ParseException {
 
         /* 질문.
             코드 리뷰 중 RequestBody에 reservationDTO를 쓰지 않고 reservationRequest를 따로 생성해서 사용하는 이유가 있는지 질문이 들어왔는데,
@@ -51,7 +54,7 @@ public class ReservationController {
 
     // 예약 확정(결제)
     @PostMapping("/confirm")
-    public ResponseEntity<ReservationResponse> finalizeReservation(@RequestParam String reservationId) {
+    public ResponseEntity<ReservationView> finalizeReservation(@RequestParam String reservationId) {
 
         reservationService.confirmReservation(reservationId);
 
@@ -78,18 +81,22 @@ public class ReservationController {
         return ResponseEntity.ok().build();
     }
 
-
-    private ReservationDTO mapToReservationDTO(ReservationRequest reservationRequest) {
+    private ReservationDTO mapToReservationDTO(ReservationRequest reservationRequest) throws ParseException {
 
         LocalDateTime reservationDate = LocalDateTime.now();
 
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+
+        Date entryDate = formatter.parse(reservationRequest.getEntryDate());
+        Date leavingDate = formatter.parse(reservationRequest.getLeavingDate());
+
         ReservationDTO reservationDTO = new ReservationDTO();
-        reservationDTO.setUserId(reservationRequest.getUserId());
+        reservationDTO.setUserId(Long.valueOf(reservationRequest.getUserId()));
         reservationDTO.setCampId(reservationRequest.getCampId());
         reservationDTO.setCampFacsId(reservationRequest.getCampFacsId());
         reservationDTO.setReservationDate(reservationDate);
-        reservationDTO.setEntryDate(reservationRequest.getEntryDate());
-        reservationDTO.setLeavingDate(reservationRequest.getLeavingDate());
+        reservationDTO.setEntryDate(entryDate);
+        reservationDTO.setLeavingDate(leavingDate);
         reservationDTO.setGearRentalStatus(reservationRequest.getGearRentalStatus());
 
         return reservationDTO;
