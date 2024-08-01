@@ -11,6 +11,7 @@ import com.commit.campus.repository.RatingSummaryRepository;
 import com.commit.campus.repository.ReviewRepository;
 import com.commit.campus.repository.UserRepository;
 import com.commit.campus.service.ReviewService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -93,6 +94,22 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public void updateReview(ReviewDTO reviewDTO, long userId) {
+        Review originReview = reviewRepository.findById(reviewDTO.getReviewId())
+                .orElseThrow(() -> new EntityNotFoundException("엔티티를 찾을 수 없습니다."));
+        log.info("서비스 확인: {}", originReview);
+
+        if (!(originReview.getUserId() == userId)) {
+            throw new NotAuthorizedException("이 리뷰를 수정할 권한이 없습니다.", HttpStatus.FORBIDDEN);
+        }
+
+        Review updatedReview = updateReviewFromDTO(originReview, reviewDTO);
+        log.info("서비스 확인 {}", updatedReview);
+
+        reviewRepository.save(updatedReview);
+
+        ratingSummaryRepository.removeRating(originReview.getCampId(), originReview.getRating());
+        ratingSummaryRepository.addRating(updatedReview.getCampId(), updatedReview.getRating());
+
     }
 
     @Override

@@ -59,6 +59,7 @@ public class ReviewController {
     public ResponseEntity<Void> updateReview(
             @RequestBody UpdateReviewRequest reviewRequest) {
 
+        long userId = 1; // TODO: 토큰에서 빼내야 함
         ReviewDTO reviewDTO = modelMapper.map(reviewRequest, ReviewDTO.class);
         reviewService.updateReview(reviewDTO, userId);
 
