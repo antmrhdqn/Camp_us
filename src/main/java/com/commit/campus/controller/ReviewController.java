@@ -65,7 +65,6 @@ public class ReviewController {
 
     // 리뷰 삭제
     @DeleteMapping("/{reviewId}")
-
     public ResponseEntity<Void> deleteReview(@PathVariable long reviewId) {
 
         long userId = 1; // TODO: 토큰에서 빼내야 함
