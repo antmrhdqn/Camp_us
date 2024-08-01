@@ -40,12 +40,12 @@ public class ReviewController {
 
     // 리뷰 등록
     @PostMapping
-    public ResponseEntity<Void> createReview(@RequestBody ReviewRequest reviewRequest) {
+    public ResponseEntity<Void> createReview(@RequestBody CreateReviewRequest createReviewRequest) {
 
         long userId = 1; // TODO: 토큰에서 빼내야함
 
-        log.info("컨트롤러 확인 request {}", reviewRequest);
-        ReviewDTO reviewDTO = modelMapper.map(reviewRequest, ReviewDTO.class);
+        log.info("컨트롤러 확인 request {}", createReviewRequest);
+        ReviewDTO reviewDTO = modelMapper.map(createReviewRequest, ReviewDTO.class);
         reviewDTO.setUserId(userId);
         log.info("컨트롤러 확인 DTO {}", reviewDTO);
         reviewService.createReview(reviewDTO);
