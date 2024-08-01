@@ -136,23 +136,11 @@ public class ReservationServiceImpl implements ReservationService {
         return reservationId;
     }
 
-    private ReservationDTO mapToReservationDTO(Map<String, String> reservationInfo) {
+    private ReservationDTO mapToReservationDTO(Map<String, String> reservationInfo) throws ParseException {
 
         // redis에서 꺼내온 데이터 DTO에 매핑 하기
 
-//        long reservationId
-//        long user_id
-//        long campId
-//        long campFacsId
-//        LocalDateTime reservationDate
-//        Date entryDate
-//        Date leavingDate
-//        String reservationStatus
-//        String gearRentalStatus
-
-        Date entryDate = convertDateFormat(reservationInfo);
-
-        log.info("entryDate = " + entryDate);
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 
         ReservationDTO reservationDTO = new ReservationDTO();
 
@@ -161,46 +149,11 @@ public class ReservationServiceImpl implements ReservationService {
         reservationDTO.setCampId(Long.valueOf(reservationInfo.get("campId")));
         reservationDTO.setCampFacsId(Long.valueOf(reservationInfo.get("campFacsId")));
         reservationDTO.setReservationDate(LocalDateTime.parse(reservationInfo.get("reservationDate")));
-//        reservationDTO.setEntryDate(dateFomatter.(reservationInfo.get("entryDate")));
+        reservationDTO.setEntryDate(formatter.parse(reservationInfo.get("entryDate")));
+        reservationDTO.setLeavingDate(formatter.parse(reservationInfo.get("leavingDate")));
+        reservationDTO.setReservationStatus("예약 확정");
+        reservationDTO.setGearRentalStatus(reservationInfo.get("gearRentalStatus"));
 
-        return null;
-    }
-
-    private Date convertDateFormat(Map<String, String> reservationInfo) {
-
-        String rowDate = reservationInfo.get("entryDate");
-
-        SimpleDateFormat inputFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy");
-        SimpleDateFormat outputFormat = new SimpleDateFormat("yyyy-MM-dd");
-
-        Date formattedDate = null;
-
-        try {
-            // 입력 문자열을 Date 객체로 변환
-            Date parsedDate = inputFormat.parse(rowDate);
-
-            // Date 객체를 원하는 형식의 문자열로 변환
-            String formattedDateString = outputFormat.format(parsedDate);
-
-            // 문자열을 다시 Date 객체로 변환
-            formattedDate = outputFormat.parse(formattedDateString);
-
-        } catch (ParseException e) {
-            // 오류 처리
-            System.err.println("Date parsing failed");
-            e.printStackTrace();
-        }
-
-        return formattedDate;
-    }
-
-    private String generateReservationKey(ReservationDTO reservationDTO) {
-        // Generate a unique key based on reservation fields
-        return "reservation:" + reservationDTO.getCampFacsId() + ":" + reservationDTO.getUserId();
-    }
-
-    private String serializeToJson(ReservationDTO reservationDTO) {
-        // Implement JSON serialization (using Jackson or Gson for example)
-        return new com.google.gson.Gson().toJson(reservationDTO); // Using Gson for example
+        return reservationDTO;
     }
 }

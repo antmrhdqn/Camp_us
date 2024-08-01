@@ -19,5 +19,6 @@ public class ReservationDTO {
     private LocalDateTime reservationDate;
     private Date entryDate;
     private Date leavingDate;
+    private String reservationStatus;
     private String gearRentalStatus;
 }
