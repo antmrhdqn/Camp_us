@@ -55,8 +55,9 @@ public class ReviewController {
     }
 
     // 리뷰 수정
-    @PutMapping("/{reviewId}")
-    public ResponseEntity<Void> updateReview(@PathVariable long reviewId, @RequestBody ReviewRequest reviewRequest) {
+    @PutMapping
+    public ResponseEntity<Void> updateReview(
+            @RequestBody UpdateReviewRequest reviewRequest) {
 
         ReviewDTO reviewDTO = modelMapper.map(reviewRequest, ReviewDTO.class);
         reviewService.updateReview(reviewDTO, userId);
