@@ -18,7 +18,6 @@ import java.util.List;
 public class MyReview {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private long userId;
 
@@ -38,14 +37,6 @@ public class MyReview {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public MyReview(Long userId) {
-        this.userId = userId;
-        this.reviewCount = 0;
-        this.reviewIds = new ArrayList<>();
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
-
     @PrePersist
     protected void onCreate() {
         if (this.reviewIds == null) {
@@ -57,10 +48,27 @@ public class MyReview {
         this.updatedAt = LocalDateTime.now();
     }
 
+    public MyReview(Long userId) {
+        this.userId = userId;
+        this.reviewCount = 0;
+        this.reviewIds = new ArrayList<>();
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
     public void addReview(Long reviewId) {
         this.reviewCount++;
         this.reviewIds.add(reviewId);
         this.lastReviewDate = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public void removeReview(Long reviewId) {
+        this.reviewIds.remove(reviewId);
+        this.reviewCount--;
+        this.updatedAt = LocalDateTime.now();
+        if (this.reviewIds.isEmpty()) {
+            this.lastReviewDate = null;
+        }
     }
 }
