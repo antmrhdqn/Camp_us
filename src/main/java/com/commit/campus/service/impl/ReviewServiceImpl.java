@@ -88,7 +88,7 @@ public class ReviewServiceImpl implements ReviewService {
 
         myReviewRepository.save(myReview);
         log.info("서비스 확인 내 리뷰 저장 완료");
-        ratingSummaryRepository.ratingUpdate(savedReivew.getCampId(), savedReivew.getRating());
+        ratingSummaryRepository.addRating(savedReivew.getCampId(), savedReivew.getRating());
     }
 
     @Override
@@ -107,5 +107,15 @@ public class ReviewServiceImpl implements ReviewService {
             throw new NotAuthorizedException("이 리뷰를 삭제할 권한이 없습니다.", HttpStatus.FORBIDDEN);
         }
 
+        ratingSummaryRepository.removeRating(review.getCampId(), review.getRating());
+
+        MyReview myReview = myReviewRepository.findById(userId)
+                .orElseThrow(() -> new IllegalStateException("사용자의 리뷰 정보가 존재하지 않습니다. 데이터 무결성 문제가 있을 수 있습니다."));
+
+        myReview.removeReview(reviewId);
+
+        myReviewRepository.save(myReview);
+
+        reviewRepository.delete(review);
     }
 }
