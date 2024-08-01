@@ -68,7 +68,8 @@ public class ReviewController {
 
     public ResponseEntity<Void> deleteReview(@PathVariable long reviewId) {
 
-        reviewService.deleteReview(reviewId);
+        long userId = 1; // TODO: 토큰에서 빼내야 함
+        reviewService.deleteReview(reviewId, userId);
 
         return ResponseEntity.noContent().build();
     }
