@@ -1,12 +1,15 @@
 package com.commit.campus.repository;
 
 import com.commit.campus.entity.Camping;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CampingRepository extends JpaRepository<Camping, Long> {
@@ -35,9 +38,13 @@ public interface CampingRepository extends JpaRepository<Camping, Long> {
                        @Param("glampingSiteCnt") Integer glampingSiteCnt,
                        @Param("caravanSiteCnt") Integer caravanSiteCnt);
 
-    @Query("SELECT c FROM Camping c JOIN CampingSummary cs ON c.campId = cs.campId ORDER BY cs.bookmarkCnt DESC")
+    Page<Camping> findByCampIdIn(List<Long> reviewedCampIds, Pageable pageable);
+
+    // 찜한 수로 정렬된 캠핑장 리스트를 조회하는 쿼리
+    @Query("SELECT c FROM Camping c JOIN FETCH c.campingStatistics cs ORDER BY cs.bookmarkCnt DESC")
     List<Camping> findAllOrderByBookmarkCntDesc();
 
-    @Query("SELECT c FROM Camping c JOIN CampingSummary cs ON c.campId = cs.campId ORDER BY cs.reviewCnt DESC")
+    // 리뷰 수로 정렬된 캠핑장 리스트를 조회하는 쿼리
+    @Query("SELECT c FROM Camping c JOIN FETCH c.campingStatistics cs ORDER BY cs.reviewCnt DESC")
     List<Camping> findAllOrderByReviewCntDesc();
 }

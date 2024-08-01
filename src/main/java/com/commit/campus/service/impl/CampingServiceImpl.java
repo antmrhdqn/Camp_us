@@ -1,9 +1,12 @@
 package com.commit.campus.service.impl;
 
+import com.commit.campus.dto.BookmarkedCampingDTO;  // 추가된 부분
 import com.commit.campus.dto.CampingDTO;
 import com.commit.campus.dto.CampingFacilitiesDTO;
+import com.commit.campus.dto.CampingStatisticsDTO;  // 추가된 부분
 import com.commit.campus.entity.Camping;
 import com.commit.campus.entity.CampingFacilities;
+import com.commit.campus.entity.CampingStatistics;  // 추가된 부분
 import com.commit.campus.repository.CampingRepository;
 import com.commit.campus.service.CampingService;
 import org.springframework.beans.BeanUtils;
@@ -42,7 +45,23 @@ public class CampingServiceImpl implements CampingService {
 
     @Override
     public Optional<Camping> getCampingById(Long campId) {
-        return campingRepository.findById(campId);
+        return campingRepository.findById(campId);  // 기존 단일 조회 메서드 유지
+    }
+
+    @Override
+    public List<CampingDTO> getAllCampingsSortedByBookmarks() {  // 찜한 수로 정렬된 캠핑장 리스트를 조회하는 메서드
+        List<Camping> campings = campingRepository.findAllOrderByBookmarkCntDesc();  // 찜한 수로 내림차순 정렬된 캠핑장 리스트 조회
+        return campings.stream()
+                .map(this::toCampingDTO)  // 캠핑 엔티티를 DTO로 변환
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<CampingDTO> getAllCampingsSortedByReviews() {  // 리뷰 수로 정렬된 캠핑장 리스트를 조회하는 메서드
+        List<Camping> campings = campingRepository.findAllOrderByReviewCntDesc();  // 리뷰 수로 내림차순 정렬된 캠핑장 리스트 조회
+        return campings.stream()
+                .map(this::toCampingDTO)  // 캠핑 엔티티를 DTO로 변환
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -53,17 +72,32 @@ public class CampingServiceImpl implements CampingService {
                 .map(this::convertToFacilitiesDTO)
                 .collect(Collectors.toList());
         dto.setCampingFacilities(facilitiesDTOList);
+
+        // CampingStatistics 엔티티에서 값을 가져와서 DTO에 설정
+        CampingStatistics campingStatistics = camping.getCampingStatistics();  // 캠핑장의 통계 정보를 가져옴
+        if (campingStatistics != null) {
+            CampingStatisticsDTO campingStatisticsDTO = new CampingStatisticsDTO(
+                    campingStatistics.getCampId(),
+                    campingStatistics.getBookmarkCnt(),
+                    campingStatistics.getReviewCnt()
+            );
+            dto.setCampingStatistics(campingStatisticsDTO);  // DTO에 통계 정보를 설정
+        }
+
         return dto;
     }
 
     @Override
-    public List<Camping> getAllCampingsSortedByBookmarks() {
-        return campingRepository.findAllOrderByBookmarkCntDesc();
-    }
-
-    @Override
-    public List<Camping> getAllCampingsSortedByReviews() {
-        return campingRepository.findAllOrderByReviewCntDesc();
+    public BookmarkedCampingDTO getBookmarkedCamping(Long campId) {  // 추가된 메서드
+        Camping camping = campingRepository.findById(campId).orElseThrow(() -> new IllegalArgumentException("Invalid campId: " + campId));
+        return BookmarkedCampingDTO.builder()
+                .campName(camping.getCampName())
+                .doName(camping.getDoName())
+                .sigunguName(camping.getSigunguName())
+                .postCode(camping.getPostCode())
+                .induty(camping.getInduty())
+                .firstImageUrl(camping.getFirstImageUrl())
+                .build();
     }
 
     private CampingFacilitiesDTO convertToFacilitiesDTO(CampingFacilities facilities) {
