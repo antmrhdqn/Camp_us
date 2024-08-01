@@ -103,7 +103,6 @@ public class ReservationServiceImpl implements ReservationService {
 
         // 예약 확정 요청이 들어오면 받아온 해시키로 캐시 데이터가 있는지 확인하여 만료 여부 판별
         Map<String, String> reservationInfo = redisCommands.hgetall(key);
-
         if (reservationInfo.isEmpty()) {
             throw new RuntimeException("이미 만료된 예약입니다.");
         }
@@ -136,7 +135,7 @@ public class ReservationServiceImpl implements ReservationService {
         return reservationId;
     }
 
-    private ReservationDTO mapToReservationDTO(Map<String, String> reservationInfo) throws ParseException {
+    private ReservationDTO mapToReservationDTO(Map<String, String> reservationInfo) {
 
         // redis에서 꺼내온 데이터 DTO에 매핑 하기
 
@@ -144,15 +143,19 @@ public class ReservationServiceImpl implements ReservationService {
 
         ReservationDTO reservationDTO = new ReservationDTO();
 
-        reservationDTO.setReservationId(reservationInfo.get("reservationId"));
-        reservationDTO.setUserId(Long.valueOf(reservationInfo.get("userId")));
-        reservationDTO.setCampId(Long.valueOf(reservationInfo.get("campId")));
-        reservationDTO.setCampFacsId(Long.valueOf(reservationInfo.get("campFacsId")));
-        reservationDTO.setReservationDate(LocalDateTime.parse(reservationInfo.get("reservationDate")));
-        reservationDTO.setEntryDate(formatter.parse(reservationInfo.get("entryDate")));
-        reservationDTO.setLeavingDate(formatter.parse(reservationInfo.get("leavingDate")));
-        reservationDTO.setReservationStatus("예약 확정");
-        reservationDTO.setGearRentalStatus(reservationInfo.get("gearRentalStatus"));
+        try {
+            reservationDTO.setReservationId(reservationInfo.get("reservationId"));
+            reservationDTO.setUserId(Long.valueOf(reservationInfo.get("userId")));
+            reservationDTO.setCampId(Long.valueOf(reservationInfo.get("campId")));
+            reservationDTO.setCampFacsId(Long.valueOf(reservationInfo.get("campFacsId")));
+            reservationDTO.setReservationDate(LocalDateTime.parse(reservationInfo.get("reservationDate")));
+            reservationDTO.setEntryDate(formatter.parse(reservationInfo.get("entryDate")));
+            reservationDTO.setLeavingDate(formatter.parse(reservationInfo.get("leavingDate")));
+            reservationDTO.setReservationStatus("예약 확정");
+            reservationDTO.setGearRentalStatus(reservationInfo.get("gearRentalStatus"));
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
 
         return reservationDTO;
     }
