@@ -41,10 +41,10 @@ public interface CampingRepository extends JpaRepository<Camping, Long> {
     Page<Camping> findByCampIdIn(List<Long> reviewedCampIds, Pageable pageable);
 
     // 찜한 수로 정렬된 캠핑장 리스트를 조회하는 쿼리
-    @Query("SELECT c FROM Camping c JOIN FETCH c.campingStatistics cs ORDER BY cs.bookmarkCnt DESC")
+    @Query("SELECT c FROM Camping c JOIN FETCH c.campingSummary cs ORDER BY cs.bookmarkCnt DESC")
     List<Camping> findAllOrderByBookmarkCntDesc();
 
     // 리뷰 수로 정렬된 캠핑장 리스트를 조회하는 쿼리
-    @Query("SELECT c FROM Camping c JOIN FETCH c.campingStatistics cs ORDER BY cs.reviewCnt DESC")
+    @Query("SELECT c FROM Camping c JOIN FETCH c.campingSummary cs ORDER BY cs.reviewCnt DESC")
     List<Camping> findAllOrderByReviewCntDesc();
 }

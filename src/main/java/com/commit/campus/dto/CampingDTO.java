@@ -39,4 +39,7 @@ public class CampingDTO {
     private LocalDateTime modifiedDate;
     private List<CampingFacilitiesDTO> campingFacilities;
     private CampingStatisticsDTO campingStatistics;  // CampingStatisticsDTO 필드 추가
+
+    private int bookmarkCnt;
+    private int reviewCnt;
 }
