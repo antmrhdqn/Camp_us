@@ -1,6 +1,6 @@
 package com.commit.campus.entity;
 
-import lombok.Getter;
+import lombok.*;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
@@ -9,6 +9,7 @@ import java.util.Date;
 
 @Entity
 @Getter
+@Setter
 public class Reservation implements Serializable {
     @Id
     @Column(name = "reservation_id")
