@@ -37,7 +37,6 @@ public class MyReview {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-
     public MyReview(Long userId) {
         this.userId = userId;
         this.reviewCount = 0;
