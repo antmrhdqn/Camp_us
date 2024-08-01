@@ -135,4 +135,17 @@ public class ReviewServiceImpl implements ReviewService {
 
         reviewRepository.delete(review);
     }
+
+    private Review updateReviewFromDTO(Review review, ReviewDTO reviewDTO) {
+        return Review.builder()
+                .reviewId(review.getReviewId())
+                .campId(review.getCampId())
+                .userId(review.getUserId())
+                .reviewContent(reviewDTO.getReviewContent() != null ? reviewDTO.getReviewContent() : review.getReviewContent())
+                .rating(reviewDTO.getRating())
+                .reviewCreatedDate(review.getReviewCreatedDate())
+                .reviewModificationDate(LocalDateTime.now())
+                .reviewImageUrl(reviewDTO.getReviewImageUrl() != null ? reviewDTO.getReviewImageUrl() : review.getReviewImageUrl())
+                .build();
+    }
 }
