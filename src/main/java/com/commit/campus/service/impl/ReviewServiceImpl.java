@@ -1,6 +1,8 @@
 package com.commit.campus.service.impl;
 
+import com.commit.campus.common.exceptions.NotAuthorizedException;
 import com.commit.campus.common.exceptions.ReviewAlreadyExistsException;
+import com.commit.campus.common.exceptions.ReviewNotFoundException;
 import com.commit.campus.dto.ReviewDTO;
 import com.commit.campus.entity.MyReview;
 import com.commit.campus.entity.Review;
@@ -94,7 +96,16 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public void deleteReview(long reviewId) {
+    public void deleteReview(long reviewId, long userId) {
+
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ReviewNotFoundException("작성된 리뷰가 존재하지 않습니다.", HttpStatus.NOT_FOUND));
+
+        long reviewer = review.getUserId();
+
+        if (!(reviewer == userId)) {
+            throw new NotAuthorizedException("이 리뷰를 삭제할 권한이 없습니다.", HttpStatus.FORBIDDEN);
+        }
 
     }
 }
