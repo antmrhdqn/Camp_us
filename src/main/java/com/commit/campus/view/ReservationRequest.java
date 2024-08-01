@@ -12,7 +12,7 @@ public class ReservationRequest {
     private int userId;
     private long campId;
     private long campFacsId;
-    private Date entryDate;
-    private Date leavingDate;
+    private String entryDate;
+    private String leavingDate;
     private String gearRentalStatus;
 }
