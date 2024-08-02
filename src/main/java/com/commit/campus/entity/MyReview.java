@@ -12,13 +12,12 @@ import java.util.List;
 @Table(name = "my_review")
 @Builder
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @ToString
 public class MyReview {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private long userId;
 
@@ -62,5 +61,14 @@ public class MyReview {
         this.reviewIds.add(reviewId);
         this.lastReviewDate = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+    }
+
+    public void removeReview(Long reviewId) {
+        this.reviewIds.remove(reviewId);
+        this.reviewCount--;
+        this.updatedAt = LocalDateTime.now();
+        if (this.reviewIds.isEmpty()) {
+            this.lastReviewDate = null;
+        }
     }
 }
