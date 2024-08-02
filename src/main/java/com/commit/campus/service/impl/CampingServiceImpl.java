@@ -8,7 +8,6 @@ import com.commit.campus.entity.CampingFacilities;
 import com.commit.campus.entity.CampingSummary;
 import com.commit.campus.repository.CampingRepository;
 import com.commit.campus.service.CampingService;
-import org.springframework.beans.BeanUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,43 +53,6 @@ public class CampingServiceImpl implements CampingService {
     public Optional<Camping> getCampingById(Long campId) {
         log.info("캠핑장 ID로 단일 캠핑장을 조회합니다: campId={}", campId);
         return campingRepository.findById(campId);
-
-    @Override
-    public CampingDTO toCampingDTO(Camping camping) {
-        CampingDTO dto = new CampingDTO();
-        BeanUtils.copyProperties(camping, dto);
-        List<CampingFacilitiesDTO> facilitiesDTOList = camping.getCampingFacilities().stream()
-                .map(this::convertToFacilitiesDTO)
-                .collect(Collectors.toList());
-        dto.setCampingFacilities(facilitiesDTOList);
-        return dto;
-    }
-
-    private CampingFacilitiesDTO convertToFacilitiesDTO(CampingFacilities facilities) {
-        CampingFacilitiesDTO dto = new CampingFacilitiesDTO();
-        BeanUtils.copyProperties(facilities, dto);
-        return dto;
-    }
-
-    private Comparator<Camping> getComparator(String sort, String order) {
-        Comparator<Camping> comparator;
-
-        switch (sort) {
-            case "campName":
-                comparator = Comparator.comparing(Camping::getCampName, Comparator.nullsLast(Comparator.naturalOrder()));
-                break;
-            case "createdDate":
-                comparator = Comparator.comparing(Camping::getCreatedDate, Comparator.nullsLast(Comparator.naturalOrder()));
-                break;
-            default:
-                comparator = Comparator.comparing(Camping::getCampId, Comparator.nullsLast(Comparator.naturalOrder()));
-        }
-
-        if ("desc".equalsIgnoreCase(order)) {
-            comparator = comparator.reversed();
-        }
-
-        return comparator;
     }
 
     @Override
