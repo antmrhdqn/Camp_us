@@ -38,6 +38,8 @@ class MyReviewServiceImplTest {
     @Mock
     private ReviewRepository reviewRepository;
     @Mock
+    private CampingRepository campingRepository;
+    @Mock
     private ModelMapper modelMapper;
 
     @InjectMocks
@@ -128,5 +130,29 @@ class MyReviewServiceImplTest {
         assertThrows(ReviewNotFoundException.class, () -> myReviewService.getMyReviews(userId, pageable));
         verify(myReviewRepository).findById(userId);
         verify(reviewRepository, never()).findByReviewIdIn(any(), any());
+    }
+
+    @Test
+    void 리뷰한_캠핑장_조회_성공() throws ReviewNotFoundException {
+        long userId = 1L;
+        Pageable pageable = PageRequest.of(0, 10);
+        List<Review> reviews = Arrays.asList(review1, review2);
+        List<Camping> campings = Arrays.asList(camping1, camping2);
+        Page<Camping> campingPage = new PageImpl<>(campings, pageable, campings.size());
+
+        when(myReviewRepository.findById(userId)).thenReturn(Optional.of(myReview));
+        when(reviewRepository.findByReviewIdIn(myReview.getReviewIds())).thenReturn(reviews);
+        when(campingRepository.findByCampIdIn(Arrays.asList(1L, 2L), pageable)).thenReturn(campingPage);
+        when(modelMapper.map(camping1, CampingDTO.class)).thenReturn(campingDTO1);
+        when(modelMapper.map(camping2, CampingDTO.class)).thenReturn(campingDTO2);
+
+        Page<CampingDTO> result = myReviewService.getReviewedCampings(userId, pageable);
+
+        assertNotNull(result);
+        assertEquals(2, result.getContent().size());
+        verify(myReviewRepository).findById(userId);
+        verify(reviewRepository).findByReviewIdIn(myReview.getReviewIds());
+        verify(campingRepository).findByCampIdIn(Arrays.asList(1L, 2L), pageable);
+        verify(modelMapper, times(2)).map(any(Camping.class), eq(CampingDTO.class));
     }
 }
