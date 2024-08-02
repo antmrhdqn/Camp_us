@@ -3,6 +3,7 @@ package com.commit.campus.service;
 import com.commit.campus.common.exceptions.NotAuthorizedException;
 import com.commit.campus.common.exceptions.ReviewAlreadyExistsException;
 import com.commit.campus.dto.ReviewDTO;
+import com.commit.campus.entity.CampingSummary;
 import com.commit.campus.entity.MyReview;
 import com.commit.campus.entity.Review;
 import com.commit.campus.repository.*;
@@ -275,6 +276,46 @@ class ReviewServiceTests {
         verify(reviewRepository, never()).save(any(Review.class));
         verify(ratingSummaryRepository, never()).decrementRating(anyLong(), anyByte());
         verify(ratingSummaryRepository, never()).incrementRating(anyLong(), anyByte());
+    }
+
+    @Test
+    void 정상적인_리뷰_삭제() {
+        // Given
+        long reviewId = 1L;
+        long userId = 101L;
+        Review existingReview = Review.builder()
+                .reviewId(reviewId)
+                .campId(1L)
+                .userId(userId)
+                .reviewContent("삭제될 리뷰 내용")
+                .rating((byte) 4)
+                .reviewCreatedDate(LocalDateTime.now().minusDays(1))
+                .build();
+
+        CampingSummary campingSummary = CampingSummary.builder()
+                .campId(1L)
+                .reviewCnt(1)
+                .build();
+
+        MyReview myReview = new MyReview(userId);
+        myReview.incrementReview(reviewId);
+
+        when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(existingReview));
+        when(campingSummaryRepository.findById(1L)).thenReturn(Optional.of(campingSummary));
+        when(myReviewRepository.findById(userId)).thenReturn(Optional.of(myReview));
+
+        // When
+        reviewService.deleteReview(reviewId, userId);
+
+        // Then
+        verify(reviewRepository).delete(existingReview);
+        verify(campingSummaryRepository).save(campingSummary);
+        assertThat(campingSummary.getReviewCnt()).isZero();
+
+        verify(ratingSummaryRepository).decrementRating(existingReview.getCampId(), existingReview.getRating());
+
+        verify(myReviewRepository).save(myReview);
+        assertThat(myReview.getReviewIds()).doesNotContain(reviewId);
     }
 
     // 테스트 데이터 생성을 위한 헬퍼 메소드
