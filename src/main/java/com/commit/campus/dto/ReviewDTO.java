@@ -1,9 +1,6 @@
 package com.commit.campus.dto;
 
-import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
-
 import java.time.LocalDateTime;
 
 @Data
