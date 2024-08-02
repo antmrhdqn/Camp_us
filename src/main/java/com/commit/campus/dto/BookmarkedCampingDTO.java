@@ -1,11 +1,11 @@
-package com.commit.campus.view;
+package com.commit.campus.dto;
 
 import lombok.Builder;
 import lombok.Getter;
 
-@Builder
 @Getter
-public class BookmarkView {
+@Builder
+public class BookmarkedCampingDTO {
 
     private String campName;
     private String doName;
@@ -14,7 +14,7 @@ public class BookmarkView {
     private String induty;
     private String firstImageUrl;
 
-    public BookmarkView(String campName, String doName, String sigunguName, String postCode, String induty, String firstImageUrl) {
+    public BookmarkedCampingDTO(String campName, String doName, String sigunguName, String postCode, String induty, String firstImageUrl) {
         this.campName = campName;
         this.doName = doName;
         this.sigunguName = sigunguName;

@@ -1,5 +1,6 @@
 package com.commit.campus.service;
 
+import com.commit.campus.dto.BookmarkedCampingDTO;
 import com.commit.campus.dto.CampingDTO;
 import com.commit.campus.entity.Camping;
 
@@ -7,6 +8,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CampingService {
+
     List<Camping> getAllCampings();  // 모든 캠핑장 정보를 조회
     Camping createCamping(Camping camping);  // 새로운 캠핑장을 생성
 
@@ -18,4 +20,7 @@ public interface CampingService {
 
     // DTO 변환 메서드
     CampingDTO toCampingDTO(Camping camping);
+
+    BookmarkedCampingDTO getBookmarkedCamping(Long campId);
+
 }

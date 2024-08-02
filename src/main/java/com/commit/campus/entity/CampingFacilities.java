@@ -1,13 +1,16 @@
 package com.commit.campus.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.Getter;
+import jakarta.persistence.*;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Getter
 @Setter
+//@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CampingFacilities {
 
     @Id

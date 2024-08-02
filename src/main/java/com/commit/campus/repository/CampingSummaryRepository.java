@@ -1,10 +1,9 @@
 package com.commit.campus.repository;
 
-import com.commit.campus.entity.Reservation;
+import com.commit.campus.entity.CampingSummary;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ReservationRepository extends JpaRepository<Reservation, Integer> {
-
+public interface CampingSummaryRepository extends JpaRepository<CampingSummary, Long> {
 }

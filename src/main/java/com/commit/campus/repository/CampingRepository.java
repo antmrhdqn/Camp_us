@@ -38,4 +38,5 @@ public interface CampingRepository extends JpaRepository<Camping, Long> {
                        @Param("caravanSiteCnt") Integer caravanSiteCnt);
 
     Page<Camping> findByCampIdIn(List<Long> reviewedCampIds, Pageable pageable);
+
 }
