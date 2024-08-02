@@ -5,11 +5,13 @@ import jakarta.persistence.*;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Date;
 
+@Table(name = "reservation")
 @Entity
 @Getter
-@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Reservation implements Serializable {
     @Id
     @Column(name = "reservation_id")
