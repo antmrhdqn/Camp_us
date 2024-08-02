@@ -85,11 +85,10 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElse(new MyReview(savedReview.getUserId()));
 
         myReview.addReview(savedReview.getReviewId());
-
         log.info("서비스 확인 myreview {}", myReview);
-
         myReviewRepository.save(myReview);
         log.info("서비스 확인 내 리뷰 저장 완료");
+
         ratingSummaryRepository.addRating(savedReview.getCampId(), savedReview.getRating());
 
         CampingSummary campingSummary = campingSummaryRepository.findById(savedReview.getCampId())
