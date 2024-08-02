@@ -28,10 +28,10 @@ public class Reservation implements Serializable {
     private LocalDateTime reservationDate;  // 예약 날짜
 
     @Column(name = "entry_date")
-    private Date entryDate;  // 입실 날짜
+    private LocalDateTime entryDate;  // 입실 날짜
 
     @Column(name = "leaving_date")
-    private Date leavingDate;  // 퇴실 날짜
+    private LocalDateTime leavingDate;  // 퇴실 날짜
 
     @Column(name = "reservation_status")
     private String reservationStatus;  // 예약 상태

@@ -17,8 +17,8 @@ public class ReservationDTO {
     private Long campId;
     private Long campFacsId;
     private LocalDateTime reservationDate;
-    private Date entryDate;
-    private Date leavingDate;
+    private LocalDateTime entryDate;
+    private LocalDateTime leavingDate;
     private String reservationStatus;
     private String gearRentalStatus;
 }
