@@ -4,10 +4,7 @@ import com.commit.campus.common.exceptions.ReviewAlreadyExistsException;
 import com.commit.campus.dto.ReviewDTO;
 import com.commit.campus.entity.MyReview;
 import com.commit.campus.entity.Review;
-import com.commit.campus.repository.MyReviewRepository;
-import com.commit.campus.repository.RatingSummaryRepository;
-import com.commit.campus.repository.ReviewRepository;
-import com.commit.campus.repository.UserRepository;
+import com.commit.campus.repository.*;
 import com.commit.campus.service.impl.ReviewServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +35,7 @@ class ReviewServiceTests {
     @Mock private MyReviewRepository myReviewRepository;
     @Mock private UserRepository userRepository;
     @Mock private RatingSummaryRepository ratingSummaryRepository;
+    @Mock private CampingSummaryRepository campingSummaryRepository;
     @Mock private ModelMapper modelMapper;
 
     @InjectMocks
@@ -202,6 +200,46 @@ class ReviewServiceTests {
         verify(ratingSummaryRepository, never()).incrementRating(anyLong(), anyByte());
     }
 
+    @Test
+    void 정상적인_리뷰_업데이트() {
+        // Given
+        long reviewId = 1L;
+        long userId = 101L;
+        Review existingReview = Review.builder()
+                .reviewId(reviewId)
+                .campId(1L)
+                .userId(userId)
+                .reviewContent("기존 리뷰 내용")
+                .rating((byte) 4)
+                .reviewCreatedDate(LocalDateTime.now().minusDays(1))
+                .reviewImageUrl("old_image.jpg")
+                .build();
+
+        ReviewDTO updateDTO = new ReviewDTO();
+        updateDTO.setReviewId(reviewId);
+        updateDTO.setReviewContent("업데이트된 리뷰 내용");
+        updateDTO.setRating((byte) 5);
+        updateDTO.setReviewImageUrl("new_image.jpg");
+
+        when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(existingReview));
+        when(reviewRepository.save(any(Review.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        reviewService.updateReview(updateDTO, userId);
+
+        // Then
+        ArgumentCaptor<Review> reviewCaptor = ArgumentCaptor.forClass(Review.class);
+        verify(reviewRepository).save(reviewCaptor.capture());
+        Review updatedReview = reviewCaptor.getValue();
+
+        assertThat(updatedReview.getReviewContent()).isEqualTo("업데이트된 리뷰 내용");
+        assertThat(updatedReview.getRating()).isEqualTo((byte) 5);
+        assertThat(updatedReview.getReviewImageUrl()).isEqualTo("new_image.jpg");
+        assertThat(updatedReview.getReviewModificationDate()).isNotNull();
+
+        verify(ratingSummaryRepository).decrementRating(existingReview.getCampId(), existingReview.getRating());
+        verify(ratingSummaryRepository).incrementRating(updatedReview.getCampId(), updatedReview.getRating());
+    }
 
     // 테스트 데이터 생성을 위한 헬퍼 메소드
     private List<Review> createTestReviews(long campId, int count) {
