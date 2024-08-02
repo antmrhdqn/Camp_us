@@ -27,5 +27,7 @@ public interface CampingService {
     List<CampingDTO> getAllCampingsSortedByReviews();
 
     // 특정 캠핑장의 북마크 정보를 가져오는 메서드
+
     BookmarkedCampingDTO getBookmarkedCamping(Long campId);
+
 }

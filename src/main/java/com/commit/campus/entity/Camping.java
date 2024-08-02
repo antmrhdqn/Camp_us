@@ -1,5 +1,8 @@
 package com.commit.campus.entity;
 
+
+import lombok.ToString;
+import lombok.Getter;
 import jakarta.persistence.*;
 import lombok.ToString;
 import lombok.Setter;
@@ -15,6 +18,7 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
+//@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Camping implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -125,3 +129,4 @@ public class Camping implements Serializable {
         lastModifiedDate = LocalDateTime.now();
     }
 }
+
