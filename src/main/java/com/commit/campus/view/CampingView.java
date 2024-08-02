@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @Schema(description = "캠핑 뷰 모델")
-public class CampingViewModel {
+public class CampingView {
     @Schema(description = "캠핑장의 고유 ID")
     private Long campId;  // 캠핑장의 고유 ID
     @Schema(description = "캠핑장 이름")
@@ -44,7 +44,7 @@ public class CampingViewModel {
     private int reviewCnt;  // 리뷰 수
 
     // Camping 엔티티 객체를 받아서 ViewModel 객체를 초기화하는 생성자
-    public CampingViewModel(Camping entity) {
+    public CampingView(Camping entity) {
         this.campId = entity.getCampId();
         this.campName = entity.getCampName();
         this.lineIntro = entity.getLineIntro();
@@ -81,7 +81,7 @@ public class CampingViewModel {
     }
 
     // CampingDTO 객체를 받아서 ViewModel 객체를 초기화하는 생성자 추가
-    public CampingViewModel(CampingDTO dto) {
+    public CampingView(CampingDTO dto) {
         this.campId = dto.getCampId();
         this.campName = dto.getCampName();
         this.lineIntro = dto.getLineIntro();
