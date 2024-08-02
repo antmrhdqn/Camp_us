@@ -318,6 +318,38 @@ class ReviewServiceTests {
         assertThat(myReview.getReviewIds()).doesNotContain(reviewId);
     }
 
+    @Test
+    void 권한_없는_사용자의_리뷰_삭제_시도() {
+        // Given
+        long reviewId = 1L;
+        long userId = 101L;
+        long differentUserId = 102L;
+        Review existingReview = Review.builder()
+                .reviewId(reviewId)
+                .campId(1L)
+                .userId(userId)
+                .reviewContent("삭제될 리뷰 내용")
+                .rating((byte) 4)
+                .reviewCreatedDate(LocalDateTime.now().minusDays(1))
+                .build();
+
+        when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(existingReview));
+
+        // When & Then
+        assertThatThrownBy(() -> reviewService.deleteReview(reviewId, differentUserId))
+                .isInstanceOf(NotAuthorizedException.class)
+                .hasMessage("이 리뷰를 삭제할 권한이 없습니다.")
+                .satisfies(exception -> {
+                    NotAuthorizedException castedEx = (NotAuthorizedException) exception;
+                    assertThat(castedEx.getStatus()).isEqualTo(HttpStatus.FORBIDDEN);
+                });
+
+        verify(reviewRepository, never()).delete(any(Review.class));
+        verify(campingSummaryRepository, never()).save(any(CampingSummary.class));
+        verify(ratingSummaryRepository, never()).decrementRating(anyLong(), anyByte());
+        verify(myReviewRepository, never()).save(any(MyReview.class));
+    }
+
     // 테스트 데이터 생성을 위한 헬퍼 메소드
     private List<Review> createTestReviews(long campId, int count) {
         List<Review> reviews = new ArrayList<>();
