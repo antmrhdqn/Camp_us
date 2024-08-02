@@ -79,17 +79,19 @@ public class ReviewServiceImpl implements ReviewService {
                 .build();
         log.info("서비스 확인 entity {}", review);
 
-        Review savedReivew = reviewRepository.save(review);
+        Review savedReview = reviewRepository.save(review);
 
-        MyReview myReview = myReviewRepository.findById(savedReivew.getUserId())
-                .orElse(new MyReview(savedReivew.getUserId()));
+        MyReview myReview = myReviewRepository.findById(savedReview.getUserId())
+                .orElse(new MyReview(savedReview.getUserId()));
 
-        myReview.addReview(savedReivew.getReviewId());
+        myReview.addReview(savedReview.getReviewId());
+
         log.info("서비스 확인 myreview {}", myReview);
 
         myReviewRepository.save(myReview);
         log.info("서비스 확인 내 리뷰 저장 완료");
-        ratingSummaryRepository.addRating(savedReivew.getCampId(), savedReivew.getRating());
+        ratingSummaryRepository.addRating(savedReview.getCampId(), savedReview.getRating());
+\
     }
 
     @Override
