@@ -84,12 +84,12 @@ public class ReviewServiceImpl implements ReviewService {
         MyReview myReview = myReviewRepository.findById(savedReview.getUserId())
                 .orElse(new MyReview(savedReview.getUserId()));
 
-        myReview.addReview(savedReview.getReviewId());
+        myReview.incrementReview(savedReview.getReviewId());
         log.info("서비스 확인 myreview {}", myReview);
         myReviewRepository.save(myReview);
         log.info("서비스 확인 내 리뷰 저장 완료");
 
-        ratingSummaryRepository.addRating(savedReview.getCampId(), savedReview.getRating());
+        ratingSummaryRepository.incrementRating(savedReview.getCampId(), savedReview.getRating());
 
         CampingSummary campingSummary = campingSummaryRepository.findById(savedReview.getCampId())
                 .orElseGet(() -> CampingSummary.builder()
@@ -117,8 +117,8 @@ public class ReviewServiceImpl implements ReviewService {
 
         reviewRepository.save(updatedReview);
 
-        ratingSummaryRepository.removeRating(originReview.getCampId(), originReview.getRating());
-        ratingSummaryRepository.addRating(updatedReview.getCampId(), updatedReview.getRating());
+        ratingSummaryRepository.decrementRating(originReview.getCampId(), originReview.getRating());
+        ratingSummaryRepository.incrementRating(updatedReview.getCampId(), updatedReview.getRating());
 
     }
 
@@ -140,12 +140,12 @@ public class ReviewServiceImpl implements ReviewService {
         campingSummary.decrementReviewCnt();
         campingSummaryRepository.save(campingSummary);
 
-        ratingSummaryRepository.removeRating(review.getCampId(), review.getRating());
+        ratingSummaryRepository.decrementRating(review.getCampId(), review.getRating());
 
         MyReview myReview = myReviewRepository.findById(userId)
                 .orElseThrow(() -> new IllegalStateException("사용자의 리뷰 정보가 존재하지 않습니다. 데이터 무결성 문제가 있을 수 있습니다."));
 
-        myReview.removeReview(reviewId);
+        myReview.decrementReview(reviewId);
         myReviewRepository.save(myReview);
 
         reviewRepository.delete(review);
