@@ -4,6 +4,7 @@ import com.commit.campus.common.exceptions.NotAuthorizedException;
 import com.commit.campus.common.exceptions.ReviewAlreadyExistsException;
 import com.commit.campus.common.exceptions.ReviewNotFoundException;
 import com.commit.campus.dto.ReviewDTO;
+import com.commit.campus.entity.CampingSummary;
 import com.commit.campus.entity.MyReview;
 import com.commit.campus.entity.Review;
 import com.commit.campus.repository.*;
@@ -90,7 +91,16 @@ public class ReviewServiceImpl implements ReviewService {
         myReviewRepository.save(myReview);
         log.info("서비스 확인 내 리뷰 저장 완료");
         ratingSummaryRepository.addRating(savedReview.getCampId(), savedReview.getRating());
-\
+
+        CampingSummary campingSummary = campingSummaryRepository.findById(savedReview.getCampId())
+                .orElseGet(() -> CampingSummary.builder()
+                        .campId(savedReview.getCampId())
+                        .bookmarkCnt(0)
+                        .reviewCnt(0)
+                        .build());
+
+        campingSummary.incrementReviewCnt();
+        campingSummaryRepository.save(campingSummary);
     }
 
     @Override
@@ -125,13 +135,18 @@ public class ReviewServiceImpl implements ReviewService {
             throw new NotAuthorizedException("이 리뷰를 삭제할 권한이 없습니다.", HttpStatus.FORBIDDEN);
         }
 
+        CampingSummary campingSummary = campingSummaryRepository.findById(review.getCampId())
+                .orElseThrow(() -> new IllegalStateException("해당 캠핑장의 리뷰 정보가 존재하지 않습니다. 데이터 무결성 문제가 있을 수 있습니다."));
+
+        campingSummary.decrementReviewCnt();
+        campingSummaryRepository.save(campingSummary);
+
         ratingSummaryRepository.removeRating(review.getCampId(), review.getRating());
 
         MyReview myReview = myReviewRepository.findById(userId)
                 .orElseThrow(() -> new IllegalStateException("사용자의 리뷰 정보가 존재하지 않습니다. 데이터 무결성 문제가 있을 수 있습니다."));
 
         myReview.removeReview(reviewId);
-
         myReviewRepository.save(myReview);
 
         reviewRepository.delete(review);
