@@ -155,4 +155,17 @@ class MyReviewServiceImplTest {
         verify(campingRepository).findByCampIdIn(Arrays.asList(1L, 2L), pageable);
         verify(modelMapper, times(2)).map(any(Camping.class), eq(CampingDTO.class));
     }
+
+    @Test
+    void 리뷰한_캠핑장_조회_실패_리뷰없음() {
+        long userId = 1L;
+        Pageable pageable = PageRequest.of(0, 10);
+
+        when(myReviewRepository.findById(userId)).thenReturn(Optional.empty());
+
+        assertThrows(ReviewNotFoundException.class, () -> myReviewService.getReviewedCampings(userId, pageable));
+        verify(myReviewRepository).findById(userId);
+        verify(reviewRepository, never()).findByReviewIdIn(any());
+        verify(campingRepository, never()).findByCampIdIn(any(), any());
+    }
 }
