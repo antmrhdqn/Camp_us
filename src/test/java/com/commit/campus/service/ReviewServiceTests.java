@@ -1,5 +1,6 @@
 package com.commit.campus.service;
 
+import com.commit.campus.common.exceptions.NotAuthorizedException;
 import com.commit.campus.common.exceptions.ReviewAlreadyExistsException;
 import com.commit.campus.dto.ReviewDTO;
 import com.commit.campus.entity.MyReview;
@@ -239,6 +240,41 @@ class ReviewServiceTests {
 
         verify(ratingSummaryRepository).decrementRating(existingReview.getCampId(), existingReview.getRating());
         verify(ratingSummaryRepository).incrementRating(updatedReview.getCampId(), updatedReview.getRating());
+    }
+
+    @Test
+    void 권한_없는_사용자의_리뷰_업데이트_시도() {
+        // Given
+        long reviewId = 1L;
+        long userId = 101L;
+        long differentUserId = 102L;
+        Review existingReview = Review.builder()
+                .reviewId(reviewId)
+                .campId(1L)
+                .userId(userId)
+                .reviewContent("기존 리뷰 내용")
+                .rating((byte) 4)
+                .reviewCreatedDate(LocalDateTime.now().minusDays(1))
+                .build();
+
+        ReviewDTO updateDTO = new ReviewDTO();
+        updateDTO.setReviewId(reviewId);
+        updateDTO.setReviewContent("업데이트된 리뷰 내용");
+
+        when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(existingReview));
+
+        // When & Then
+        assertThatThrownBy(() -> reviewService.updateReview(updateDTO, differentUserId))
+                .isInstanceOf(NotAuthorizedException.class)
+                .hasMessage("이 리뷰를 수정할 권한이 없습니다.")
+                .satisfies(exception -> {
+                    NotAuthorizedException castedEx = (NotAuthorizedException) exception;
+                    assertThat(castedEx.getStatus()).isEqualTo(HttpStatus.FORBIDDEN);
+                });
+
+        verify(reviewRepository, never()).save(any(Review.class));
+        verify(ratingSummaryRepository, never()).decrementRating(anyLong(), anyByte());
+        verify(ratingSummaryRepository, never()).incrementRating(anyLong(), anyByte());
     }
 
     // 테스트 데이터 생성을 위한 헬퍼 메소드
