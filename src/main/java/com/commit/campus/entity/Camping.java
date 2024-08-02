@@ -1,18 +1,23 @@
 package com.commit.campus.entity;
 
+import lombok.ToString;
 import lombok.AccessLevel;
 import lombok.Getter;
 import jakarta.persistence.*;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.Getter;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
 
+
 @Entity
+@Table(name = "camping")
 @Getter
 @Setter
+@ToString
 //@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Camping implements Serializable {
     @Id
@@ -109,4 +114,14 @@ public class Camping implements Serializable {
 
     @OneToMany(mappedBy = "campingEntity", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CampingFacilities> campingFacilities;
+
+    @PrePersist
+    protected void onCreate() {
+        createdDate = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        lastModifiedDate = LocalDateTime.now();
+    }
 }
