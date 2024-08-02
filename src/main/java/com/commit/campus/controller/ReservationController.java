@@ -85,18 +85,13 @@ public class ReservationController {
 
         LocalDateTime reservationDate = LocalDateTime.now();
 
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-
-        Date entryDate = formatter.parse(reservationRequest.getEntryDate());
-        Date leavingDate = formatter.parse(reservationRequest.getLeavingDate());
-
         ReservationDTO reservationDTO = new ReservationDTO();
         reservationDTO.setUserId(Long.valueOf(reservationRequest.getUserId()));
         reservationDTO.setCampId(reservationRequest.getCampId());
         reservationDTO.setCampFacsId(reservationRequest.getCampFacsId());
         reservationDTO.setReservationDate(reservationDate);
-        reservationDTO.setEntryDate(entryDate);
-        reservationDTO.setLeavingDate(leavingDate);
+        reservationDTO.setEntryDate(LocalDateTime.parse(reservationRequest.getEntryDate()));
+        reservationDTO.setLeavingDate(LocalDateTime.parse(reservationRequest.getLeavingDate()));
         reservationDTO.setGearRentalStatus(reservationRequest.getGearRentalStatus());
 
         return reservationDTO;

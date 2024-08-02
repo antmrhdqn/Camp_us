@@ -10,11 +10,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.Map;
 
 @Slf4j
@@ -143,19 +141,15 @@ public class ReservationServiceImpl implements ReservationService {
 
         ReservationDTO reservationDTO = new ReservationDTO();
 
-        try {
-            reservationDTO.setReservationId(reservationInfo.get("reservationId"));
-            reservationDTO.setUserId(Long.valueOf(reservationInfo.get("userId")));
-            reservationDTO.setCampId(Long.valueOf(reservationInfo.get("campId")));
-            reservationDTO.setCampFacsId(Long.valueOf(reservationInfo.get("campFacsId")));
-            reservationDTO.setReservationDate(LocalDateTime.parse(reservationInfo.get("reservationDate")));
-            reservationDTO.setEntryDate(formatter.parse(reservationInfo.get("entryDate")));
-            reservationDTO.setLeavingDate(formatter.parse(reservationInfo.get("leavingDate")));
-            reservationDTO.setReservationStatus("예약 확정");
-            reservationDTO.setGearRentalStatus(reservationInfo.get("gearRentalStatus"));
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
+        reservationDTO.setReservationId(reservationInfo.get("reservationId"));
+        reservationDTO.setUserId(Long.valueOf(reservationInfo.get("userId")));
+        reservationDTO.setCampId(Long.valueOf(reservationInfo.get("campId")));
+        reservationDTO.setCampFacsId(Long.valueOf(reservationInfo.get("campFacsId")));
+        reservationDTO.setReservationDate(LocalDateTime.parse(reservationInfo.get("reservationDate")));
+        reservationDTO.setEntryDate(LocalDateTime.parse(reservationInfo.get("entryDate")));
+        reservationDTO.setLeavingDate(LocalDateTime.parse(reservationInfo.get("leavingDate")));
+        reservationDTO.setReservationStatus("예약 확정");
+        reservationDTO.setGearRentalStatus(reservationInfo.get("gearRentalStatus"));
 
         return reservationDTO;
     }
