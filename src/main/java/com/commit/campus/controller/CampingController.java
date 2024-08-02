@@ -1,8 +1,12 @@
 package com.commit.campus.controller;
 
+import com.commit.campus.dto.CampingDTO;
 import com.commit.campus.entity.Camping;
 import com.commit.campus.service.CampingService;
 import com.commit.campus.view.CampingViewModel;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -46,8 +50,31 @@ public class CampingController {
     @Operation(summary = "캠핑장 단일 조회", description = "특정 ID의 캠핑장 상세 정보를 조회합니다.")
     public ResponseEntity<CampingViewModel> getCampingById(
             @PathVariable @Parameter(description = "캠핑장 ID", required = true) Long id) {
+
         Optional<Camping> camping = campingService.getCampingById(id);
         return camping.map(value -> ResponseEntity.ok(new CampingViewModel(value)))
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
+
+    @GetMapping("/sortedByBookmarks")
+    @Operation(summary = "찜한 수로 정렬된 캠핑장 리스트 조회", description = "찜한 수에 따라 정렬된 캠핑장 리스트를 조회합니다.")
+    public ResponseEntity<List<CampingViewModel>> getCampingsSortedByBookmarks() {
+        List<CampingDTO> campings = campingService.getAllCampingsSortedByBookmarks();
+        List<CampingViewModel> viewModels = campings.stream()
+                .map(CampingViewModel::new)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(viewModels);
+    }
+
+    @GetMapping("/sortedByReviews")
+    @Operation(summary = "리뷰 수로 정렬된 캠핑장 리스트 조회", description = "리뷰 수에 따라 정렬된 캠핑장 리스트를 조회합니다.")
+    public ResponseEntity<List<CampingViewModel>> getCampingsSortedByReviews() {
+        List<CampingDTO> campings = campingService.getAllCampingsSortedByReviews();
+        List<CampingViewModel> viewModels = campings.stream()
+                .map(CampingViewModel::new)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(viewModels);
+    }
 }
+
+

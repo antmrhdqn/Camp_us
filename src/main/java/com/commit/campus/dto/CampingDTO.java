@@ -37,8 +37,13 @@ public class CampingDTO {
     private String firstImageUrl;
     private LocalDateTime createdDate;
     private LocalDateTime modifiedDate;
-    private List<CampingFacilitiesDTO> campingFacilities; // 필드 추가
 
+    private int bookmarkCnt;
+    private int reviewCnt;
+  
+    private List<CampingFacilitiesDTO> campingFacilities;
+    private CampingStatisticsDTO campingStatistics;  // CampingStatisticsDTO 필드 추가
+  
     // 필드에 대한 getter와 setter 추가
     public List<CampingFacilitiesDTO> getCampingFacilities() {
         return campingFacilities;
