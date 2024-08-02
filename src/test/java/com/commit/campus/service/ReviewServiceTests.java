@@ -178,7 +178,7 @@ class ReviewServiceTests {
         MyReview savedMyReview = myReviewCaptor.getValue();
         assertThat(savedMyReview.getReviewIds()).contains(review.getReviewId());
 
-        verify(ratingSummaryRepository).ratingUpdate(reviewDTO.getCampId(), reviewDTO.getRating());
+        verify(ratingSummaryRepository).incrementRating(reviewDTO.getCampId(), reviewDTO.getRating());
     }
 
     @Test
@@ -199,7 +199,7 @@ class ReviewServiceTests {
         verify(reviewRepository, never()).save(any(Review.class));
         verify(myReviewRepository, never()).findById(anyLong());
         verify(myReviewRepository, never()).save(any(MyReview.class));
-        verify(ratingSummaryRepository, never()).ratingUpdate(anyLong(), anyByte());
+        verify(ratingSummaryRepository, never()).incrementRating(anyLong(), anyByte());
     }
 
 
