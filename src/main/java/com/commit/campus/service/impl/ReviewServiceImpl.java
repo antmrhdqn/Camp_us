@@ -28,13 +28,15 @@ public class ReviewServiceImpl implements ReviewService {
     private final MyReviewRepository myReviewRepository;
     private final UserRepository userRepository;
     private final RatingSummaryRepository ratingSummaryRepository;
+    private final CampingSummaryRepository campingSummaryRepository;
     private final ModelMapper modelMapper;
 
-    public ReviewServiceImpl(ReviewRepository reviewRepository, MyReviewRepository myReviewRepository, UserRepository userRepository, RatingSummaryRepository ratingSummaryRepository, ModelMapper modelMapper) {
+    public ReviewServiceImpl(ReviewRepository reviewRepository, MyReviewRepository myReviewRepository, UserRepository userRepository, RatingSummaryRepository ratingSummaryRepository, CampingSummaryRepository campingSummaryRepository, ModelMapper modelMapper) {
         this.reviewRepository = reviewRepository;
         this.myReviewRepository = myReviewRepository;
         this.userRepository = userRepository;
         this.ratingSummaryRepository = ratingSummaryRepository;
+        this.campingSummaryRepository = campingSummaryRepository;
         this.modelMapper = modelMapper;
     }
 
