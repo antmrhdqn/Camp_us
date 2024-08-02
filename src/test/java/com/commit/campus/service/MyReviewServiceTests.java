@@ -6,6 +6,7 @@ import com.commit.campus.dto.ReviewDTO;
 import com.commit.campus.entity.Camping;
 import com.commit.campus.entity.MyReview;
 import com.commit.campus.entity.Review;
+import com.commit.campus.repository.CampingRepository;
 import com.commit.campus.repository.MyReviewRepository;
 import com.commit.campus.repository.ReviewRepository;
 import com.commit.campus.service.impl.MyReviewServiceImpl;
@@ -38,6 +39,7 @@ class MyReviewServiceImplTest {
     private ReviewRepository reviewRepository;
     @Mock
     private ModelMapper modelMapper;
+
     @InjectMocks
     private MyReviewServiceImpl myReviewService;
 
@@ -114,5 +116,17 @@ class MyReviewServiceImplTest {
         verify(myReviewRepository).findById(userId);
         verify(reviewRepository).findByReviewIdIn(myReview.getReviewIds(), pageable);
         verify(modelMapper, times(2)).map(any(Review.class), eq(ReviewDTO.class));
+    }
+
+    @Test
+    void 내_리뷰_조회_실패_리뷰없음() {
+        long userId = 1L;
+        Pageable pageable = PageRequest.of(0, 10);
+
+        when(myReviewRepository.findById(userId)).thenReturn(Optional.empty());
+
+        assertThrows(ReviewNotFoundException.class, () -> myReviewService.getMyReviews(userId, pageable));
+        verify(myReviewRepository).findById(userId);
+        verify(reviewRepository, never()).findByReviewIdIn(any(), any());
     }
 }
