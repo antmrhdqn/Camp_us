@@ -62,4 +62,13 @@ public class MyReview {
         this.lastReviewDate = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
+
+    public void removeReview(Long reviewId) {
+        this.reviewIds.remove(reviewId);
+        this.reviewCount--;
+        this.updatedAt = LocalDateTime.now();
+        if (this.reviewIds.isEmpty()) {
+            this.lastReviewDate = null;
+        }
+    }
 }
