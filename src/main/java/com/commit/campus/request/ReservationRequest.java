@@ -1,10 +1,7 @@
-package com.commit.campus.view;
+package com.commit.campus.request;
 
 import lombok.Getter;
 import lombok.ToString;
-
-import java.time.LocalDateTime;
-import java.util.Date;
 
 @Getter
 @ToString

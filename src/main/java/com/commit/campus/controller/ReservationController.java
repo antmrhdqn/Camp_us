@@ -3,7 +3,7 @@ package com.commit.campus.controller;
 import com.commit.campus.dto.ReservationDTO;
 import com.commit.campus.entity.Reservation;
 import com.commit.campus.service.ReservationService;
-import com.commit.campus.view.ReservationRequest;
+import com.commit.campus.request.ReservationRequest;
 import com.commit.campus.view.ReservationView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,9 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 
 @RestController
