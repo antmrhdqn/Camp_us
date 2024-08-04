@@ -12,7 +12,7 @@ import java.util.Date;
 @ToString
 public class ReservationDTO {
 
-    private String reservationId;
+    private Long reservationId;
     private Long userId;
     private Long campId;
     private Long campFacsId;

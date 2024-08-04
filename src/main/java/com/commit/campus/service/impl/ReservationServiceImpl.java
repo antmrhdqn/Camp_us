@@ -1,6 +1,7 @@
 package com.commit.campus.service.impl;
 
 import com.commit.campus.dto.ReservationDTO;
+import com.commit.campus.entity.Reservation;
 import com.commit.campus.repository.ReservationRepository;
 import com.commit.campus.service.ReservationService;
 import io.lettuce.core.api.sync.RedisCommands;
@@ -10,7 +11,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
@@ -54,6 +54,9 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public String createReservation(ReservationDTO reservationDTO) {
+
+        // 예약 가능 여부 체크
+
 
         // 예약 아이디 생성
         LocalDateTime reservationDate = reservationDTO.getReservationDate();
@@ -113,8 +116,20 @@ public class ReservationServiceImpl implements ReservationService {
         // 데이터가 있는 경우 rds에 저장하고 예약 가능 건 수 차감, 예약 확정 멘트 보내주기
         ReservationDTO reservationDTO = mapToReservationDTO(reservationInfo);
 
-        // 저장
-//        reservationRepository.saveAll(reservationDTO);
+        // 트랜잭션 처리 (예약내역 저장 +
+        Reservation reservation = Reservation.builder()
+                .reservationId(reservationDTO.getReservationId())
+                .campId(reservationDTO.getCampId())
+                .campFacsId(reservationDTO.getCampFacsId())
+                .userId(reservationDTO.getUserId())
+                .reservationDate(reservationDTO.getReservationDate())
+                .entryDate(reservationDTO.getEntryDate())
+                .leavingDate(reservationDTO.getLeavingDate())
+                .reservationStatus(reservationDTO.getReservationStatus())
+                .gearRentalStatus(reservationDTO.getGearRentalStatus())
+                .build();
+
+        reservationRepository.save(reservation);
 
         return null;
     }
@@ -126,7 +141,7 @@ public class ReservationServiceImpl implements ReservationService {
         String formattedDate = reservationDate.format(dateFormat);
 
         String indexCode = String.format("%06d", index);
-        index ++;
+        index++;
 
         String reservationId = formattedDate + indexCode;
 
@@ -135,13 +150,9 @@ public class ReservationServiceImpl implements ReservationService {
 
     private ReservationDTO mapToReservationDTO(Map<String, String> reservationInfo) {
 
-        // redis에서 꺼내온 데이터 DTO에 매핑 하기
-
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-
         ReservationDTO reservationDTO = new ReservationDTO();
 
-        reservationDTO.setReservationId(reservationInfo.get("reservationId"));
+        reservationDTO.setReservationId(Long.valueOf(reservationInfo.get("reservationId")));
         reservationDTO.setUserId(Long.valueOf(reservationInfo.get("userId")));
         reservationDTO.setCampId(Long.valueOf(reservationInfo.get("campId")));
         reservationDTO.setCampFacsId(Long.valueOf(reservationInfo.get("campFacsId")));
