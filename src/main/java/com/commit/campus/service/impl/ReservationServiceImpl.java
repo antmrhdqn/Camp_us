@@ -116,7 +116,7 @@ public class ReservationServiceImpl implements ReservationService {
         // 데이터가 있는 경우 rds에 저장하고 예약 가능 건 수 차감, 예약 확정 멘트 보내주기
         ReservationDTO reservationDTO = mapToReservationDTO(reservationInfo);
 
-        // 트랜잭션 처리 (예약내역 저장 +
+        // 트랜잭션 처리 (예약내역 저장 + 이용 가능 개수 차감)
         Reservation reservation = Reservation.builder()
                 .reservationId(reservationDTO.getReservationId())
                 .campId(reservationDTO.getCampId())
