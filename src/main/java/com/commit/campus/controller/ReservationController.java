@@ -90,6 +90,7 @@ public class ReservationController {
         reservationDTO.setEntryDate(LocalDateTime.parse(reservationRequest.getEntryDate()));
         reservationDTO.setLeavingDate(LocalDateTime.parse(reservationRequest.getLeavingDate()));
         reservationDTO.setGearRentalStatus(reservationRequest.getGearRentalStatus());
+        reservationDTO.setCampFacsType(reservationRequest.getCampFacsType());
 
 //        reservationDTO.setCampFacsType();
 

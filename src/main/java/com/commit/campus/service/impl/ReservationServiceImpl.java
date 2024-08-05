@@ -94,6 +94,7 @@ public class ReservationServiceImpl implements ReservationService {
             redisCommands.hset(key, "entryDate", reservationDTO.getEntryDate().toString());
             redisCommands.hset(key, "leavingDate", reservationDTO.getLeavingDate().toString());
             redisCommands.hset(key, "gearRentalStatus", reservationDTO.getGearRentalStatus());
+            redisCommands.hset(key, "campFacsType", reservationDTO.getCampFacsType().toString());
 
         } catch (RuntimeException e) {
             throw new RuntimeException("redis에 저장이 되지 않음");
@@ -179,6 +180,7 @@ public class ReservationServiceImpl implements ReservationService {
         return reservationDTO;
     }
 
+    // redis에 저장할 해쉬키 생성(예약일자 + 인덱스값)
     private synchronized String createReservationId(LocalDateTime reservationDate) {
 
         DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyMMddhhmmss");
@@ -210,7 +212,7 @@ public class ReservationServiceImpl implements ReservationService {
         return reservationDTO;
     }
 
-        // 예약 가능 개수 생성 메소드
+    // 예약 가능 개수 생성 메소드
     private Availability createAvailability(Camping camping, Date date) {
         Availability availability = new Availability();
         availability.setCampId(camping.getCampId());
@@ -257,18 +259,3 @@ public class ReservationServiceImpl implements ReservationService {
         }
     }
 }
-
-/*
-    - 예약 등록
-    1. 사용자가 예약 정보(캠핑장, 시설아이디, 입실일, 퇴실일, 장비 대여 여부)를 입력 후 요청을 보냄.
-    2. 컨트롤러에서 해당 예약 정보를 받아 DTO에 위 정보들 + 시설 아이디로 해당 시설의 데이터를 가져와 시설 유형을 campFacsType에 저장
-    3.
-
-    - 예약 확정
-    1. 사용자가 예약 아이디와 함께 예약 확정 요청을 보냄
-    2. 서비스 단에서 받아온 예약 아이디로 가장 먼저 redis의 데이터가 존재하는지 유무 판별
-    3. 데이터가 있다면 예약 테이블에 예약 정보를 저장
-    4. 예약 가능 테이블을 스캔하여 입실 날짜와 퇴실 날짜 사이의 예약 가능 개수를 차감
-        4.1. 스캔했는데 해당 날짜의 데이터가 없는 경우 캠핑장 아이디를 기준으로 캠핑장 테이블을 불러와 각 시설의 개수를 가져옴
-        4.2. 해당 날짜의 데이터가 있는 경우 받아온 시설 유형에 해당하는 개수를 하나 차감
-*/
