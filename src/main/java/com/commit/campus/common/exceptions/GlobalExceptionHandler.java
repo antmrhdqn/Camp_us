@@ -11,7 +11,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ReviewAlreadyExistsException.class)
     public ResponseEntity<ErrorView> handleReviewAlreadyExists(ReviewAlreadyExistsException ex) {
+
         ErrorView errorView = new ErrorView("REVIEW_ALREADY_EXISTS", ex.getMessage());
+
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
                 .body(errorView);
@@ -19,7 +21,9 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NotAuthorizedException.class)
     public ResponseEntity<ErrorView> handleNotAuthorizedException(NotAuthorizedException ex) {
+
         ErrorView errorView = new ErrorView("NOT_AUTHORIZED", ex.getMessage());
+
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(errorView);

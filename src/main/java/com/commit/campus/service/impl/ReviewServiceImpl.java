@@ -87,19 +87,23 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     private ReviewDTO mapToReviewWithNickname(Review review) {
+
         ReviewDTO reviewDTO = modelMapper.map(review, ReviewDTO.class);
         String userNickname = userRepository.findNicknameByUserId(review.getUserId());
         reviewDTO.setUserNickname(userNickname);
+
         return reviewDTO;
     }
 
     private void checkExistingReview(long userId, long campId) {
+
         if (reviewRepository.existsByUserIdAndCampId(userId, campId)) {
             throw new ReviewAlreadyExistsException("이미 이 캠핑장에 대한 리뷰를 작성하셨습니다.");
         }
     }
 
     private Review saveReview(ReviewDTO reviewDTO) {
+
         Review review = Review.builder()
                 .campId(reviewDTO.getCampId())
                 .userId(reviewDTO.getUserId())
@@ -108,10 +112,12 @@ public class ReviewServiceImpl implements ReviewService {
                 .reviewCreatedDate(LocalDateTime.now())
                 .reviewImageUrl(reviewDTO.getReviewImageUrl())
                 .build();
+
         return reviewRepository.save(review);
     }
 
     private void updateMyReview(long userId, long reviewId, boolean isIncrement) {
+
         MyReview myReview = myReviewRepository.findById(userId)
                 .orElse(new MyReview(userId));
         if (isIncrement) {
@@ -119,19 +125,11 @@ public class ReviewServiceImpl implements ReviewService {
         } else {
             myReview.decrementReviewCnt(reviewId);
         }
-
         myReviewRepository.save(myReview);
     }
 
-    private void incrementRating(long campId, byte rating) {
-        ratingSummaryRepository.incrementRating(campId, rating);
-    }
-
-    private void decrementRating(long campId, byte rating) {
-        ratingSummaryRepository.decrementRating(campId, rating);
-    }
-
     private void updateRating(long campId, byte rating, boolean isIncrement) {
+
         if (isIncrement) {
 
             ratingSummaryRepository.incrementRating(campId, rating);
@@ -142,11 +140,13 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     private void adjustRating(Review oldReview, Review newReview) {
+
         updateRating(oldReview.getCampId(), oldReview.getRating(), false);
         updateRating(newReview.getCampId(), newReview.getRating(), true);
     }
 
     private void incrementReviewCnt(long campId) {
+
         CampingSummary campingSummary = campingSummaryRepository.findById(campId)
                 .orElseGet(() -> CampingSummary.builder()
                         .campId(campId)
@@ -158,6 +158,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     private void decrementReviewCnt(long campId) {
+
         CampingSummary campingSummary = campingSummaryRepository.findById(campId)
                 .orElseThrow(() -> new EntityNotFoundException("해당 캠핑장의 리뷰 정보가 존재하지 않습니다."));
 
@@ -166,11 +167,13 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     private Review findReviewById(long reviewId) {
+
         return reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new EntityNotFoundException("리뷰를 찾을 수 없습니다."));
     }
 
     private Review updateReviewFromDTO(Review review, ReviewDTO reviewDTO) {
+
         return Review.builder()
                 .reviewId(review.getReviewId())
                 .campId(review.getCampId())
@@ -184,6 +187,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     private void verifyReviewPermission(long reviewerId, long userId, String action) {
+
         if (reviewerId != userId) {
             throw new NotAuthorizedException("이 리뷰를 " + action + "할 권한이 없습니다.", HttpStatus.FORBIDDEN);
         }
