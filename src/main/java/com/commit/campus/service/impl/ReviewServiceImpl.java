@@ -43,19 +43,13 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public Page<ReviewDTO> getReviewsByCampId(long campId, Pageable pageable) {
-        log.info("서비스 진입");
         Page<Review> reviewPage = reviewRepository.findByCampId(campId, pageable);
-        log.info("반환 확인: {}", reviewPage);
 
         return reviewPage.map(review -> {
             ReviewDTO reviewDTO = modelMapper.map(review, ReviewDTO.class);
-            log.info("DTO 확인: {}", reviewDTO);
             long userId = review.getUserId();
-            log.info("id 확인: {}", userId);
             String userNickname = userRepository.findNicknameByUserId(userId);
-            log.info("nickname 확인: {}", userNickname);
             reviewDTO.setUserNickname(userNickname);
-            log.info("DTO 확인: {}", reviewDTO);
             return reviewDTO;
         });
     }
@@ -68,7 +62,6 @@ public class ReviewServiceImpl implements ReviewService {
             throw new ReviewAlreadyExistsException("이미 이 캠핑장에 대한 리뷰를 작성하셨습니다.", HttpStatus.CONFLICT);
         }
 
-        log.info("서비스 확인 reviewDTO {}", reviewDTO);
         Review review = Review.builder()
                 .campId(reviewDTO.getCampId())
                 .userId(reviewDTO.getUserId())
@@ -77,7 +70,6 @@ public class ReviewServiceImpl implements ReviewService {
                 .reviewCreatedDate(LocalDateTime.now())
                 .reviewImageUrl(reviewDTO.getReviewImageUrl())
                 .build();
-        log.info("서비스 확인 entity {}", review);
 
         Review savedReview = reviewRepository.save(review);
 
@@ -85,9 +77,7 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElse(new MyReview(savedReview.getUserId()));
 
         myReview.incrementReviewCnt(savedReview.getReviewId());
-        log.info("서비스 확인 myreview {}", myReview);
         myReviewRepository.save(myReview);
-        log.info("서비스 확인 내 리뷰 저장 완료");
 
         ratingSummaryRepository.incrementRating(savedReview.getCampId(), savedReview.getRating());
 
@@ -106,14 +96,12 @@ public class ReviewServiceImpl implements ReviewService {
     public void updateReview(ReviewDTO reviewDTO, long userId) {
         Review originReview = reviewRepository.findById(reviewDTO.getReviewId())
                 .orElseThrow(() -> new EntityNotFoundException("엔티티를 찾을 수 없습니다."));
-        log.info("서비스 확인: {}", originReview);
 
         if (!(originReview.getUserId() == userId)) {
             throw new NotAuthorizedException("이 리뷰를 수정할 권한이 없습니다.", HttpStatus.FORBIDDEN);
         }
 
         Review updatedReview = updateReviewFromDTO(originReview, reviewDTO);
-        log.info("서비스 확인 {}", updatedReview);
 
         reviewRepository.save(updatedReview);
 
