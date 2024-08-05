@@ -55,9 +55,9 @@ public class ReviewServiceImpl implements ReviewService {
         checkExistingReview(reviewDTO.getUserId(), reviewDTO.getCampId());
 
         Review savedReview = saveReview(reviewDTO);
-        updateMyReview(savedReview);
-        updateRatingSummary(savedReview);
-        updateCampingSummary(savedReview);
+        updateMyReview(savedReview.getUserId(), savedReview.getReviewId(), true);
+        updateRating(savedReview.getCampId(), savedReview.getRating(), true);
+        incrementReviewCnt(savedReview.getCampId());
     }
 
     @Override
@@ -70,34 +70,18 @@ public class ReviewServiceImpl implements ReviewService {
         Review updatedReview = updateReviewFromDTO(originReview, reviewDTO);
         reviewRepository.save(updatedReview);
 
-        updateRatingSummary(originReview, updatedReview);
+        adjustRating(originReview, updatedReview);
     }
 
     @Override
     public void deleteReview(long reviewId, long userId) {
 
-        Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new EntityNotFoundException("작성된 리뷰가 존재하지 않습니다."));
+        Review review = findReviewById(reviewId);
+        verifyReviewPermission(review.getUserId(), userId, "삭제");
 
-        long reviewer = review.getUserId();
-
-        if (!(reviewer == userId)) {
-            throw new NotAuthorizedException("이 리뷰를 삭제할 권한이 없습니다.", HttpStatus.FORBIDDEN);
-        }
-
-        CampingSummary campingSummary = campingSummaryRepository.findById(review.getCampId())
-                .orElseThrow(() -> new IllegalStateException("해당 캠핑장의 리뷰 정보가 존재하지 않습니다. 데이터 무결성 문제가 있을 수 있습니다."));
-
-        campingSummary.decrementReviewCnt();
-        campingSummaryRepository.save(campingSummary);
-
-        ratingSummaryRepository.decrementRating(review.getCampId(), review.getRating());
-
-        MyReview myReview = myReviewRepository.findById(userId)
-                .orElseThrow(() -> new IllegalStateException("사용자의 리뷰 정보가 존재하지 않습니다. 데이터 무결성 문제가 있을 수 있습니다."));
-
-        myReview.decrementReviewCnt(reviewId);
-        myReviewRepository.save(myReview);
+        decrementReviewCnt(review.getCampId());
+        updateRating(review.getCampId(), review.getRating(), false);
+        updateMyReview(userId, reviewId, false);
 
         reviewRepository.delete(review);
     }
@@ -111,7 +95,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     private void checkExistingReview(long userId, long campId) {
         if (reviewRepository.existsByUserIdAndCampId(userId, campId)) {
-            throw new ReviewAlreadyExistsException("이미 이 캠핑장에 대한 리뷰를 작성하셨습니다.", HttpStatus.CONFLICT);
+            throw new ReviewAlreadyExistsException("이미 이 캠핑장에 대한 리뷰를 작성하셨습니다.");
         }
     }
 
@@ -127,25 +111,57 @@ public class ReviewServiceImpl implements ReviewService {
         return reviewRepository.save(review);
     }
 
-    private void updateMyReview(Review savedReview) {
-        MyReview myReview = myReviewRepository.findById(savedReview.getUserId())
-                .orElse(new MyReview(savedReview.getUserId()));
-        myReview.incrementReviewCnt(savedReview.getReviewId());
+    private void updateMyReview(long userId, long reviewId, boolean isIncrement) {
+        MyReview myReview = myReviewRepository.findById(userId)
+                .orElse(new MyReview(userId));
+        if (isIncrement) {
+            myReview.incrementReviewCnt(reviewId);
+        } else {
+            myReview.decrementReviewCnt(reviewId);
+        }
+
         myReviewRepository.save(myReview);
     }
 
-    private void updateRatingSummary(Review savedReview) {
-        ratingSummaryRepository.incrementRating(savedReview.getCampId(), savedReview.getRating());
+    private void incrementRating(long campId, byte rating) {
+        ratingSummaryRepository.incrementRating(campId, rating);
     }
 
-    private void updateCampingSummary(Review savedReview) {
-        CampingSummary campingSummary = campingSummaryRepository.findById(savedReview.getCampId())
+    private void decrementRating(long campId, byte rating) {
+        ratingSummaryRepository.decrementRating(campId, rating);
+    }
+
+    private void updateRating(long campId, byte rating, boolean isIncrement) {
+        if (isIncrement) {
+
+            ratingSummaryRepository.incrementRating(campId, rating);
+        } else {
+
+            ratingSummaryRepository.decrementRating(campId, rating);
+        }
+    }
+
+    private void adjustRating(Review oldReview, Review newReview) {
+        updateRating(oldReview.getCampId(), oldReview.getRating(), false);
+        updateRating(newReview.getCampId(), newReview.getRating(), true);
+    }
+
+    private void incrementReviewCnt(long campId) {
+        CampingSummary campingSummary = campingSummaryRepository.findById(campId)
                 .orElseGet(() -> CampingSummary.builder()
-                        .campId(savedReview.getCampId())
+                        .campId(campId)
                         .bookmarkCnt(0)
                         .reviewCnt(0)
                         .build());
         campingSummary.incrementReviewCnt();
+        campingSummaryRepository.save(campingSummary);
+    }
+
+    private void decrementReviewCnt(long campId) {
+        CampingSummary campingSummary = campingSummaryRepository.findById(campId)
+                .orElseThrow(() -> new EntityNotFoundException("해당 캠핑장의 리뷰 정보가 존재하지 않습니다."));
+
+        campingSummary.decrementReviewCnt();
         campingSummaryRepository.save(campingSummary);
     }
 
@@ -169,12 +185,8 @@ public class ReviewServiceImpl implements ReviewService {
 
     private void verifyReviewPermission(long reviewerId, long userId, String action) {
         if (reviewerId != userId) {
-            throw new NotAuthorizedException("이 리뷰를 "+ action + "할 권한이 없습니다.", HttpStatus.FORBIDDEN);
+            throw new NotAuthorizedException("이 리뷰를 " + action + "할 권한이 없습니다.", HttpStatus.FORBIDDEN);
         }
     }
 
-    private void updateRatingSummary(Review oldReview, Review newReview) {
-        ratingSummaryRepository.decrementRating(oldReview.getCampId(), oldReview.getRating());
-        ratingSummaryRepository.incrementRating(newReview.getCampId(), newReview.getRating());
-    }
 }
