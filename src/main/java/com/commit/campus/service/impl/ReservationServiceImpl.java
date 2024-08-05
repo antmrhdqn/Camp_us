@@ -164,6 +164,11 @@ public class ReservationServiceImpl implements ReservationService {
         return reservationDTO;
     }
 
+    @Override
+    public void cancelReservation(ReservationDTO reservationDTO) {
+
+    }
+
     // redis에 저장할 해쉬키 생성(예약일자 + 인덱스값)
     private synchronized String createReservationId(LocalDateTime reservationDate) {
 
