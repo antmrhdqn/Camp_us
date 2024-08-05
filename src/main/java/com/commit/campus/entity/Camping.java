@@ -74,19 +74,19 @@ public class Camping implements Serializable {
     private int staffCount;
 
     @Column(name = "general_site_cnt")
-    private Integer generalSiteCnt;
+    private int generalSiteCnt;
 
     @Column(name = "car_site_cnt")
-    private Integer carSiteCnt;
+    private int carSiteCnt;
 
     @Column(name = "glamping_site_cnt")
-    private Integer glampingSiteCnt;
+    private int glampingSiteCnt;
 
     @Column(name = "caravan_site_cnt")
-    private Integer caravanSiteCnt;
+    private int caravanSiteCnt;
 
     @Column(name = "personal_caravan_site_cnt")
-    private Integer personalCaravanSiteCnt;
+    private int personalCaravanSiteCnt;
 
     @Column(name = "created_date")
     private LocalDateTime createdDate;
