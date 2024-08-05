@@ -2,7 +2,6 @@ package com.commit.campus.service.impl;
 
 import com.commit.campus.common.exceptions.NotAuthorizedException;
 import com.commit.campus.common.exceptions.ReviewAlreadyExistsException;
-import com.commit.campus.common.exceptions.ReviewNotFoundException;
 import com.commit.campus.dto.ReviewDTO;
 import com.commit.campus.entity.CampingSummary;
 import com.commit.campus.entity.MyReview;
@@ -78,7 +77,7 @@ public class ReviewServiceImpl implements ReviewService {
     public void deleteReview(long reviewId, long userId) {
 
         Review review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new ReviewNotFoundException("작성된 리뷰가 존재하지 않습니다.", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new EntityNotFoundException("작성된 리뷰가 존재하지 않습니다."));
 
         long reviewer = review.getUserId();
 
@@ -152,7 +151,7 @@ public class ReviewServiceImpl implements ReviewService {
 
     private Review findReviewById(long reviewId) {
         return reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new ReviewNotFoundException("리뷰를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new EntityNotFoundException("리뷰를 찾을 수 없습니다."));
     }
 
     private Review updateReviewFromDTO(Review review, ReviewDTO reviewDTO) {

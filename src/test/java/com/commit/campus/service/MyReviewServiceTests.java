@@ -1,6 +1,5 @@
 package com.commit.campus.service;
 
-import com.commit.campus.common.exceptions.ReviewNotFoundException;
 import com.commit.campus.dto.CampingDTO;
 import com.commit.campus.dto.ReviewDTO;
 import com.commit.campus.entity.Camping;
@@ -10,6 +9,7 @@ import com.commit.campus.repository.CampingRepository;
 import com.commit.campus.repository.MyReviewRepository;
 import com.commit.campus.repository.ReviewRepository;
 import com.commit.campus.service.impl.MyReviewServiceImpl;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -100,7 +100,7 @@ class MyReviewServiceTests {
     }
 
     @Test
-    void 내_리뷰_조회_성공() throws ReviewNotFoundException {
+    void 내_리뷰_조회_성공(){
         long userId = 1L;
         Pageable pageable = PageRequest.of(0, 10);
         List<Review> reviews = Arrays.asList(review1, review2);
@@ -127,13 +127,13 @@ class MyReviewServiceTests {
 
         when(myReviewRepository.findById(userId)).thenReturn(Optional.empty());
 
-        assertThrows(ReviewNotFoundException.class, () -> myReviewService.getMyReviews(userId, pageable));
+        assertThrows(EntityNotFoundException.class, () -> myReviewService.getMyReviews(userId, pageable));
         verify(myReviewRepository).findById(userId);
         verify(reviewRepository, never()).findByReviewIdIn(any(), any());
     }
 
     @Test
-    void 리뷰한_캠핑장_조회_성공() throws ReviewNotFoundException {
+    void 리뷰한_캠핑장_조회_성공() {
         long userId = 1L;
         Pageable pageable = PageRequest.of(0, 10);
         List<Review> reviews = Arrays.asList(review1, review2);
@@ -163,7 +163,7 @@ class MyReviewServiceTests {
 
         when(myReviewRepository.findById(userId)).thenReturn(Optional.empty());
 
-        assertThrows(ReviewNotFoundException.class, () -> myReviewService.getReviewedCampings(userId, pageable));
+        assertThrows(EntityNotFoundException.class, () -> myReviewService.getReviewedCampings(userId, pageable));
         verify(myReviewRepository).findById(userId);
         verify(reviewRepository, never()).findByReviewIdIn(any());
         verify(campingRepository, never()).findByCampIdIn(any(), any());

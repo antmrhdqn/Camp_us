@@ -15,13 +15,6 @@ public class GlobalExceptionHandler {
                 .body(ex.getMessage());
     }
 
-    @ExceptionHandler(ReviewNotFoundException.class)
-    public ResponseEntity<String> handleReviewNotFoundException(ReviewNotFoundException ex) {
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(ex.getMessage());
-    }
-
     @ExceptionHandler(NotAuthorizedException.class)
     public ResponseEntity<String> handleNotAuthorizedException(NotAuthorizedException ex) {
         return ResponseEntity
