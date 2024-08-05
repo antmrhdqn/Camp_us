@@ -129,6 +129,7 @@ public class ReservationServiceImpl implements ReservationService {
         Date leavingDate = Date.from(reservationDTO.getLeavingDate().atZone(ZoneId.systemDefault()).toInstant());
         log.info("leavingDate = " + leavingDate);
 
+        // 캠핑장 아이디와 예약시 입력한 입퇴실 날짜가 일치하는 데이터를 모두 조회하여 리스트에 담기
         List<Availability> availabilityList = availabilityRepository.findByCampIdAndDateBetween(campId, entryDate, leavingDate);
 
         log.info("Availability List:");
@@ -136,15 +137,21 @@ public class ReservationServiceImpl implements ReservationService {
             log.info(availability.toString());
         }
 
-        // 조회했는데 데이터가 없는 경우 -> 입실 ~ 퇴실 날짜 사이의 데이터를 새로 생성
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(entryDate);
 
-        // 캠핑장 아이디로 예약 가능 테이블을 스캔하여 입실 ~ 퇴실 날짜의 데이터가 존재하는지 여부 판단
+        // 입실 날짜부터 퇴실 날짜까지 반복하며 해당 날짜로 된 date가 존재하는지 확인
         while (!calendar.getTime().after(leavingDate)) {
+            log.info("while문 동작 중");
             Date date = new java.sql.Date(calendar.getTime().getTime());
+
+            // equalsDate 잘 찾는지 로그 확인용
+            availabilityList.stream()
+                    .filter(a -> dateEquals(a.getDate(), date))
+                    .forEach(a -> log.info("찾았다!: " + a.toString()));
+
             boolean exists = availabilityList.stream()
-                    .anyMatch(a -> a.getDate().equals(date));
+                    .anyMatch(a -> dateEquals(a.getDate(), date));
 
             // 해당 날짜의 데이터가 없는 경우 새로 생성
             if (!exists) {
@@ -155,7 +162,7 @@ public class ReservationServiceImpl implements ReservationService {
             calendar.add(Calendar.DATE, 1);
         }
 
-        // 했는데 데이터가 있는 경우 -> 입실 ~ 퇴실 날짜에 사용자가 예약한 시설 유형에 해당하는 카운트를 하나 차감(업데이트)
+        // 예약 가능 개수 업데이트
         decreaseAvailability(reservationDTO, entryDate, leavingDate);
 
         return reservationDTO;
@@ -244,6 +251,17 @@ public class ReservationServiceImpl implements ReservationService {
             }
             calendar.add(Calendar.DATE, 1);
         }
+    }
+
+    // 날짜 비교 메소드
+    public boolean dateEquals(Date date1, Date date2) {
+        Calendar cal1 = Calendar.getInstance();
+        Calendar cal2 = Calendar.getInstance();
+        cal1.setTime(date1);
+        cal2.setTime(date2);
+        return (cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR)) &&
+                (cal1.get(Calendar.MONTH) == cal2.get(Calendar.MONTH)) &&
+                (cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH));
     }
 
 
