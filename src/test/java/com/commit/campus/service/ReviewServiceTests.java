@@ -298,7 +298,7 @@ class ReviewServiceTests {
                 .build();
 
         MyReview myReview = new MyReview(userId);
-        myReview.incrementReview(reviewId);
+        myReview.incrementReviewCnt(reviewId);
 
         when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(existingReview));
         when(campingSummaryRepository.findById(1L)).thenReturn(Optional.of(campingSummary));

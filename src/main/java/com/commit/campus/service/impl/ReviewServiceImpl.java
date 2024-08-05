@@ -84,7 +84,7 @@ public class ReviewServiceImpl implements ReviewService {
         MyReview myReview = myReviewRepository.findById(savedReview.getUserId())
                 .orElse(new MyReview(savedReview.getUserId()));
 
-        myReview.incrementReview(savedReview.getReviewId());
+        myReview.incrementReviewCnt(savedReview.getReviewId());
         log.info("서비스 확인 myreview {}", myReview);
         myReviewRepository.save(myReview);
         log.info("서비스 확인 내 리뷰 저장 완료");
@@ -145,7 +145,7 @@ public class ReviewServiceImpl implements ReviewService {
         MyReview myReview = myReviewRepository.findById(userId)
                 .orElseThrow(() -> new IllegalStateException("사용자의 리뷰 정보가 존재하지 않습니다. 데이터 무결성 문제가 있을 수 있습니다."));
 
-        myReview.decrementReview(reviewId);
+        myReview.decrementReviewCnt(reviewId);
         myReviewRepository.save(myReview);
 
         reviewRepository.delete(review);
