@@ -4,12 +4,10 @@ import com.commit.campus.common.exceptions.NotAuthorizedException;
 import com.commit.campus.common.exceptions.ReviewAlreadyExistsException;
 import com.commit.campus.common.exceptions.ReviewNotFoundException;
 import com.commit.campus.dto.ReviewDTO;
+import com.commit.campus.entity.CampingSummary;
 import com.commit.campus.entity.MyReview;
 import com.commit.campus.entity.Review;
-import com.commit.campus.repository.MyReviewRepository;
-import com.commit.campus.repository.RatingSummaryRepository;
-import com.commit.campus.repository.ReviewRepository;
-import com.commit.campus.repository.UserRepository;
+import com.commit.campus.repository.*;
 import com.commit.campus.service.ReviewService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
@@ -31,13 +29,15 @@ public class ReviewServiceImpl implements ReviewService {
     private final MyReviewRepository myReviewRepository;
     private final UserRepository userRepository;
     private final RatingSummaryRepository ratingSummaryRepository;
+    private final CampingSummaryRepository campingSummaryRepository;
     private final ModelMapper modelMapper;
 
-    public ReviewServiceImpl(ReviewRepository reviewRepository, MyReviewRepository myReviewRepository, UserRepository userRepository, RatingSummaryRepository ratingSummaryRepository, ModelMapper modelMapper) {
+    public ReviewServiceImpl(ReviewRepository reviewRepository, MyReviewRepository myReviewRepository, UserRepository userRepository, RatingSummaryRepository ratingSummaryRepository, CampingSummaryRepository campingSummaryRepository, ModelMapper modelMapper) {
         this.reviewRepository = reviewRepository;
         this.myReviewRepository = myReviewRepository;
         this.userRepository = userRepository;
         this.ratingSummaryRepository = ratingSummaryRepository;
+        this.campingSummaryRepository = campingSummaryRepository;
         this.modelMapper = modelMapper;
     }
 
@@ -79,17 +79,27 @@ public class ReviewServiceImpl implements ReviewService {
                 .build();
         log.info("서비스 확인 entity {}", review);
 
-        Review savedReivew = reviewRepository.save(review);
+        Review savedReview = reviewRepository.save(review);
 
-        MyReview myReview = myReviewRepository.findById(savedReivew.getUserId())
-                .orElse(new MyReview(savedReivew.getUserId()));
+        MyReview myReview = myReviewRepository.findById(savedReview.getUserId())
+                .orElse(new MyReview(savedReview.getUserId()));
 
-        myReview.addReview(savedReivew.getReviewId());
+        myReview.incrementReviewCnt(savedReview.getReviewId());
         log.info("서비스 확인 myreview {}", myReview);
-
         myReviewRepository.save(myReview);
         log.info("서비스 확인 내 리뷰 저장 완료");
-        ratingSummaryRepository.addRating(savedReivew.getCampId(), savedReivew.getRating());
+
+        ratingSummaryRepository.incrementRating(savedReview.getCampId(), savedReview.getRating());
+
+        CampingSummary campingSummary = campingSummaryRepository.findById(savedReview.getCampId())
+                .orElseGet(() -> CampingSummary.builder()
+                        .campId(savedReview.getCampId())
+                        .bookmarkCnt(0)
+                        .reviewCnt(0)
+                        .build());
+
+        campingSummary.incrementReviewCnt();
+        campingSummaryRepository.save(campingSummary);
     }
 
     @Override
@@ -107,8 +117,8 @@ public class ReviewServiceImpl implements ReviewService {
 
         reviewRepository.save(updatedReview);
 
-        ratingSummaryRepository.removeRating(originReview.getCampId(), originReview.getRating());
-        ratingSummaryRepository.addRating(updatedReview.getCampId(), updatedReview.getRating());
+        ratingSummaryRepository.decrementRating(originReview.getCampId(), originReview.getRating());
+        ratingSummaryRepository.incrementRating(updatedReview.getCampId(), updatedReview.getRating());
 
     }
 
@@ -124,13 +134,18 @@ public class ReviewServiceImpl implements ReviewService {
             throw new NotAuthorizedException("이 리뷰를 삭제할 권한이 없습니다.", HttpStatus.FORBIDDEN);
         }
 
-        ratingSummaryRepository.removeRating(review.getCampId(), review.getRating());
+        CampingSummary campingSummary = campingSummaryRepository.findById(review.getCampId())
+                .orElseThrow(() -> new IllegalStateException("해당 캠핑장의 리뷰 정보가 존재하지 않습니다. 데이터 무결성 문제가 있을 수 있습니다."));
+
+        campingSummary.decrementReviewCnt();
+        campingSummaryRepository.save(campingSummary);
+
+        ratingSummaryRepository.decrementRating(review.getCampId(), review.getRating());
 
         MyReview myReview = myReviewRepository.findById(userId)
                 .orElseThrow(() -> new IllegalStateException("사용자의 리뷰 정보가 존재하지 않습니다. 데이터 무결성 문제가 있을 수 있습니다."));
 
-        myReview.removeReview(reviewId);
-
+        myReview.decrementReviewCnt(reviewId);
         myReviewRepository.save(myReview);
 
         reviewRepository.delete(review);
