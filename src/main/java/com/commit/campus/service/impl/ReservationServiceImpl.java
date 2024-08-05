@@ -132,11 +132,6 @@ public class ReservationServiceImpl implements ReservationService {
         // 캠핑장 아이디와 예약시 입력한 입퇴실 날짜가 일치하는 데이터를 모두 조회하여 리스트에 담기
         List<Availability> availabilityList = availabilityRepository.findByCampIdAndDateBetween(campId, entryDate, leavingDate);
 
-        log.info("Availability List:");
-        for (Availability availability : availabilityList) {
-            log.info(availability.toString());
-        }
-
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(entryDate);
 
@@ -155,6 +150,7 @@ public class ReservationServiceImpl implements ReservationService {
 
             // 해당 날짜의 데이터가 없는 경우 새로 생성
             if (!exists) {
+                log.info("하나 추가합니다~");
                 Camping camping = campingRepository.findById(campId).orElse(null);
                 Availability newAvailability = createAvailability(camping, date);
                 availabilityRepository.save(newAvailability);
@@ -221,33 +217,36 @@ public class ReservationServiceImpl implements ReservationService {
 
         while (!calendar.getTime().after(leavingDate)) {
             Date date = new java.sql.Date(calendar.getTime().getTime());
-            Availability availability = availabilityRepository.findByCampIdAndDate(reservationDTO.getCampId(), date);
+            List<Availability> availabilities = availabilityRepository.findByCampIdAndDate(reservationDTO.getCampId(), date);
 
-            log.info("availability = " + availability);
+            if (availabilities != null && !availabilities.isEmpty()) {
+                Availability availability = availabilities.get(0); // 첫 번째 결과만 사용하거나 필요에 따라 처리
+                log.info("availability = " + availability);
 
-            if (availability != null) {
-                log.info("if문 실행됨");
-                switch (reservationDTO.getCampFacsType()) {
-                    case 1: // 일반 야영장
-                        availability.setGeneralSiteAvail(availability.getGeneralSiteAvail() - 1);
-                        log.info("일반야영장 개수 차감");
-                        break;
-                    case 2: // 자동차 야영장
-                        availability.setCarSiteAvail(availability.getCarSiteAvail() - 1);
-                        log.info("자동차야영장 개수 차감");
-                        break;
-                    case 3: // 글램핑장
-                        availability.setGlampingSiteAvail(availability.getGlampingSiteAvail() - 1);
-                        log.info("글램핑 개수 차감");
-                        break;
-                    case 4: // 카라반
-                        availability.setCaravanSiteAvail(availability.getCaravanSiteAvail() - 1);
-                        log.info("카라반 개수 차감");
-                        break;
-                    default:
-                        throw new RuntimeException("잘못된 캠프 시설 유형입니다.");
+                if (availability != null) {
+                    log.info("if문 실행됨");
+                    switch (reservationDTO.getCampFacsType()) {
+                        case 1: // 일반 야영장
+                            availability.setGeneralSiteAvail(availability.getGeneralSiteAvail() - 1);
+                            log.info("일반야영장 개수 차감");
+                            break;
+                        case 2: // 자동차 야영장
+                            availability.setCarSiteAvail(availability.getCarSiteAvail() - 1);
+                            log.info("자동차야영장 개수 차감");
+                            break;
+                        case 3: // 글램핑장
+                            availability.setGlampingSiteAvail(availability.getGlampingSiteAvail() - 1);
+                            log.info("글램핑 개수 차감");
+                            break;
+                        case 4: // 카라반
+                            availability.setCaravanSiteAvail(availability.getCaravanSiteAvail() - 1);
+                            log.info("카라반 개수 차감");
+                            break;
+                        default:
+                            throw new RuntimeException("잘못된 캠프 시설 유형입니다.");
+                    }
+                    availabilityRepository.save(availability);
                 }
-                availabilityRepository.save(availability);
             }
             calendar.add(Calendar.DATE, 1);
         }
@@ -263,7 +262,6 @@ public class ReservationServiceImpl implements ReservationService {
                 (cal1.get(Calendar.MONTH) == cal2.get(Calendar.MONTH)) &&
                 (cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH));
     }
-
 
     @Override
     public String redisHealthCheck() {
