@@ -125,7 +125,7 @@ public class ReservationServiceImpl implements ReservationService {
         reservationRepository.save(reservation);
 
         // 이용 가능 개수 차감
-//        decreaseAvailability(reservationDTO);
+        decreaseAvailability(reservationDTO);
 
         return null;
     }
@@ -180,6 +180,34 @@ public class ReservationServiceImpl implements ReservationService {
                 return availability.getCaravanSiteAvail() > 0;
             default:
                 return false;
+        }
+    }
+
+    // 이용 가능 개수 차감 메소드
+    private void decreaseAvailability(ReservationDTO reservationDTO) {
+        Availability availability = availabilityRepository.findByCampIdAndDate(
+                reservationDTO.getCampId(), java.sql.Date.valueOf(reservationDTO.getReservationDate().toLocalDate())
+        );
+
+        if (availability != null) {
+            switch (reservationDTO.getCampFacsId().intValue()) {
+                case 1: // 일반 사이트
+                    availability.setGeneralSiteAvail(availability.getGeneralSiteAvail() - 1);
+                    break;
+                case 2: // 자동차 사이트
+                    availability.setCarSiteAvail(availability.getCarSiteAvail() - 1);
+                    break;
+                case 3: // 글램핑 사이트
+                    availability.setGlampingSiteAvail(availability.getGlampingSiteAvail() - 1);
+                    break;
+                case 4: // 카라반 사이트
+                    availability.setCaravanSiteAvail(availability.getCaravanSiteAvail() - 1);
+                    break;
+                default:
+                    throw new RuntimeException("잘못된 캠프 시설 ID입니다.");
+            }
+
+            availabilityRepository.save(availability);
         }
     }
 }
