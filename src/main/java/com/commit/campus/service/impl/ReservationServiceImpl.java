@@ -127,7 +127,7 @@ public class ReservationServiceImpl implements ReservationService {
         // 이용 가능 개수 차감
         decreaseAvailability(reservationDTO);
 
-        return null;
+        return reservationDTO;
     }
 
     private synchronized String createReservationId(LocalDateTime reservationDate) {
