@@ -7,7 +7,6 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 @Repository
 @Slf4j
@@ -19,11 +18,11 @@ public class RatingSummaryRepository {
         this.ratingSummaryTable = dynamoDbEnhancedClient.table("RATING_SUMMARY", TableSchema.fromBean(RatingSummary.class));
     }
 
-    public void addRating(Long campId, Byte rating) {
+    public void incrementRating(Long campId, Byte rating) {
         updateRatingSummary(campId, rating, true);
     }
 
-    public void removeRating(Long campId, Byte rating) {
+    public void decrementRating(Long campId, Byte rating) {
         updateRatingSummary(campId, rating, false);
     }
 

@@ -1,13 +1,12 @@
 package com.commit.campus.service;
 
+import com.commit.campus.common.exceptions.NotAuthorizedException;
 import com.commit.campus.common.exceptions.ReviewAlreadyExistsException;
 import com.commit.campus.dto.ReviewDTO;
+import com.commit.campus.entity.CampingSummary;
 import com.commit.campus.entity.MyReview;
 import com.commit.campus.entity.Review;
-import com.commit.campus.repository.MyReviewRepository;
-import com.commit.campus.repository.RatingSummaryRepository;
-import com.commit.campus.repository.ReviewRepository;
-import com.commit.campus.repository.UserRepository;
+import com.commit.campus.repository.*;
 import com.commit.campus.service.impl.ReviewServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +37,7 @@ class ReviewServiceTests {
     @Mock private MyReviewRepository myReviewRepository;
     @Mock private UserRepository userRepository;
     @Mock private RatingSummaryRepository ratingSummaryRepository;
+    @Mock private CampingSummaryRepository campingSummaryRepository;
     @Mock private ModelMapper modelMapper;
 
     @InjectMocks
@@ -178,7 +178,7 @@ class ReviewServiceTests {
         MyReview savedMyReview = myReviewCaptor.getValue();
         assertThat(savedMyReview.getReviewIds()).contains(review.getReviewId());
 
-        verify(ratingSummaryRepository).ratingUpdate(reviewDTO.getCampId(), reviewDTO.getRating());
+        verify(ratingSummaryRepository).incrementRating(reviewDTO.getCampId(), reviewDTO.getRating());
     }
 
     @Test
@@ -199,9 +199,156 @@ class ReviewServiceTests {
         verify(reviewRepository, never()).save(any(Review.class));
         verify(myReviewRepository, never()).findById(anyLong());
         verify(myReviewRepository, never()).save(any(MyReview.class));
-        verify(ratingSummaryRepository, never()).ratingUpdate(anyLong(), anyByte());
+        verify(ratingSummaryRepository, never()).incrementRating(anyLong(), anyByte());
     }
 
+    @Test
+    void 정상적인_리뷰_업데이트() {
+        // Given
+        long reviewId = 1L;
+        long userId = 101L;
+        Review existingReview = Review.builder()
+                .reviewId(reviewId)
+                .campId(1L)
+                .userId(userId)
+                .reviewContent("기존 리뷰 내용")
+                .rating((byte) 4)
+                .reviewCreatedDate(LocalDateTime.now().minusDays(1))
+                .reviewImageUrl("old_image.jpg")
+                .build();
+
+        ReviewDTO updateDTO = new ReviewDTO();
+        updateDTO.setReviewId(reviewId);
+        updateDTO.setReviewContent("업데이트된 리뷰 내용");
+        updateDTO.setRating((byte) 5);
+        updateDTO.setReviewImageUrl("new_image.jpg");
+
+        when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(existingReview));
+        when(reviewRepository.save(any(Review.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        // When
+        reviewService.updateReview(updateDTO, userId);
+
+        // Then
+        ArgumentCaptor<Review> reviewCaptor = ArgumentCaptor.forClass(Review.class);
+        verify(reviewRepository).save(reviewCaptor.capture());
+        Review updatedReview = reviewCaptor.getValue();
+
+        assertThat(updatedReview.getReviewContent()).isEqualTo("업데이트된 리뷰 내용");
+        assertThat(updatedReview.getRating()).isEqualTo((byte) 5);
+        assertThat(updatedReview.getReviewImageUrl()).isEqualTo("new_image.jpg");
+        assertThat(updatedReview.getReviewModificationDate()).isNotNull();
+
+        verify(ratingSummaryRepository).decrementRating(existingReview.getCampId(), existingReview.getRating());
+        verify(ratingSummaryRepository).incrementRating(updatedReview.getCampId(), updatedReview.getRating());
+    }
+
+    @Test
+    void 권한_없는_사용자의_리뷰_업데이트_시도() {
+        // Given
+        long reviewId = 1L;
+        long userId = 101L;
+        long differentUserId = 102L;
+        Review existingReview = Review.builder()
+                .reviewId(reviewId)
+                .campId(1L)
+                .userId(userId)
+                .reviewContent("기존 리뷰 내용")
+                .rating((byte) 4)
+                .reviewCreatedDate(LocalDateTime.now().minusDays(1))
+                .build();
+
+        ReviewDTO updateDTO = new ReviewDTO();
+        updateDTO.setReviewId(reviewId);
+        updateDTO.setReviewContent("업데이트된 리뷰 내용");
+
+        when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(existingReview));
+
+        // When & Then
+        assertThatThrownBy(() -> reviewService.updateReview(updateDTO, differentUserId))
+                .isInstanceOf(NotAuthorizedException.class)
+                .hasMessage("이 리뷰를 수정할 권한이 없습니다.")
+                .satisfies(exception -> {
+                    NotAuthorizedException castedEx = (NotAuthorizedException) exception;
+                    assertThat(castedEx.getStatus()).isEqualTo(HttpStatus.FORBIDDEN);
+                });
+
+        verify(reviewRepository, never()).save(any(Review.class));
+        verify(ratingSummaryRepository, never()).decrementRating(anyLong(), anyByte());
+        verify(ratingSummaryRepository, never()).incrementRating(anyLong(), anyByte());
+    }
+
+    @Test
+    void 정상적인_리뷰_삭제() {
+        // Given
+        long reviewId = 1L;
+        long userId = 101L;
+        Review existingReview = Review.builder()
+                .reviewId(reviewId)
+                .campId(1L)
+                .userId(userId)
+                .reviewContent("삭제될 리뷰 내용")
+                .rating((byte) 4)
+                .reviewCreatedDate(LocalDateTime.now().minusDays(1))
+                .build();
+
+        CampingSummary campingSummary = CampingSummary.builder()
+                .campId(1L)
+                .reviewCnt(1)
+                .build();
+
+        MyReview myReview = new MyReview(userId);
+        myReview.incrementReviewCnt(reviewId);
+
+        when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(existingReview));
+        when(campingSummaryRepository.findById(1L)).thenReturn(Optional.of(campingSummary));
+        when(myReviewRepository.findById(userId)).thenReturn(Optional.of(myReview));
+
+        // When
+        reviewService.deleteReview(reviewId, userId);
+
+        // Then
+        verify(reviewRepository).delete(existingReview);
+        verify(campingSummaryRepository).save(campingSummary);
+        assertThat(campingSummary.getReviewCnt()).isZero();
+
+        verify(ratingSummaryRepository).decrementRating(existingReview.getCampId(), existingReview.getRating());
+
+        verify(myReviewRepository).save(myReview);
+        assertThat(myReview.getReviewIds()).doesNotContain(reviewId);
+    }
+
+    @Test
+    void 권한_없는_사용자의_리뷰_삭제_시도() {
+        // Given
+        long reviewId = 1L;
+        long userId = 101L;
+        long differentUserId = 102L;
+        Review existingReview = Review.builder()
+                .reviewId(reviewId)
+                .campId(1L)
+                .userId(userId)
+                .reviewContent("삭제될 리뷰 내용")
+                .rating((byte) 4)
+                .reviewCreatedDate(LocalDateTime.now().minusDays(1))
+                .build();
+
+        when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(existingReview));
+
+        // When & Then
+        assertThatThrownBy(() -> reviewService.deleteReview(reviewId, differentUserId))
+                .isInstanceOf(NotAuthorizedException.class)
+                .hasMessage("이 리뷰를 삭제할 권한이 없습니다.")
+                .satisfies(exception -> {
+                    NotAuthorizedException castedEx = (NotAuthorizedException) exception;
+                    assertThat(castedEx.getStatus()).isEqualTo(HttpStatus.FORBIDDEN);
+                });
+
+        verify(reviewRepository, never()).delete(any(Review.class));
+        verify(campingSummaryRepository, never()).save(any(CampingSummary.class));
+        verify(ratingSummaryRepository, never()).decrementRating(anyLong(), anyByte());
+        verify(myReviewRepository, never()).save(any(MyReview.class));
+    }
 
     // 테스트 데이터 생성을 위한 헬퍼 메소드
     private List<Review> createTestReviews(long campId, int count) {

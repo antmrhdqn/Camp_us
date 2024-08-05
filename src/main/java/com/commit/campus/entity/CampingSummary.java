@@ -31,4 +31,14 @@ public class CampingSummary {
         this.bookmarkCnt = bookmarkCnt;
         this.reviewCnt = reviewCnt;
     }
+
+    public void incrementReviewCnt() {
+        this.reviewCnt++;
+    }
+
+    public void decrementReviewCnt() {
+        if (this.reviewCnt > 0) {
+            this.reviewCnt--;
+        }
+    }
 }

@@ -56,14 +56,14 @@ public class MyReview {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void addReview(Long reviewId) {
+    public void incrementReviewCnt(Long reviewId) {
         this.reviewCount++;
         this.reviewIds.add(reviewId);
         this.lastReviewDate = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void removeReview(Long reviewId) {
+    public void decrementReviewCnt(Long reviewId) {
         this.reviewIds.remove(reviewId);
         this.reviewCount--;
         this.updatedAt = LocalDateTime.now();
