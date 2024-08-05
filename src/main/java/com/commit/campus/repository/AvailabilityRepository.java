@@ -4,7 +4,8 @@ import com.commit.campus.entity.Availability;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Date;
+import java.util.List;
 
 public interface AvailabilityRepository extends JpaRepository<Availability, Long> {
-    Availability findByCampIdAndDate(Long campId, Date date);
+    List<Availability> findByCampIdAndDateBetween(Long campId, Date startDate, Date endDate);
 }
