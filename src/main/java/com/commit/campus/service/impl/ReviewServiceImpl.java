@@ -65,7 +65,7 @@ public class ReviewServiceImpl implements ReviewService {
 
         Review originReview = findReviewById(reviewDTO.getReviewId());
 
-        verifyReviewEditPermission(originReview.getUserId(), userId);
+        verifyReviewPermission(originReview.getUserId(), userId, "수정");
 
         Review updatedReview = updateReviewFromDTO(originReview, reviewDTO);
         reviewRepository.save(updatedReview);
@@ -167,9 +167,9 @@ public class ReviewServiceImpl implements ReviewService {
                 .build();
     }
 
-    private void verifyReviewEditPermission(long reviewerId, long userId) {
+    private void verifyReviewPermission(long reviewerId, long userId, String action) {
         if (reviewerId != userId) {
-            throw new NotAuthorizedException("이 리뷰를 수정할 권한이 없습니다.", HttpStatus.FORBIDDEN);
+            throw new NotAuthorizedException("이 리뷰를 "+ action + "할 권한이 없습니다.", HttpStatus.FORBIDDEN);
         }
     }
 
