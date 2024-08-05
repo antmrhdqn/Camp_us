@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 @Table(name = "reservation")
 @Entity
 @Getter
-@Builder
+@Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class Reservation implements Serializable {
@@ -49,4 +49,5 @@ public class Reservation implements Serializable {
     @ManyToOne
     @JoinColumn(name = "user_id", insertable = false, updatable = false)
     private User user;
+
 }

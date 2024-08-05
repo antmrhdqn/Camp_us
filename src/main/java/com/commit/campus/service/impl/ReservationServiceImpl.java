@@ -159,21 +159,28 @@ public class ReservationServiceImpl implements ReservationService {
         }
 
         // 예약 가능 개수 업데이트
-        decreaseAvailability(reservationDTO, entryDate, leavingDate);
+        updateAvailability(reservationDTO, entryDate, leavingDate, -1);
 
         return reservationDTO;
     }
 
     @Override
+    @Transactional
     public void cancelReservation(ReservationDTO reservationDTO) {
         // 예약 아이디로 예약 테이블에서 데이터 찾아오기
-        Reservation reservation = reservationRepository.findById(reservationDTO.getReservationId()).orElse(null);
+        Reservation reservation = reservationRepository.findById(reservationDTO.getReservationId())
+                .orElseThrow(() -> new RuntimeException("예약을 찾을 수 없습니다: " + reservationDTO.getReservationId()));
 
         // 해당 데이터의 reservationStatus를 "취소"로 변경
+        Reservation updatedReservation = reservation.toBuilder()
+                .reservationStatus("취소")
+                .build();
+        reservationRepository.save(updatedReservation);
 
         // 캠핑장 id와 예약한 campFacsType을 이용하여 Availability 테이블의 시설 예약 가능 개수를 하나 증가시킴
-
-
+        Date entryDate = Date.from(updatedReservation.getEntryDate().atZone(ZoneId.systemDefault()).toInstant());
+        Date leavingDate = Date.from(updatedReservation.getLeavingDate().atZone(ZoneId.systemDefault()).toInstant());
+        updateAvailability(reservationDTO, entryDate, leavingDate, 1);
     }
 
     // redis에 저장할 해쉬키 생성(예약일자 + 인덱스값)
@@ -222,7 +229,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     // 이용 가능 개수 차감 메소드
-    private void decreaseAvailability(ReservationDTO reservationDTO, Date entryDate, Date leavingDate) {
+    private void updateAvailability(ReservationDTO reservationDTO, Date entryDate, Date leavingDate, int changeCount) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(entryDate);
         log.info("decreaseAvailability 실행됨");
@@ -240,15 +247,15 @@ public class ReservationServiceImpl implements ReservationService {
                     switch (reservationDTO.getCampFacsType()) {
                         case 1: // 일반 야영장
                             availability.setGeneralSiteAvail(availability.getGeneralSiteAvail() - 1);
-                            log.info("일반야영장 개수 차감");
+                            log.info("일반야영장 개수 변경");
                             break;
                         case 2: // 자동차 야영장
                             availability.setCarSiteAvail(availability.getCarSiteAvail() - 1);
-                            log.info("자동차야영장 개수 차감");
+                            log.info("자동차야영장 개수 변경");
                             break;
                         case 3: // 글램핑장
                             availability.setGlampingSiteAvail(availability.getGlampingSiteAvail() - 1);
-                            log.info("글램핑 개수 차감");
+                            log.info("글램핑 개수 변경");
                             break;
                         case 4: // 카라반
                             availability.setCaravanSiteAvail(availability.getCaravanSiteAvail() - 1);
