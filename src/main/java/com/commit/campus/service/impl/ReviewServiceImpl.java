@@ -63,20 +63,15 @@ public class ReviewServiceImpl implements ReviewService {
 
     @Override
     public void updateReview(ReviewDTO reviewDTO, long userId) {
-        Review originReview = reviewRepository.findById(reviewDTO.getReviewId())
-                .orElseThrow(() -> new EntityNotFoundException("엔티티를 찾을 수 없습니다."));
 
-        if (!(originReview.getUserId() == userId)) {
-            throw new NotAuthorizedException("이 리뷰를 수정할 권한이 없습니다.", HttpStatus.FORBIDDEN);
-        }
+        Review originReview = findReviewById(reviewDTO.getReviewId());
+
+        verifyReviewEditPermission(originReview.getUserId(), userId);
 
         Review updatedReview = updateReviewFromDTO(originReview, reviewDTO);
-
         reviewRepository.save(updatedReview);
 
-        ratingSummaryRepository.decrementRating(originReview.getCampId(), originReview.getRating());
-        ratingSummaryRepository.incrementRating(updatedReview.getCampId(), updatedReview.getRating());
-
+        updateRatingSummary(originReview, updatedReview);
     }
 
     @Override
@@ -155,6 +150,11 @@ public class ReviewServiceImpl implements ReviewService {
         campingSummaryRepository.save(campingSummary);
     }
 
+    private Review findReviewById(long reviewId) {
+        return reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new ReviewNotFoundException("리뷰를 찾을 수 없습니다.", HttpStatus.NOT_FOUND));
+    }
+
     private Review updateReviewFromDTO(Review review, ReviewDTO reviewDTO) {
         return Review.builder()
                 .reviewId(review.getReviewId())
@@ -166,5 +166,16 @@ public class ReviewServiceImpl implements ReviewService {
                 .reviewModificationDate(LocalDateTime.now())
                 .reviewImageUrl(reviewDTO.getReviewImageUrl() != null ? reviewDTO.getReviewImageUrl() : review.getReviewImageUrl())
                 .build();
+    }
+
+    private void verifyReviewEditPermission(long reviewerId, long userId) {
+        if (reviewerId != userId) {
+            throw new NotAuthorizedException("이 리뷰를 수정할 권한이 없습니다.", HttpStatus.FORBIDDEN);
+        }
+    }
+
+    private void updateRatingSummary(Review oldReview, Review newReview) {
+        ratingSummaryRepository.decrementRating(oldReview.getCampId(), oldReview.getRating());
+        ratingSummaryRepository.incrementRating(newReview.getCampId(), newReview.getRating());
     }
 }
