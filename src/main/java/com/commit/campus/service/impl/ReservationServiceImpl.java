@@ -14,8 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -51,24 +51,6 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    public String redisHealthCheck() {
-        try {
-            ValueOperations<String, String> opsForValue = redisTemplate.opsForValue();
-            opsForValue.set("health_check", "OK");
-            String result = opsForValue.get("health_check");
-
-            if ("OK".equals(result)) {
-                return "레디스 실행중 ~,~";
-            } else {
-                return "레디스 서버 연결 실패!";
-            }
-
-        } catch (Exception e) {
-            return "연결 실패했따: " + e.getMessage();
-        }
-    }
-
-    @Override
     public String createReservation(ReservationDTO reservationDTO) {
 
         // 예약 가능 여부 체크
@@ -83,8 +65,10 @@ public class ReservationServiceImpl implements ReservationService {
 
         log.info("key = " + key);
 
+        // 캐시 만료 시간 설정(7200초)
         redisCommands.expire(key, DEFAULT_TTL_SECONDS);
 
+        // redis에 예약 내역 임시 저장
         try {
             redisCommands.hset(key, "reservationId", reservationId);
             redisCommands.hset(key, "userId", reservationDTO.getUserId().toString());
@@ -104,15 +88,8 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
+    @Transactional
     public ReservationDTO confirmReservation(String reservationId) {
-
-//        - 예약 확정
-//        1. 사용자가 예약 아이디와 함께 예약 확정 요청을 보냄
-//        2. 서비스 단에서 받아온 예약 아이디로 가장 먼저 redis의 데이터가 존재하는지 유무 판별
-//        3. 데이터가 있다면 예약 테이블에 예약 정보를 저장
-//        4. 예약 가능 테이블을 스캔하여 camp_id와 entryDate ~ leavingDate를 가지는 데이터가 있는지 판별
-//        5. 해당 날짜의 데이터가 없는 경우 캠핑장 아이디를 기준으로 캠핑장 테이블의 각 시설 개수를 가져와 해당 날짜로 새로운 데이터 생성
-//        6. 이후 camp_facs_type을 판별하여 해당하는 날짜의 시설 예약 가능 카운트 하나 차감
 
         String key = "reservationInfo:" + reservationId;
 
@@ -131,7 +108,6 @@ public class ReservationServiceImpl implements ReservationService {
 
         // 예약 테이블에 정보 저장
         ReservationDTO reservationDTO = mapToReservationDTO(reservationInfo);
-
         Reservation reservation = Reservation.builder()
                 .reservationId(reservationDTO.getReservationId())
                 .campId(reservationDTO.getCampId())
@@ -143,17 +119,22 @@ public class ReservationServiceImpl implements ReservationService {
                 .reservationStatus(reservationDTO.getReservationStatus())
                 .gearRentalStatus(reservationDTO.getGearRentalStatus())
                 .build();
-
         reservationRepository.save(reservation);
 
         // 요청받은 예약 정보로 availability에 저장된 데이터 확인
         long campId = reservationDTO.getCampId();
+        log.info("campId = " + campId);
         Date entryDate = Date.from(reservationDTO.getEntryDate().atZone(ZoneId.systemDefault()).toInstant());
+        log.info("entryDate = " + entryDate);
         Date leavingDate = Date.from(reservationDTO.getLeavingDate().atZone(ZoneId.systemDefault()).toInstant());
+        log.info("leavingDate = " + leavingDate);
 
         List<Availability> availabilityList = availabilityRepository.findByCampIdAndDateBetween(campId, entryDate, leavingDate);
 
-        log.info("availabilityList = " + availabilityList);
+        log.info("Availability List:");
+        for (Availability availability : availabilityList) {
+            log.info(availability.toString());
+        }
 
         // 조회했는데 데이터가 없는 경우 -> 입실 ~ 퇴실 날짜 사이의 데이터를 새로 생성
         Calendar calendar = Calendar.getInstance();
@@ -229,33 +210,58 @@ public class ReservationServiceImpl implements ReservationService {
     private void decreaseAvailability(ReservationDTO reservationDTO, Date entryDate, Date leavingDate) {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(entryDate);
+        log.info("decreaseAvailability 실행됨");
 
         while (!calendar.getTime().after(leavingDate)) {
             Date date = new java.sql.Date(calendar.getTime().getTime());
             Availability availability = availabilityRepository.findByCampIdAndDate(reservationDTO.getCampId(), date);
 
+            log.info("availability = " + availability);
+
             if (availability != null) {
+                log.info("if문 실행됨");
                 switch (reservationDTO.getCampFacsType()) {
                     case 1: // 일반 야영장
                         availability.setGeneralSiteAvail(availability.getGeneralSiteAvail() - 1);
+                        log.info("일반야영장 개수 차감");
                         break;
                     case 2: // 자동차 야영장
                         availability.setCarSiteAvail(availability.getCarSiteAvail() - 1);
+                        log.info("자동차야영장 개수 차감");
                         break;
                     case 3: // 글램핑장
                         availability.setGlampingSiteAvail(availability.getGlampingSiteAvail() - 1);
+                        log.info("글램핑 개수 차감");
                         break;
                     case 4: // 카라반
                         availability.setCaravanSiteAvail(availability.getCaravanSiteAvail() - 1);
+                        log.info("카라반 개수 차감");
                         break;
                     default:
                         throw new RuntimeException("잘못된 캠프 시설 유형입니다.");
                 }
-
                 availabilityRepository.save(availability);
             }
-
             calendar.add(Calendar.DATE, 1);
+        }
+    }
+
+
+    @Override
+    public String redisHealthCheck() {
+        try {
+            ValueOperations<String, String> opsForValue = redisTemplate.opsForValue();
+            opsForValue.set("health_check", "OK");
+            String result = opsForValue.get("health_check");
+
+            if ("OK".equals(result)) {
+                return "레디스 실행중 ~,~";
+            } else {
+                return "레디스 서버 연결 실패!";
+            }
+
+        } catch (Exception e) {
+            return "연결 실패했따: " + e.getMessage();
         }
     }
 }
