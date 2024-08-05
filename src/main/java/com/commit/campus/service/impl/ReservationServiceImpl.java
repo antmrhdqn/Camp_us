@@ -1,7 +1,9 @@
 package com.commit.campus.service.impl;
 
 import com.commit.campus.dto.ReservationDTO;
+import com.commit.campus.entity.Availability;
 import com.commit.campus.entity.Reservation;
+import com.commit.campus.repository.AvailabilityRepository;
 import com.commit.campus.repository.ReservationRepository;
 import com.commit.campus.service.ReservationService;
 import io.lettuce.core.api.sync.RedisCommands;
@@ -20,6 +22,7 @@ import java.util.Map;
 public class ReservationServiceImpl implements ReservationService {
 
     private final ReservationRepository reservationRepository;
+    private final AvailabilityRepository availabilityRepository;
     private final RedisTemplate redisTemplate;
     private final RedisCommands redisCommands;
 
@@ -28,9 +31,11 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Autowired
     public ReservationServiceImpl(ReservationRepository reservationRepository,
+                                  AvailabilityRepository availabilityRepository,
                                   RedisTemplate redisTemplate,
                                   RedisCommands redisCommands) {
         this.reservationRepository = reservationRepository;
+        this.availabilityRepository = availabilityRepository;
         this.redisTemplate = redisTemplate;
         this.redisCommands = redisCommands;
     }
@@ -57,9 +62,10 @@ public class ReservationServiceImpl implements ReservationService {
     public String createReservation(ReservationDTO reservationDTO) {
 
         // 예약 가능 여부 체크
+        if (!isAvailable(reservationDTO)) {
+            throw new RuntimeException("해당 날짜에 예약 가능한 사이트가 없습니다.");
+        }
 
-
-        // 예약 아이디 생성
         LocalDateTime reservationDate = reservationDTO.getReservationDate();
         String reservationId = createReservationId(reservationDate);
 
@@ -67,12 +73,9 @@ public class ReservationServiceImpl implements ReservationService {
 
         log.info("key = " + key);
 
-        // 만료 시간 2시간 (= 7200초)
         redisCommands.expire(key, DEFAULT_TTL_SECONDS);
 
-        // 동기식으로 데이터 저장
         try {
-
             redisCommands.hset(key, "reservationId", reservationId);
             redisCommands.hset(key, "userId", reservationDTO.getUserId().toString());
             redisCommands.hset(key, "campId", reservationDTO.getCampId().toString());
@@ -96,21 +99,17 @@ public class ReservationServiceImpl implements ReservationService {
 
         log.info("redis key = " + key);
 
-        // 예약 확정 요청이 들어오면 받아온 해시키로 캐시 데이터가 있는지 확인하여 만료 여부 판별
         Map<String, String> reservationInfo = redisCommands.hgetall(key);
         if (reservationInfo.isEmpty()) {
             throw new RuntimeException("이미 만료된 예약입니다.");
         }
 
-        // 데이터 확인용 로그(나중에 삭제)
         for (Map.Entry<String, String> entry : reservationInfo.entrySet()) {
             log.info("Key: " + entry.getKey() + " / Value: " + entry.getValue());
         }
 
-        // 데이터가 있는 경우 rds에 저장하고 예약 가능 건 수 차감, 예약 확정 멘트 보내주기
         ReservationDTO reservationDTO = mapToReservationDTO(reservationInfo);
 
-        // 트랜잭션 처리 (예약내역 저장 + 이용 가능 개수 차감)
         Reservation reservation = Reservation.builder()
                 .reservationId(reservationDTO.getReservationId())
                 .campId(reservationDTO.getCampId())
@@ -125,10 +124,12 @@ public class ReservationServiceImpl implements ReservationService {
 
         reservationRepository.save(reservation);
 
+        // 이용 가능 개수 차감
+//        decreaseAvailability(reservationDTO);
+
         return null;
     }
 
-    // redis에 해쉬 키로 저장할 예약아이디 생성 (예약일자 + 6자리 인덱스값)
     private synchronized String createReservationId(LocalDateTime reservationDate) {
 
         DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyMMddhhmmss");
@@ -157,5 +158,28 @@ public class ReservationServiceImpl implements ReservationService {
         reservationDTO.setGearRentalStatus(reservationInfo.get("gearRentalStatus"));
 
         return reservationDTO;
+    }
+
+    // 예약 가능 여부 체크 메소드
+    private boolean isAvailable(ReservationDTO reservationDTO) {
+        Availability availability = availabilityRepository.findByCampIdAndDate(
+                reservationDTO.getCampId(), java.sql.Date.valueOf(reservationDTO.getReservationDate().toLocalDate())
+        );
+        if (availability == null) {
+            return false;
+        }
+
+        switch (reservationDTO.getCampFacsId().intValue()) {
+            case 1: // 일반 사이트
+                return availability.getGeneralSiteAvail() > 0;
+            case 2: // 자동차 사이트
+                return availability.getCarSiteAvail() > 0;
+            case 3: // 글램핑 사이트
+                return availability.getGlampingSiteAvail() > 0;
+            case 4: // 카라반 사이트
+                return availability.getCaravanSiteAvail() > 0;
+            default:
+                return false;
+        }
     }
 }
