@@ -19,6 +19,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -108,9 +109,9 @@ public class ReservationServiceImpl implements ReservationService {
 //        1. 사용자가 예약 아이디와 함께 예약 확정 요청을 보냄
 //        2. 서비스 단에서 받아온 예약 아이디로 가장 먼저 redis의 데이터가 존재하는지 유무 판별
 //        3. 데이터가 있다면 예약 테이블에 예약 정보를 저장
-//        4. 예약 가능 테이블을 스캔하여 입실 날짜와 퇴실 날짜 사이의 예약 가능 개수를 차감
-//        4.1. 스캔했는데 해당 날짜의 데이터가 없는 경우 캠핑장 아이디를 기준으로 캠핑장 테이블을 불러와 각 시설의 개수를 가져옴
-//        4.2. 해당 날짜의 데이터가 있는 경우 받아온 시설 유형에 해당하는 개수를 하나 차감
+//        4. 예약 가능 테이블을 스캔하여 camp_id와 entryDate ~ leavingDate를 가지는 데이터가 있는지 판별
+//        5. 해당 날짜의 데이터가 없는 경우 캠핑장 아이디를 기준으로 캠핑장 테이블의 각 시설 개수를 가져와 해당 날짜로 새로운 데이터 생성
+//        6. 이후 camp_facs_type을 판별하여 해당하는 날짜의 시설 예약 가능 카운트 하나 차감
 
         String key = "reservationInfo:" + reservationId;
 
@@ -144,17 +145,36 @@ public class ReservationServiceImpl implements ReservationService {
 
         reservationRepository.save(reservation);
 
-        // 캠핑장 아이디로 예약 가능 테이블을 스캔하여 입실 ~ 퇴실 날짜의 데이터가 존재하는지 여부 판단
+        // 요청받은 예약 정보로 availability에 저장된 데이터 확인
         long campId = reservationDTO.getCampId();
         Date entryDate = Date.from(reservationDTO.getEntryDate().atZone(ZoneId.systemDefault()).toInstant());
         Date leavingDate = Date.from(reservationDTO.getLeavingDate().atZone(ZoneId.systemDefault()).toInstant());
 
-        availabilityRepository.findByCampIdAndDateBetween(campId, entryDate, leavingDate);
-        // 스캔했는데 데이터가 없는 경우 -> 입실 ~ 퇴실 날짜 사이의 데이터를 새로 생성
-            // 이 때 캠핑장 아이디를 가지고 캠핑 테이블을 조회하여 해당 캠핑장의 시설 개수 정보를 매핑해줌
-        // 스캔했는데 데이터가 있는 경우 -> 입실 ~ 퇴실 날짜에 사용자가 예약한 시설 유형에 해당하는 카운트를 하나 차감(업데이트)
-        // 이용 가능 개수 차감
-        decreaseAvailability(reservationDTO);
+        List<Availability> availabilityList = availabilityRepository.findByCampIdAndDateBetween(campId, entryDate, leavingDate);
+
+        log.info("availabilityList = " + availabilityList);
+
+        // 조회했는데 데이터가 없는 경우 -> 입실 ~ 퇴실 날짜 사이의 데이터를 새로 생성
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(entryDate);
+
+        // 캠핑장 아이디로 예약 가능 테이블을 스캔하여 입실 ~ 퇴실 날짜의 데이터가 존재하는지 여부 판단
+        while (!calendar.getTime().after(leavingDate)) {
+            Date date = new java.sql.Date(calendar.getTime().getTime());
+            boolean exists = availabilityList.stream()
+                    .anyMatch(a -> a.getDate().equals(date));
+
+            // 해당 날짜의 데이터가 없는 경우 새로 생성
+            if (!exists) {
+                Camping camping = campingRepository.findById(campId).orElse(null);
+                Availability newAvailability = createAvailability(camping, date);
+                availabilityRepository.save(newAvailability);
+            }
+            calendar.add(Calendar.DATE, 1);
+        }
+
+        // 했는데 데이터가 있는 경우 -> 입실 ~ 퇴실 날짜에 사용자가 예약한 시설 유형에 해당하는 카운트를 하나 차감(업데이트)
+        decreaseAvailability(reservationDTO, entryDate, leavingDate);
 
         return reservationDTO;
     }
@@ -224,7 +244,7 @@ public class ReservationServiceImpl implements ReservationService {
     private Availability createAvailability(Camping camping, Date date) {
         Availability availability = new Availability();
         availability.setCampId(camping.getCampId());
-        availability.setDate(java.sql.Date.valueOf(date));
+        availability.setDate(date);
         availability.setGeneralSiteAvail(camping.getGeneralSiteCnt());
         availability.setCarSiteAvail(camping.getCarSiteCnt());
         availability.setGlampingSiteAvail(camping.getGlampingSiteCnt());
@@ -234,30 +254,36 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     // 이용 가능 개수 차감 메소드
-    private void decreaseAvailability(ReservationDTO reservationDTO) {
-        Availability availability = availabilityRepository.findByCampIdAndDate(
-                reservationDTO.getCampId(), java.sql.Date.valueOf(reservationDTO.getReservationDate().toLocalDate())
-        );
+    private void decreaseAvailability(ReservationDTO reservationDTO, Date entryDate, Date leavingDate) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(entryDate);
 
-        if (availability != null) {
-            switch (reservationDTO.getCampFacsId().intValue()) {
-                case 1: // 일반 사이트
-                    availability.setGeneralSiteAvail(availability.getGeneralSiteAvail() - 1);
-                    break;
-                case 2: // 자동차 사이트
-                    availability.setCarSiteAvail(availability.getCarSiteAvail() - 1);
-                    break;
-                case 3: // 글램핑 사이트
-                    availability.setGlampingSiteAvail(availability.getGlampingSiteAvail() - 1);
-                    break;
-                case 4: // 카라반 사이트
-                    availability.setCaravanSiteAvail(availability.getCaravanSiteAvail() - 1);
-                    break;
-                default:
-                    throw new RuntimeException("잘못된 캠프 시설 ID입니다.");
+        while (!calendar.getTime().after(leavingDate)) {
+            Date date = new java.sql.Date(calendar.getTime().getTime());
+            Availability availability = availabilityRepository.findByCampIdAndDate(reservationDTO.getCampId(), date);
+
+            if (availability != null) {
+                switch (reservationDTO.getCampFacsType()) {
+                    case 1: // 일반 야영장
+                        availability.setGeneralSiteAvail(availability.getGeneralSiteAvail() - 1);
+                        break;
+                    case 2: // 자동차 야영장
+                        availability.setCarSiteAvail(availability.getCarSiteAvail() - 1);
+                        break;
+                    case 3: // 글램핑장
+                        availability.setGlampingSiteAvail(availability.getGlampingSiteAvail() - 1);
+                        break;
+                    case 4: // 카라반
+                        availability.setCaravanSiteAvail(availability.getCaravanSiteAvail() - 1);
+                        break;
+                    default:
+                        throw new RuntimeException("잘못된 캠프 시설 유형입니다.");
+                }
+
+                availabilityRepository.save(availability);
             }
 
-            availabilityRepository.save(availability);
+            calendar.add(Calendar.DATE, 1);
         }
     }
 }
