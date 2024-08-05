@@ -210,36 +210,6 @@ public class ReservationServiceImpl implements ReservationService {
         return reservationDTO;
     }
 
-    // 예약 가능 여부 체크 메소드
-    private boolean isAvailable(ReservationDTO reservationDTO) {
-        List<Date> dates = reservationDTO.getEntryDate().toLocalDate().datesUntil(reservationDTO.getLeavingDate().toLocalDate()).toList();
-
-        for (LocalDate date : dates) {
-            Availability availability = availabilityRepository.findByCampIdAndDate(
-                    reservationDTO.getCampId(), java.sql.Date.valueOf(date)
-            );
-
-            if (availability == null) {
-                Camping camping = campingRepository.findById(reservationDTO.getCampId()).orElseThrow(() -> new RuntimeException("캠핑 정보를 찾을 수 없습니다."));
-                availability = createAvailability(camping, date);
-                availabilityRepository.save(availability);
-            }
-
-            switch (reservationDTO.getCampFacsType()) {
-                case 1: // 일반 사이트
-                    return availability.getGeneralSiteAvail() > 0;
-                case 2: // 자동차 사이트
-                    return availability.getCarSiteAvail() > 0;
-                case 3: // 글램핑 사이트
-                    return availability.getGlampingSiteAvail() > 0;
-                case 4: // 카라반 사이트
-                    return availability.getCaravanSiteAvail() > 0;
-                default:
-                    return false;
-            }
-        }
-    }
-
         // 예약 가능 개수 생성 메소드
     private Availability createAvailability(Camping camping, Date date) {
         Availability availability = new Availability();
