@@ -156,6 +156,7 @@ public class ReservationServiceImpl implements ReservationService {
         reservationDTO.setLeavingDate(LocalDateTime.parse(reservationInfo.get("leavingDate")));
         reservationDTO.setReservationStatus("예약 확정");
         reservationDTO.setGearRentalStatus(reservationInfo.get("gearRentalStatus"));
+        reservationDTO.setCampFacsType(Integer.valueOf(reservationInfo.get("campFacsType")));
 
         return reservationDTO;
     }
@@ -169,7 +170,7 @@ public class ReservationServiceImpl implements ReservationService {
             return false;
         }
 
-        switch (reservationDTO.getCampFacsId().intValue()) {
+        switch (reservationDTO.getCampFacsType()) {
             case 1: // 일반 사이트
                 return availability.getGeneralSiteAvail() > 0;
             case 2: // 자동차 사이트

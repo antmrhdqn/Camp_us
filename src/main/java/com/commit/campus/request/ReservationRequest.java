@@ -12,4 +12,5 @@ public class ReservationRequest {
     private String entryDate;
     private String leavingDate;
     private String gearRentalStatus;
+    private int campFacsType;
 }
