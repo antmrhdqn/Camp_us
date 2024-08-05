@@ -2,6 +2,7 @@ package com.commit.campus.controller;
 
 import com.commit.campus.dto.ReservationDTO;
 import com.commit.campus.entity.Reservation;
+import com.commit.campus.repository.CampingFacilitiesRepository;
 import com.commit.campus.service.ReservationService;
 import com.commit.campus.request.ReservationRequest;
 import com.commit.campus.view.ReservationView;
@@ -21,10 +22,12 @@ import java.util.List;
 public class ReservationController {
 
     private final ReservationService reservationService;
+    private final CampingFacilitiesRepository campingFacilitiesRepository;
 
     @Autowired
-    public ReservationController(ReservationService reservationService) {
+    public ReservationController(ReservationService reservationService, CampingFacilitiesRepository campingFacilitiesRepository) {
         this.reservationService = reservationService;
+        this.campingFacilitiesRepository = campingFacilitiesRepository;
     }
 
     @GetMapping("/redis_check")
@@ -36,13 +39,6 @@ public class ReservationController {
     @PostMapping("/create")
     public ResponseEntity<String> createReservation(@RequestBody ReservationRequest reservationRequest) throws ParseException {
 
-        /* 질문.
-            코드 리뷰 중 RequestBody에 reservationDTO를 쓰지 않고 reservationRequest를 따로 생성해서 사용하는 이유가 있는지 질문이 들어왔는데,
-            request는 사용자가 전달해 주는 정보만 따로 담을 용도로 생성하였고,
-            reservationDTO에는 request 정보 + 예약 내역 관리를 위해 저장해야할 내용을 추가적으로 작성하였습니다.
-
-            이처럼 requestBody에 DTO를 사용하지 않고 별도의 클래스를 정의하여 사용해도 괜찮은지 궁금합니다.
-        */
         ReservationDTO reservationDTO = mapToReservationDTO(reservationRequest);
 
         String reservationId = reservationService.createReservation(reservationDTO);
@@ -83,6 +79,9 @@ public class ReservationController {
 
         LocalDateTime reservationDate = LocalDateTime.now();
 
+        long campFacsId = reservationRequest.getCampFacsId();
+        int facsType = campingFacilitiesRepository.findById(campFacsId).get().getFacsTypeId();
+
         ReservationDTO reservationDTO = new ReservationDTO();
         reservationDTO.setUserId(Long.valueOf(reservationRequest.getUserId()));
         reservationDTO.setCampId(reservationRequest.getCampId());
@@ -91,6 +90,8 @@ public class ReservationController {
         reservationDTO.setEntryDate(LocalDateTime.parse(reservationRequest.getEntryDate()));
         reservationDTO.setLeavingDate(LocalDateTime.parse(reservationRequest.getLeavingDate()));
         reservationDTO.setGearRentalStatus(reservationRequest.getGearRentalStatus());
+
+//        reservationDTO.setCampFacsType();
 
         return reservationDTO;
     }

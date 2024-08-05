@@ -2,8 +2,10 @@ package com.commit.campus.service.impl;
 
 import com.commit.campus.dto.ReservationDTO;
 import com.commit.campus.entity.Availability;
+import com.commit.campus.entity.Camping;
 import com.commit.campus.entity.Reservation;
 import com.commit.campus.repository.AvailabilityRepository;
+import com.commit.campus.repository.CampingRepository;
 import com.commit.campus.repository.ReservationRepository;
 import com.commit.campus.service.ReservationService;
 import io.lettuce.core.api.sync.RedisCommands;
@@ -13,8 +15,11 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -23,6 +28,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     private final ReservationRepository reservationRepository;
     private final AvailabilityRepository availabilityRepository;
+    private final CampingRepository campingRepository;
     private final RedisTemplate redisTemplate;
     private final RedisCommands redisCommands;
 
@@ -32,10 +38,12 @@ public class ReservationServiceImpl implements ReservationService {
     @Autowired
     public ReservationServiceImpl(ReservationRepository reservationRepository,
                                   AvailabilityRepository availabilityRepository,
+                                  CampingRepository campingRepository,
                                   RedisTemplate redisTemplate,
                                   RedisCommands redisCommands) {
         this.reservationRepository = reservationRepository;
         this.availabilityRepository = availabilityRepository;
+        this.campingRepository = campingRepository;
         this.redisTemplate = redisTemplate;
         this.redisCommands = redisCommands;
     }
@@ -62,9 +70,9 @@ public class ReservationServiceImpl implements ReservationService {
     public String createReservation(ReservationDTO reservationDTO) {
 
         // 예약 가능 여부 체크
-        if (!isAvailable(reservationDTO)) {
-            throw new RuntimeException("해당 날짜에 예약 가능한 사이트가 없습니다.");
-        }
+//        if (!isAvailable(reservationDTO)) {
+//            throw new RuntimeException("해당 날짜에 예약 가능한 사이트가 없습니다.");
+//        }
 
         LocalDateTime reservationDate = reservationDTO.getReservationDate();
         String reservationId = createReservationId(reservationDate);
@@ -95,19 +103,30 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     public ReservationDTO confirmReservation(String reservationId) {
 
+//        - 예약 확정
+//        1. 사용자가 예약 아이디와 함께 예약 확정 요청을 보냄
+//        2. 서비스 단에서 받아온 예약 아이디로 가장 먼저 redis의 데이터가 존재하는지 유무 판별
+//        3. 데이터가 있다면 예약 테이블에 예약 정보를 저장
+//        4. 예약 가능 테이블을 스캔하여 입실 날짜와 퇴실 날짜 사이의 예약 가능 개수를 차감
+//        4.1. 스캔했는데 해당 날짜의 데이터가 없는 경우 캠핑장 아이디를 기준으로 캠핑장 테이블을 불러와 각 시설의 개수를 가져옴
+//        4.2. 해당 날짜의 데이터가 있는 경우 받아온 시설 유형에 해당하는 개수를 하나 차감
+
         String key = "reservationInfo:" + reservationId;
 
         log.info("redis key = " + key);
 
+        // redis 데이터가 살아있는지 판별
         Map<String, String> reservationInfo = redisCommands.hgetall(key);
         if (reservationInfo.isEmpty()) {
             throw new RuntimeException("이미 만료된 예약입니다.");
         }
 
+        // 데이터 확인용 로그 출력
         for (Map.Entry<String, String> entry : reservationInfo.entrySet()) {
             log.info("Key: " + entry.getKey() + " / Value: " + entry.getValue());
         }
 
+        // 예약 테이블에 정보 저장
         ReservationDTO reservationDTO = mapToReservationDTO(reservationInfo);
 
         Reservation reservation = Reservation.builder()
@@ -124,6 +143,15 @@ public class ReservationServiceImpl implements ReservationService {
 
         reservationRepository.save(reservation);
 
+        // 캠핑장 아이디로 예약 가능 테이블을 스캔하여 입실 ~ 퇴실 날짜의 데이터가 존재하는지 여부 판단
+        long campId = reservationDTO.getCampId();
+        LocalDateTime entryDate = reservationDTO.getEntryDate();
+        LocalDateTime leavingDate = reservationDTO.getLeavingDate();
+
+        availabilityRepository.findByCampIdAndDate(campId, entryDate, leavingDate);
+        // 스캔했는데 데이터가 없는 경우 -> 입실 ~ 퇴실 날짜 사이의 데이터를 새로 생성
+            // 이 때 캠핑장 아이디를 가지고 캠핑 테이블을 조회하여 해당 캠핑장의 시설 개수 정보를 매핑해줌
+        // 스캔했는데 데이터가 있는 경우 -> 입실 ~ 퇴실 날짜에 사용자가 예약한 시설 유형에 해당하는 카운트를 하나 차감(업데이트)
         // 이용 가능 개수 차감
         decreaseAvailability(reservationDTO);
 
@@ -163,25 +191,45 @@ public class ReservationServiceImpl implements ReservationService {
 
     // 예약 가능 여부 체크 메소드
     private boolean isAvailable(ReservationDTO reservationDTO) {
-        Availability availability = availabilityRepository.findByCampIdAndDate(
-                reservationDTO.getCampId(), java.sql.Date.valueOf(reservationDTO.getReservationDate().toLocalDate())
-        );
-        if (availability == null) {
-            return false;
-        }
+        List<Date> dates = reservationDTO.getEntryDate().toLocalDate().datesUntil(reservationDTO.getLeavingDate().toLocalDate()).toList();
 
-        switch (reservationDTO.getCampFacsType()) {
-            case 1: // 일반 사이트
-                return availability.getGeneralSiteAvail() > 0;
-            case 2: // 자동차 사이트
-                return availability.getCarSiteAvail() > 0;
-            case 3: // 글램핑 사이트
-                return availability.getGlampingSiteAvail() > 0;
-            case 4: // 카라반 사이트
-                return availability.getCaravanSiteAvail() > 0;
-            default:
-                return false;
+        for (LocalDate date : dates) {
+            Availability availability = availabilityRepository.findByCampIdAndDate(
+                    reservationDTO.getCampId(), java.sql.Date.valueOf(date)
+            );
+
+            if (availability == null) {
+                Camping camping = campingRepository.findById(reservationDTO.getCampId()).orElseThrow(() -> new RuntimeException("캠핑 정보를 찾을 수 없습니다."));
+                availability = createAvailability(camping, date);
+                availabilityRepository.save(availability);
+            }
+
+            switch (reservationDTO.getCampFacsType()) {
+                case 1: // 일반 사이트
+                    return availability.getGeneralSiteAvail() > 0;
+                case 2: // 자동차 사이트
+                    return availability.getCarSiteAvail() > 0;
+                case 3: // 글램핑 사이트
+                    return availability.getGlampingSiteAvail() > 0;
+                case 4: // 카라반 사이트
+                    return availability.getCaravanSiteAvail() > 0;
+                default:
+                    return false;
+            }
         }
+    }
+
+        // 예약 가능 개수 생성 메소드
+    private Availability createAvailability(Camping camping, Date date) {
+        Availability availability = new Availability();
+        availability.setCampId(camping.getCampId());
+        availability.setDate(java.sql.Date.valueOf(date));
+        availability.setGeneralSiteAvail(camping.getGeneralSiteCnt());
+        availability.setCarSiteAvail(camping.getCarSiteCnt());
+        availability.setGlampingSiteAvail(camping.getGlampingSiteCnt());
+        availability.setCaravanSiteAvail(camping.getCaravanSiteCnt());
+
+        return availability;
     }
 
     // 이용 가능 개수 차감 메소드
@@ -212,3 +260,18 @@ public class ReservationServiceImpl implements ReservationService {
         }
     }
 }
+
+/*
+    - 예약 등록
+    1. 사용자가 예약 정보(캠핑장, 시설아이디, 입실일, 퇴실일, 장비 대여 여부)를 입력 후 요청을 보냄.
+    2. 컨트롤러에서 해당 예약 정보를 받아 DTO에 위 정보들 + 시설 아이디로 해당 시설의 데이터를 가져와 시설 유형을 campFacsType에 저장
+    3.
+
+    - 예약 확정
+    1. 사용자가 예약 아이디와 함께 예약 확정 요청을 보냄
+    2. 서비스 단에서 받아온 예약 아이디로 가장 먼저 redis의 데이터가 존재하는지 유무 판별
+    3. 데이터가 있다면 예약 테이블에 예약 정보를 저장
+    4. 예약 가능 테이블을 스캔하여 입실 날짜와 퇴실 날짜 사이의 예약 가능 개수를 차감
+        4.1. 스캔했는데 해당 날짜의 데이터가 없는 경우 캠핑장 아이디를 기준으로 캠핑장 테이블을 불러와 각 시설의 개수를 가져옴
+        4.2. 해당 날짜의 데이터가 있는 경우 받아온 시설 유형에 해당하는 개수를 하나 차감
+*/
