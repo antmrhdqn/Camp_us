@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
@@ -145,10 +146,10 @@ public class ReservationServiceImpl implements ReservationService {
 
         // 캠핑장 아이디로 예약 가능 테이블을 스캔하여 입실 ~ 퇴실 날짜의 데이터가 존재하는지 여부 판단
         long campId = reservationDTO.getCampId();
-        LocalDateTime entryDate = reservationDTO.getEntryDate();
-        LocalDateTime leavingDate = reservationDTO.getLeavingDate();
+        Date entryDate = Date.from(reservationDTO.getEntryDate().atZone(ZoneId.systemDefault()).toInstant());
+        Date leavingDate = Date.from(reservationDTO.getLeavingDate().atZone(ZoneId.systemDefault()).toInstant());
 
-        availabilityRepository.findByCampIdAndDate(campId, entryDate, leavingDate);
+        availabilityRepository.findByCampIdAndDateBetween(campId, entryDate, leavingDate);
         // 스캔했는데 데이터가 없는 경우 -> 입실 ~ 퇴실 날짜 사이의 데이터를 새로 생성
             // 이 때 캠핑장 아이디를 가지고 캠핑 테이블을 조회하여 해당 캠핑장의 시설 개수 정보를 매핑해줌
         // 스캔했는데 데이터가 있는 경우 -> 입실 ~ 퇴실 날짜에 사용자가 예약한 시설 유형에 해당하는 카운트를 하나 차감(업데이트)
