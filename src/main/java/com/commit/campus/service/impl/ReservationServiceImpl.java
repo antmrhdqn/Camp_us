@@ -166,6 +166,13 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     public void cancelReservation(ReservationDTO reservationDTO) {
+        // 예약 아이디로 예약 테이블에서 데이터 찾아오기
+        Reservation reservation = reservationRepository.findById(reservationDTO.getReservationId()).orElse(null);
+
+        // 해당 데이터의 reservationStatus를 "취소"로 변경
+
+        // 캠핑장 id와 예약한 campFacsType을 이용하여 Availability 테이블의 시설 예약 가능 개수를 하나 증가시킴
+
 
     }
 
