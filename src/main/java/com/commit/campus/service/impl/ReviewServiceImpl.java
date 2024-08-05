@@ -42,16 +42,12 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<ReviewDTO> getReviewsByCampId(long campId, Pageable pageable) {
+
         Page<Review> reviewPage = reviewRepository.findByCampId(campId, pageable);
 
-        return reviewPage.map(review -> {
-            ReviewDTO reviewDTO = modelMapper.map(review, ReviewDTO.class);
-            long userId = review.getUserId();
-            String userNickname = userRepository.findNicknameByUserId(userId);
-            reviewDTO.setUserNickname(userNickname);
-            return reviewDTO;
-        });
+        return reviewPage.map(this::mapToReviewWithNickname);
     }
 
     @Override
@@ -137,6 +133,13 @@ public class ReviewServiceImpl implements ReviewService {
         myReviewRepository.save(myReview);
 
         reviewRepository.delete(review);
+    }
+
+    private ReviewDTO mapToReviewWithNickname(Review review) {
+        ReviewDTO reviewDTO = modelMapper.map(review, ReviewDTO.class);
+        String userNickname = userRepository.findNicknameByUserId(review.getUserId());
+        reviewDTO.setUserNickname(userNickname);
+        return reviewDTO;
     }
 
     private Review updateReviewFromDTO(Review review, ReviewDTO reviewDTO) {
