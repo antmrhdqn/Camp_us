@@ -53,39 +53,12 @@ public class ReviewServiceImpl implements ReviewService {
     @Override
     public void createReview(ReviewDTO reviewDTO) throws ReviewAlreadyExistsException {
 
-        boolean reviewExists = reviewRepository.existsByUserIdAndCampId(reviewDTO.getUserId(), reviewDTO.getCampId());
-        if (reviewExists) {
-            throw new ReviewAlreadyExistsException("이미 이 캠핑장에 대한 리뷰를 작성하셨습니다.", HttpStatus.CONFLICT);
-        }
+        checkExistingReview(reviewDTO.getUserId(), reviewDTO.getCampId());
 
-        Review review = Review.builder()
-                .campId(reviewDTO.getCampId())
-                .userId(reviewDTO.getUserId())
-                .reviewContent(reviewDTO.getReviewContent())
-                .rating(reviewDTO.getRating())
-                .reviewCreatedDate(LocalDateTime.now())
-                .reviewImageUrl(reviewDTO.getReviewImageUrl())
-                .build();
-
-        Review savedReview = reviewRepository.save(review);
-
-        MyReview myReview = myReviewRepository.findById(savedReview.getUserId())
-                .orElse(new MyReview(savedReview.getUserId()));
-
-        myReview.incrementReviewCnt(savedReview.getReviewId());
-        myReviewRepository.save(myReview);
-
-        ratingSummaryRepository.incrementRating(savedReview.getCampId(), savedReview.getRating());
-
-        CampingSummary campingSummary = campingSummaryRepository.findById(savedReview.getCampId())
-                .orElseGet(() -> CampingSummary.builder()
-                        .campId(savedReview.getCampId())
-                        .bookmarkCnt(0)
-                        .reviewCnt(0)
-                        .build());
-
-        campingSummary.incrementReviewCnt();
-        campingSummaryRepository.save(campingSummary);
+        Review savedReview = saveReview(reviewDTO);
+        updateMyReview(savedReview);
+        updateRatingSummary(savedReview);
+        updateCampingSummary(savedReview);
     }
 
     @Override
@@ -140,6 +113,46 @@ public class ReviewServiceImpl implements ReviewService {
         String userNickname = userRepository.findNicknameByUserId(review.getUserId());
         reviewDTO.setUserNickname(userNickname);
         return reviewDTO;
+    }
+
+    private void checkExistingReview(long userId, long campId) {
+        if (reviewRepository.existsByUserIdAndCampId(userId, campId)) {
+            throw new ReviewAlreadyExistsException("이미 이 캠핑장에 대한 리뷰를 작성하셨습니다.", HttpStatus.CONFLICT);
+        }
+    }
+
+    private Review saveReview(ReviewDTO reviewDTO) {
+        Review review = Review.builder()
+                .campId(reviewDTO.getCampId())
+                .userId(reviewDTO.getUserId())
+                .reviewContent(reviewDTO.getReviewContent())
+                .rating(reviewDTO.getRating())
+                .reviewCreatedDate(LocalDateTime.now())
+                .reviewImageUrl(reviewDTO.getReviewImageUrl())
+                .build();
+        return reviewRepository.save(review);
+    }
+
+    private void updateMyReview(Review savedReview) {
+        MyReview myReview = myReviewRepository.findById(savedReview.getUserId())
+                .orElse(new MyReview(savedReview.getUserId()));
+        myReview.incrementReviewCnt(savedReview.getReviewId());
+        myReviewRepository.save(myReview);
+    }
+
+    private void updateRatingSummary(Review savedReview) {
+        ratingSummaryRepository.incrementRating(savedReview.getCampId(), savedReview.getRating());
+    }
+
+    private void updateCampingSummary(Review savedReview) {
+        CampingSummary campingSummary = campingSummaryRepository.findById(savedReview.getCampId())
+                .orElseGet(() -> CampingSummary.builder()
+                        .campId(savedReview.getCampId())
+                        .bookmarkCnt(0)
+                        .reviewCnt(0)
+                        .build());
+        campingSummary.incrementReviewCnt();
+        campingSummaryRepository.save(campingSummary);
     }
 
     private Review updateReviewFromDTO(Review review, ReviewDTO reviewDTO) {
