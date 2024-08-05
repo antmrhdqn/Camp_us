@@ -1,20 +1,35 @@
 package com.commit.campus.entity;
 
-import lombok.Getter;
+import lombok.*;
 import jakarta.persistence.*;
+
 import java.util.Date;
 
+@Table(name = "availability")
 @Entity
 @Getter
+@Setter
 public class Availability {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long availabilityId;  // 예약 가능 ID
+    @Column(name = "avail_id")
+    private Long availId;
 
-    @ManyToOne
-    @JoinColumn(name = "camp_id")
-    private Camping camping;  // 캠핑장 ID
+    @Column(name = "camp_id", nullable = false)
+    private Long campId;
 
-    private Date date;  // 날짜
-    private boolean available;  // 예약 가능 여부
+    @Column(name = "date", nullable = false)
+    private Date date;
+
+    @Column(name = "general_site_avail")
+    private int generalSiteAvail;
+
+    @Column(name = "car_site_avail")
+    private int carSiteAvail;
+
+    @Column(name = "glamping_site_avail")
+    private int glampingSiteAvail;
+
+    @Column(name = "caravan_site_avail")
+    private int caravanSiteAvail;
 }
