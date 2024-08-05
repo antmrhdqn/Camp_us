@@ -9,6 +9,7 @@ import java.util.Date;
 @Entity
 @Getter
 @Setter
+@ToString
 public class Availability {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
