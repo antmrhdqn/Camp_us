@@ -24,6 +24,7 @@ public class ReservationServiceImpl implements ReservationService {
     private final RedisCommands redisCommands;
 
     private static long index = 1;
+    private static final long DEFAULT_TTL_SECONDS = 7200;
 
     @Autowired
     public ReservationServiceImpl(ReservationRepository reservationRepository,
@@ -66,12 +67,8 @@ public class ReservationServiceImpl implements ReservationService {
 
         log.info("key = " + key);
 
-        /* 궁금증.
-            - 비동기 방식으로 저장
-            redisAsyncCommands를 사용해 비동기식으로 데이터를 redis에 저장할 때,
-            요청이 동시에 여러개 날아와도 기본적으로 redis는 단일 스레드이므로 요청이 들어온 순서대로 저장이 이루어진다고 알고 있는데
-            그렇다면 동기 방식을 사용해 저장할 때와 어떤 차이가 있는것인지 궁금합니다.
-        */
+        // 만료 시간 2시간 (= 7200초)
+        redisCommands.expire(key, DEFAULT_TTL_SECONDS);
 
         // 동기식으로 데이터 저장
         try {
@@ -84,9 +81,6 @@ public class ReservationServiceImpl implements ReservationService {
             redisCommands.hset(key, "entryDate", reservationDTO.getEntryDate().toString());
             redisCommands.hset(key, "leavingDate", reservationDTO.getLeavingDate().toString());
             redisCommands.hset(key, "gearRentalStatus", reservationDTO.getGearRentalStatus());
-
-            // 만료 시간 2시간 (= 7200초)
-            redisCommands.expire(key, 7200);
 
         } catch (RuntimeException e) {
             throw new RuntimeException("redis에 저장이 되지 않음");
