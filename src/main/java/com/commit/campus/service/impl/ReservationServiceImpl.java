@@ -230,6 +230,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     // 이용 가능 개수 차감 메소드
     private void updateAvailability(ReservationDTO reservationDTO, Date entryDate, Date leavingDate, int changeCount) {
+        // Calendar는 객체가 무거워 성능이 좋지않으므로 dateFormator를 사용한 방식으로 변겨아
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(entryDate);
         log.info("decreaseAvailability 실행됨");
