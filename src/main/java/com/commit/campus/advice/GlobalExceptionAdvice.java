@@ -1,5 +1,6 @@
 package com.commit.campus.advice;
 
+import com.commit.campus.common.exceptions.ErrorType;
 import com.commit.campus.common.exceptions.NotAuthorizedException;
 import com.commit.campus.common.exceptions.ReviewAlreadyExistsException;
 import com.commit.campus.view.ErrorView;
@@ -16,7 +17,7 @@ public class GlobalExceptionAdvice {
 
         return ResponseEntity
                 .status(HttpStatus.CONFLICT)
-                .body(new ErrorView("REVIEW_ALREADY_EXISTS", ex.getMessage()));
+                .body(new ErrorView(ErrorType.REVIEW_ALREADY_EXISTS, ex.getMessage()));
     }
 
     @ExceptionHandler(NotAuthorizedException.class)
@@ -24,6 +25,6 @@ public class GlobalExceptionAdvice {
 
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
-                .body(new ErrorView("NOT_AUTHORIZED", ex.getMessage()));
+                .body(new ErrorView(ErrorType.NOT_AUTHORIZED, ex.getMessage()));
     }
 }
