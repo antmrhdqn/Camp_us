@@ -47,7 +47,25 @@ public class CampingServiceTests {
         camping2.setDoName("강원도");
         camping2.setGlampingSiteCnt(10);
 
-        List<Camping> mockCampings = Arrays.asList(camping1, camping2);
+        Camping camping3 = new Camping();
+        camping3.setCampId(3L);
+        camping3.setCampName("감마 캠프");
+        camping3.setDoName("경기도");
+        camping3.setGlampingSiteCnt(7);
+
+        Camping camping4 = new Camping();
+        camping4.setCampId(4L);
+        camping4.setCampName("델타 캠프");
+        camping4.setDoName("경기도");
+        camping4.setGlampingSiteCnt(3);
+
+        Camping camping5 = new Camping();
+        camping5.setCampId(5L);
+        camping5.setCampName("엡실론 캠프");
+        camping5.setDoName("경기도");
+        camping5.setGlampingSiteCnt(5);
+
+        List<Camping> mockCampings = Arrays.asList(camping1, camping2, camping3, camping4, camping5);
         int offset = 0;
         int limit = 10;
 
@@ -56,9 +74,12 @@ public class CampingServiceTests {
 
         // Then
         List<Camping> result = campingService.getCampings("경기도", null, 5, null, 0, 10, "campId", "asc");
-        assertEquals(2, result.size());
+        assertEquals(5, result.size());
         assertEquals("알파 캠프", result.get(0).getCampName());
         assertEquals("베타 캠프", result.get(1).getCampName());
+        assertEquals("감마 캠프", result.get(2).getCampName());
+        assertEquals("델타 캠프", result.get(3).getCampName());
+        assertEquals("엡실론 캠프", result.get(4).getCampName());
     }
 
     @Test
@@ -77,3 +98,4 @@ public class CampingServiceTests {
         assertEquals("알파 캠프", result.get().getCampName());
     }
 }
+// 단일 조회 + 정렬 + 필터 까지 포함 테스트
