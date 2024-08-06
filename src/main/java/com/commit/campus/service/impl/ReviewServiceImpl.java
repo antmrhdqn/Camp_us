@@ -62,14 +62,14 @@ public class ReviewServiceImpl implements ReviewService {
     @Transactional
     public void updateReview(ReviewDTO reviewDTO, long userId) {
 
-        Review originReview = findReviewById(reviewDTO.getReviewId());
+        Review oldReview = findReviewById(reviewDTO.getReviewId());
 
-        verifyReviewPermission(originReview.getUserId(), userId, "수정");
+        verifyReviewPermission(oldReview.getUserId(), userId, "수정");
 
-        Review updatedReview = updateReviewFromDTO(originReview, reviewDTO);
-        reviewRepository.save(updatedReview);
+        Review newReview = updateReviewFromDTO(oldReview, reviewDTO);
+        reviewRepository.save(newReview);
 
-        adjustRating(originReview, updatedReview);
+        adjustRating(oldReview, newReview);
     }
 
     @Override
