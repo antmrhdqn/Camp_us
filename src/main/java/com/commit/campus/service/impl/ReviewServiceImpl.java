@@ -19,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 
 @Service
-@Transactional
 @Slf4j
 public class ReviewServiceImpl implements ReviewService {
 
@@ -40,7 +39,6 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public Page<ReviewDTO> getReviewsByCampId(long campId, Pageable pageable) {
 
         Page<Review> reviewPage = reviewRepository.findByCampId(campId, pageable);
@@ -49,6 +47,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
+    @Transactional
     public void createReview(ReviewDTO reviewDTO) throws ReviewAlreadyExistsException {
 
         checkExistingReview(reviewDTO.getUserId(), reviewDTO.getCampId());
@@ -60,6 +59,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
+    @Transactional
     public void updateReview(ReviewDTO reviewDTO, long userId) {
 
         Review originReview = findReviewById(reviewDTO.getReviewId());
@@ -73,6 +73,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
+    @Transactional
     public void deleteReview(long reviewId, long userId) {
 
         Review review = findReviewById(reviewId);
