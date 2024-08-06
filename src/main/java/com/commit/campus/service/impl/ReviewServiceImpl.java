@@ -120,6 +120,7 @@ public class ReviewServiceImpl implements ReviewService {
 
         MyReview myReview = myReviewRepository.findById(userId)
                 .orElse(new MyReview(userId));
+
         if (isIncrement) {
             myReview.incrementReviewCnt(reviewId);
         } else {
@@ -131,10 +132,8 @@ public class ReviewServiceImpl implements ReviewService {
     private void updateRating(long campId, byte rating, boolean isIncrement) {
 
         if (isIncrement) {
-
             ratingSummaryRepository.incrementRating(campId, rating);
         } else {
-
             ratingSummaryRepository.decrementRating(campId, rating);
         }
     }
