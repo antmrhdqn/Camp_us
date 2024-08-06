@@ -189,7 +189,7 @@ public class ReviewServiceImpl implements ReviewService {
     private void verifyReviewPermission(long reviewerId, long userId, String action) {
 
         if (reviewerId != userId) {
-            throw new NotAuthorizedException("이 리뷰를 " + action + "할 권한이 없습니다.", HttpStatus.FORBIDDEN);
+            throw new NotAuthorizedException("이 리뷰를 " + action + "할 권한이 없습니다.");
         }
     }
 
