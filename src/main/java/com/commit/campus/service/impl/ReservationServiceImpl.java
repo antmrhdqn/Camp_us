@@ -16,6 +16,7 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -230,37 +231,34 @@ public class ReservationServiceImpl implements ReservationService {
 
     // 이용 가능 개수 차감 메소드
     private void updateAvailability(ReservationDTO reservationDTO, Date entryDate, Date leavingDate, int changeCount) {
-        // Calendar는 객체가 무거워 성능이 좋지않으므로 dateFormator를 사용한 방식으로 변겨아
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(entryDate);
+        Date currentDate = entryDate;
         log.info("decreaseAvailability 실행됨");
 
-        while (!calendar.getTime().after(leavingDate)) {
-            Date date = new java.sql.Date(calendar.getTime().getTime());
-            List<Availability> availabilities = availabilityRepository.findByCampIdAndDate(reservationDTO.getCampId(), date);
+        while (!currentDate.after(leavingDate)) {
+            Date date = new Date(currentDate.getTime());
+            Availability availability = availabilityRepository.findByCampIdAndDate(reservationDTO.getCampId(), date);
 
-            if (availabilities != null && !availabilities.isEmpty()) {
-                Availability availability = availabilities.get(0); // 첫 번째 결과만 사용하거나 필요에 따라 처리
+            if (availability != null) {
                 log.info("availability = " + availability);
 
                 if (availability != null) {
                     log.info("if문 실행됨");
                     switch (reservationDTO.getCampFacsType()) {
                         case 1: // 일반 야영장
-                            availability.setGeneralSiteAvail(availability.getGeneralSiteAvail() - 1);
+                            availability.setGeneralSiteAvail(availability.getGeneralSiteAvail() + changeCount);
                             log.info("일반야영장 개수 변경");
                             break;
                         case 2: // 자동차 야영장
-                            availability.setCarSiteAvail(availability.getCarSiteAvail() - 1);
+                            availability.setCarSiteAvail(availability.getCarSiteAvail() + changeCount);
                             log.info("자동차야영장 개수 변경");
                             break;
                         case 3: // 글램핑장
-                            availability.setGlampingSiteAvail(availability.getGlampingSiteAvail() - 1);
+                            availability.setGlampingSiteAvail(availability.getGlampingSiteAvail() + changeCount);
                             log.info("글램핑 개수 변경");
                             break;
                         case 4: // 카라반
-                            availability.setCaravanSiteAvail(availability.getCaravanSiteAvail() - 1);
-                            log.info("카라반 개수 차감");
+                            availability.setCaravanSiteAvail(availability.getCaravanSiteAvail() + changeCount);
+                            log.info("카라반 개수 변경");
                             break;
                         default:
                             throw new RuntimeException("잘못된 캠프 시설 유형입니다.");
@@ -268,7 +266,7 @@ public class ReservationServiceImpl implements ReservationService {
                     availabilityRepository.save(availability);
                 }
             }
-            calendar.add(Calendar.DATE, 1);
+            currentDate = addDays(currentDate, 1);
         }
     }
 
@@ -281,6 +279,12 @@ public class ReservationServiceImpl implements ReservationService {
         return (cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR)) &&
                 (cal1.get(Calendar.MONTH) == cal2.get(Calendar.MONTH)) &&
                 (cal1.get(Calendar.DAY_OF_MONTH) == cal2.get(Calendar.DAY_OF_MONTH));
+    }
+
+    private Date addDays(Date date, int days) {
+        LocalDate localDate = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        localDate = localDate.plusDays(days);
+        return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
     }
 
     @Override
