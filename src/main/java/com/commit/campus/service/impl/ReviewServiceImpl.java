@@ -63,13 +63,14 @@ public class ReviewServiceImpl implements ReviewService {
     public void updateReview(ReviewDTO reviewDTO, long userId) {
 
         Review oldReview = findReviewById(reviewDTO.getReviewId());
+        byte oldRating = oldReview.getRating();
 
         verifyReviewPermission(oldReview.getUserId(), userId, "수정");
 
         Review newReview = updateReviewFromDTO(oldReview, reviewDTO);
         reviewRepository.save(newReview);
 
-        adjustRating(oldReview, newReview);
+        adjustRating(oldRating, newReview.getRating(), newReview.getCampId());
     }
 
     @Override
@@ -138,10 +139,9 @@ public class ReviewServiceImpl implements ReviewService {
         }
     }
 
-    private void adjustRating(Review oldReview, Review newReview) {
-
-        updateRating(oldReview.getCampId(), oldReview.getRating(), false);
-        updateRating(newReview.getCampId(), newReview.getRating(), true);
+    private void adjustRating(byte oldRating, byte newRating, long campId) {
+        updateRating(campId, oldRating, false);
+        updateRating(campId, newRating, true);
     }
 
     private void incrementReviewCnt(long campId) {
