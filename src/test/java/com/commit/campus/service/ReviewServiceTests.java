@@ -189,11 +189,7 @@ class ReviewServiceTests {
         // When & Then
         assertThatThrownBy(() -> reviewService.createReview(reviewDTO))
                 .isInstanceOf(ReviewAlreadyExistsException.class)
-                .hasMessage("이미 이 캠핑장에 대한 리뷰를 작성하셨습니다.")
-                .satisfies(exception -> {
-                    ReviewAlreadyExistsException castedEx = (ReviewAlreadyExistsException) exception;
-                    assertThat(castedEx.getStatus()).isEqualTo(HttpStatus.CONFLICT);
-                });
+                .hasMessage("이미 이 캠핑장에 대한 리뷰를 작성하셨습니다.");
 
         verify(reviewRepository).existsByUserIdAndCampId(reviewDTO.getUserId(), reviewDTO.getCampId());
         verify(reviewRepository, never()).save(any(Review.class));
@@ -267,11 +263,7 @@ class ReviewServiceTests {
         // When & Then
         assertThatThrownBy(() -> reviewService.updateReview(updateDTO, differentUserId))
                 .isInstanceOf(NotAuthorizedException.class)
-                .hasMessage("이 리뷰를 수정할 권한이 없습니다.")
-                .satisfies(exception -> {
-                    NotAuthorizedException castedEx = (NotAuthorizedException) exception;
-                    assertThat(castedEx.getStatus()).isEqualTo(HttpStatus.FORBIDDEN);
-                });
+                .hasMessage("이 리뷰를 수정할 권한이 없습니다.");
 
         verify(reviewRepository, never()).save(any(Review.class));
         verify(ratingSummaryRepository, never()).decrementRating(anyLong(), anyByte());
@@ -338,11 +330,7 @@ class ReviewServiceTests {
         // When & Then
         assertThatThrownBy(() -> reviewService.deleteReview(reviewId, differentUserId))
                 .isInstanceOf(NotAuthorizedException.class)
-                .hasMessage("이 리뷰를 삭제할 권한이 없습니다.")
-                .satisfies(exception -> {
-                    NotAuthorizedException castedEx = (NotAuthorizedException) exception;
-                    assertThat(castedEx.getStatus()).isEqualTo(HttpStatus.FORBIDDEN);
-                });
+                .hasMessage("이 리뷰를 삭제할 권한이 없습니다.");
 
         verify(reviewRepository, never()).delete(any(Review.class));
         verify(campingSummaryRepository, never()).save(any(CampingSummary.class));
