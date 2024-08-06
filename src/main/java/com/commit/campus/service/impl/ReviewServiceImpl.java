@@ -13,11 +13,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -174,13 +174,9 @@ public class ReviewServiceImpl implements ReviewService {
 
     private Review updateReviewFromDTO(Review review, ReviewDTO reviewDTO) {
 
-        return Review.builder()
-                .reviewId(review.getReviewId())
-                .campId(review.getCampId())
-                .userId(review.getUserId())
+        return review.toBuilder()
                 .reviewContent(reviewDTO.getReviewContent() != null ? reviewDTO.getReviewContent() : review.getReviewContent())
                 .rating(reviewDTO.getRating())
-                .reviewCreatedDate(review.getReviewCreatedDate())
                 .reviewModificationDate(LocalDateTime.now())
                 .reviewImageUrl(reviewDTO.getReviewImageUrl() != null ? reviewDTO.getReviewImageUrl() : review.getReviewImageUrl())
                 .build();
