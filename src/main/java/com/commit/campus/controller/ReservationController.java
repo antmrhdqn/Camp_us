@@ -87,18 +87,15 @@ public class ReservationController {
         long campFacsId = reservationRequest.getCampFacsId();
         int facsType = campingFacilitiesRepository.findById(campFacsId).get().getFacsTypeId();
 
-        ReservationDTO reservationDTO = new ReservationDTO();
-        reservationDTO.setUserId(Long.valueOf(reservationRequest.getUserId()));
-        reservationDTO.setCampId(reservationRequest.getCampId());
-        reservationDTO.setCampFacsId(reservationRequest.getCampFacsId());
-        reservationDTO.setReservationDate(reservationDate);
-        reservationDTO.setEntryDate(LocalDateTime.parse(reservationRequest.getEntryDate()));
-        reservationDTO.setLeavingDate(LocalDateTime.parse(reservationRequest.getLeavingDate()));
-        reservationDTO.setGearRentalStatus(reservationRequest.getGearRentalStatus());
-        reservationDTO.setCampFacsType(reservationRequest.getCampFacsType());
-
-//        reservationDTO.setCampFacsType();
-
-        return reservationDTO;
+        return ReservationDTO.builder()
+                .userId(Long.valueOf(reservationRequest.getUserId()))
+                .campId(reservationRequest.getCampId())
+                .campFacsId(reservationRequest.getCampFacsId())
+                .reservationDate(reservationDate)
+                .entryDate(LocalDateTime.parse(reservationRequest.getEntryDate()))
+                .leavingDate(LocalDateTime.parse(reservationRequest.getLeavingDate()))
+                .gearRentalStatus(reservationRequest.getGearRentalStatus())
+                .campFacsType(facsType)
+                .build();
     }
 }
