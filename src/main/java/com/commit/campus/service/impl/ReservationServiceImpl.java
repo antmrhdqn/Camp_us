@@ -34,7 +34,7 @@ public class ReservationServiceImpl implements ReservationService {
     private final RedisTemplate<String, String> redisTemplate;
     private final RedisCommands<String, String> redisCommands;
 
-    private static final AtomicLong index = new AtomicLong(1);
+    private static final int CHANGE_COUNT = 1;
     private static final long DEFAULT_TTL_SECONDS = 7200;
 
     @Autowired
@@ -109,9 +109,10 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     private String createReservationId(LocalDateTime reservationDate) {
+        int index = 1;
         DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyMMddHHmmss");
         String formattedDate = reservationDate.format(dateFormat);
-        String indexCode = String.format("%06d", index.getAndIncrement());
+        String indexCode = String.format("%06d", index);
         return formattedDate + indexCode;
     }
 
@@ -195,8 +196,7 @@ public class ReservationServiceImpl implements ReservationService {
             }
 
             // currentDate의 시설 예약 가능 개수 차감
-            updateAvailabilityCnt(reservationDTO, availability);
-
+            updateAvailabilityCnt(reservationDTO, availability, -CHANGE_COUNT);
             currentDate = currentDate.plusDays(1);
         }
 
@@ -255,16 +255,44 @@ public class ReservationServiceImpl implements ReservationService {
         availabilityRepository.save(newAvailability);
     }
 
-    private void updateAvailabilityCnt(ReservationDTO reservationDTO, Availability availabilityList) {
+    private void updateAvailabilityCnt(ReservationDTO reservationDTO, Availability availability, int changeCount) {
 
         /*
-            availability 테이블에 currentDate에 해당하는 데이터가 있을 경우 실행
-
-            1. 예약한 캠핑장 정보와 예약한 시설 확인
-            2. 해당하는 예약 시설 개수를 하나 차감
+            1. 예약한 정보에서 camp id와 facsType을 가져옴
+            2. facsType을 체크하여 해당하는 시설의 cnt를 하나 차감
         */
-        Camping camping = campingRepository.findById(reservationDTO.getCampId()).orElse(null);
 
+        int campFacsType = reservationDTO.getCampFacsType();
+
+        switch (campFacsType) {
+            case 1:
+                availability = availability.toBuilder()
+                        .generalSiteAvail(availability.getGeneralSiteAvail() + changeCount)
+                        .build();
+                break;
+            case 2:
+                availability = availability.toBuilder()
+                        .carSiteAvail(availability.getCarSiteAvail() + changeCount)
+                        .build();
+                break;
+            case 3:
+                availability = availability.toBuilder()
+                        .glampingSiteAvail(availability.getGlampingSiteAvail() + changeCount)
+                        .build();
+                break;
+            case 4:
+                availability = availability.toBuilder()
+                        .caravanSiteAvail(availability.getCaravanSiteAvail() + changeCount)
+                        .build();
+                break;
+            default:
+                throw new IllegalArgumentException("잘못된 시설 유형입니다. : " + campFacsType);
+        }
+
+        log.info("카운트 변경됨");
+        log.info("availability = {}", availability);
+
+        availabilityRepository.save(availability);
     }
 
     private void updateAvailabilityCount(ReservationDTO reservationDTO, Date entryDate, Date leavingDate, int changeCount) {
