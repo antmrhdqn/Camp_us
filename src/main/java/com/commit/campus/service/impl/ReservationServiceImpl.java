@@ -172,6 +172,7 @@ public class ReservationServiceImpl implements ReservationService {
         log.info("findByCampIdAndDateBetween 실행됨");
         log.info("availabilityList = {}", availabilityList);
 
+        // date값을 조건문에 사용(isAfter 활용)하기 위해 LocalDate 타입으로 전환
         LocalDate currentDate = entryDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         LocalDate endDate = leavingDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
@@ -182,17 +183,15 @@ public class ReservationServiceImpl implements ReservationService {
             log.info("while문 동작 중: " + index);
             index++;
 
-            // LocalDate -> Date로 변환
-//            Date date = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-//            log.info("date = {}", date);
-
             // 해당 날짜의 데이터가 availability 테이블에 있는지 판별
             Availability availability = checkAvailabilityDate(currentDate, availabilityList);
 
             // 들어온 데이터가 없다면 해당 날짜의 데이터가 존재하지 않으므로 새로 생성
             if (availability == null) {
+                log.info("일치하는 데이터 없음");
                 long campId = reservationDTO.getCampId();
-                createAvailability(campId, currentDate);
+                availability = createAvailability(campId, currentDate);
+                log.info("{} 날짜로 예약 가능 현황 생성", currentDate);
             }
 
             // currentDate의 시설 예약 가능 개수 차감
@@ -222,17 +221,17 @@ public class ReservationServiceImpl implements ReservationService {
 
         // 스트림을 사용하여 조건을 확인하고 로깅
         Availability availability = availabilityList.stream()
-                .filter(avail -> formatter.format(avail.getDate().toInstant()).equals(currentDateStr))
-                .peek(avail -> log.info("Checking date: {}", formatter.format(avail.getDate().toInstant())))
+                .filter(avail -> formatter.format(avail.getDate().toInstant().atZone(ZoneId.systemDefault())).equals(currentDateStr))
+                .peek(avail -> log.info("Checking date: " + formatter.format(avail.getDate().toInstant().atZone(ZoneId.systemDefault()))))
                 .findFirst()
                 .orElse(null);
 
         log.info("avail = {}", availability);
 
-        return null;
+        return availability;
     }
 
-    private void createAvailability(long campId, LocalDate date) {
+    private Availability createAvailability(long campId, LocalDate date) {
 
         Camping camping = campingRepository.findById(campId).orElse(null);
 
@@ -242,6 +241,7 @@ public class ReservationServiceImpl implements ReservationService {
 
         // LocalDate -> date 타입 변환
         Date availDate = Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        log.info("availDate = {}", availDate);
 
         Availability newAvailability = Availability.builder()
             .campId(campId)
@@ -252,7 +252,12 @@ public class ReservationServiceImpl implements ReservationService {
             .caravanSiteAvail(camping.getCaravanSiteCnt())
             .build();
 
+        log.info("createAvailability 실행 완료");
+
         availabilityRepository.save(newAvailability);
+        log.info("newAvailability = {}", newAvailability);
+
+        return newAvailability;
     }
 
     private void updateAvailabilityCnt(ReservationDTO reservationDTO, Availability availability, int changeCount) {
@@ -270,21 +275,25 @@ public class ReservationServiceImpl implements ReservationService {
                         .generalSiteAvail(availability.getGeneralSiteAvail() + changeCount)
                         .build();
                 break;
+
             case 2:
                 availability = availability.toBuilder()
                         .carSiteAvail(availability.getCarSiteAvail() + changeCount)
                         .build();
                 break;
+
             case 3:
                 availability = availability.toBuilder()
                         .glampingSiteAvail(availability.getGlampingSiteAvail() + changeCount)
                         .build();
                 break;
+
             case 4:
                 availability = availability.toBuilder()
                         .caravanSiteAvail(availability.getCaravanSiteAvail() + changeCount)
                         .build();
                 break;
+
             default:
                 throw new IllegalArgumentException("잘못된 시설 유형입니다. : " + campFacsType);
         }
