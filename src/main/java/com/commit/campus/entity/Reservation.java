@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 @Table(name = "reservation")
 @Entity
 @Getter
+@ToString
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
