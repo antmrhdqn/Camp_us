@@ -59,13 +59,9 @@ public class ReservationController {
 
     // 예약 취소
     @PutMapping("/cancel")
-    public ResponseEntity<Void> cancelReservation(@RequestBody ReservationRequest reservationRequest) throws ParseException {
+    public ResponseEntity<Void> cancelReservation(@RequestParam String reservationId) throws ParseException {
 
-        ReservationDTO reservationDTO = mapToReservationDTO(reservationRequest);
-        reservationService.cancelReservation(reservationDTO);
-
-        // 기존 날짜의 예약 가능 건수 차감한 것을 되돌림
-        // 예약 히스토리의 상태값 변경
+        reservationService.cancelReservation(reservationId);
 
         return ResponseEntity.ok().build();
     }
@@ -80,7 +76,7 @@ public class ReservationController {
         return ResponseEntity.ok().build();
     }
 
-    private ReservationDTO mapToReservationDTO(ReservationRequest reservationRequest) throws ParseException {
+    private ReservationDTO mapToReservationDTO(ReservationRequest reservationRequest) {
 
         LocalDateTime reservationDate = LocalDateTime.now();
 
