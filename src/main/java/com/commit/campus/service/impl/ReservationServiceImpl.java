@@ -94,7 +94,8 @@ public class ReservationServiceImpl implements ReservationService {
         saveReservationToDatabase(reservationDTO);
 
         // 예약 가능 개수 차감
-        updateAvailability(reservationDTO);
+        boolean isIncrement = true;
+        updateAvailability(reservationDTO, isIncrement);
 
         return reservationDTO;
     }
@@ -111,18 +112,13 @@ public class ReservationServiceImpl implements ReservationService {
         */
         Reservation reservation = reservationRepository.findById(reservationDTO.getReservationId()).orElse(null);
 
+        // 예약 내역 변경
         String reservationStatus = "예약 취소";
         updateCancellationInfo(reservation, reservationStatus);
 
-        Date entryDate = Date.from(reservationDTO.getEntryDate().atZone(ZoneId.systemDefault()).toInstant());
-        Date leavingDate = Date.from(reservationDTO.getLeavingDate().atZone(ZoneId.systemDefault()).toInstant());
-
-        List<Availability> availabilityList = availabilityRepository.findByCampIdAndDateBetween(
-                reservationDTO.getCampId(), entryDate, leavingDate
-        );
-
-//        while(!)
-//        updateAvailabilityCount(reservationDTO, availability, CHANGE_COUNT);
+        // 예약 가능 개수 증가
+        boolean isIncrement = false;
+        updateAvailability(reservationDTO, isIncrement);
     }
 
     /* 예약 등록 */
@@ -180,7 +176,7 @@ public class ReservationServiceImpl implements ReservationService {
         reservationRepository.save(reservation);
     }
 
-    private void updateAvailability(ReservationDTO reservationDTO) {
+    private void updateAvailability(ReservationDTO reservationDTO, boolean isIncrese) {
 
         Date entryDate = setDate(reservationDTO.getEntryDate());
         Date leavingDate = setDate(reservationDTO.getLeavingDate());
@@ -215,8 +211,11 @@ public class ReservationServiceImpl implements ReservationService {
                 log.info("{} 날짜로 예약 가능 현황 생성", currentDate);
             }
 
-            // currentDate의 시설 예약 가능 개수 차감
-            updateAvailabilityCount(reservationDTO, availability, -CHANGE_COUNT);
+            if(isIncrese) {
+                updateAvailabilityCount(reservationDTO, availability, -CHANGE_COUNT);
+            } else {
+                updateAvailabilityCount(reservationDTO, availability, CHANGE_COUNT);
+            }
             currentDate = currentDate.plusDays(1);
         }
     }
