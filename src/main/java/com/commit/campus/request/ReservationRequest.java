@@ -6,6 +6,7 @@ import lombok.ToString;
 @Getter
 @ToString
 public class ReservationRequest {
+    private long reservationId;
     private int userId;
     private long campId;
     private long campFacsId;
