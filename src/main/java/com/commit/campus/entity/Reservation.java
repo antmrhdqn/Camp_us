@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Table(name = "reservation")
 @Entity
@@ -31,10 +32,10 @@ public class Reservation implements Serializable {
     private LocalDateTime reservationDate;  // 예약 날짜
 
     @Column(name = "entry_date")
-    private LocalDateTime entryDate;  // 입실 날짜
+    private Date entryDate;  // 입실 날짜
 
     @Column(name = "leaving_date")
-    private LocalDateTime leavingDate;  // 퇴실 날짜
+    private Date leavingDate;  // 퇴실 날짜
 
     @Column(name = "reservation_status")
     private String reservationStatus;  // 예약 상태

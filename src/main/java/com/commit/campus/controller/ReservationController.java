@@ -12,8 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.sql.Date;
+import java.util.Date;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -78,9 +79,10 @@ public class ReservationController {
         return ResponseEntity.ok().build();
     }
 
-    private ReservationDTO mapToReservationDTO(ReservationRequest reservationRequest) {
+    private ReservationDTO mapToReservationDTO(ReservationRequest reservationRequest) throws ParseException {
 
         LocalDateTime reservationDate = LocalDateTime.now();
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 
         long campFacsId = reservationRequest.getCampFacsId();
         int facsType = campingFacilitiesRepository.findById(campFacsId).get().getFacsTypeId();
@@ -91,8 +93,8 @@ public class ReservationController {
                 .campId(reservationRequest.getCampId())
                 .campFacsId(reservationRequest.getCampFacsId())
                 .reservationDate(reservationDate)
-                .entryDate(Date.valueOf(reservationRequest.getEntryDate()))
-                .leavingDate(Date.valueOf(reservationRequest.getLeavingDate()))
+                .entryDate(formatter.parse(reservationRequest.getEntryDate()))
+                .leavingDate(formatter.parse(reservationRequest.getLeavingDate()))
                 .gearRentalStatus(reservationRequest.getGearRentalStatus())
                 .campFacsType(facsType)
                 .build();
