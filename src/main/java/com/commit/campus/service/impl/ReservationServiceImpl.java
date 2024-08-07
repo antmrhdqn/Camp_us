@@ -184,10 +184,18 @@ public class ReservationServiceImpl implements ReservationService {
 
             // LocalDate -> Date로 변환
             Date date = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            log.info("date = {}", date);
 
             // 해당 날짜의 데이터가 availability 테이블에 있는지 판별
-            checkAvailabilityDate(date, availabilityList);
-//            updateOrCreateAvailability(reservationDTO, date, availabilityList);
+            boolean isDateExist = checkAvailabilityDate(date, availabilityList);
+
+            // 같지 않다면 데이터가 존재하지 않으므로 createAvailability 실행
+            if (!isDateExist) {
+                long campId = reservationDTO.getCampId();
+                createAvailability(campId, date);
+            }
+
+            // 데이터가 존재한다면 updateCount 실행
 
             currentDate = currentDate.plusDays(1);
         }
@@ -195,7 +203,7 @@ public class ReservationServiceImpl implements ReservationService {
 //        updateAvailabilityCount(reservationDTO, entryDate, leavingDate, -1);
     }
 
-    private void checkAvailabilityDate(Date currentDate, List<Availability> availabilityList) {
+    private boolean checkAvailabilityDate(Date currentDate, List<Availability> availabilityList) {
 
         /*
             매개변수로 받아온 date는 입실일자 ~ 퇴실 일자부터 하나씩 증가하는 데이터
@@ -204,8 +212,7 @@ public class ReservationServiceImpl implements ReservationService {
             1. currentDate를 String 타입으로 Formatting
             2. availability에서 date 값을 꺼내와 Formatting
             3. currentDate와 date를 비교
-            4. 같다면 데이터가 존재하는 것이므로 updateCount 실행
-            5. 같지 않다면 데이터가 존재하지 않으므로 createAvailability 실행
+
         */
 
         log.info("checkAvailabilityDate 실행됨");
@@ -214,21 +221,27 @@ public class ReservationServiceImpl implements ReservationService {
         String currentDateStr = formatter.format(currentDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
         log.info("currentDateStr = {}", currentDateStr);
 
-        String dateExists = availabilityList.stream()
-                .peek(dateString -> dateString.getDate().equals(currentDateStr)).toString();
+        // currentDate와 date를 비교
+        boolean dateExists = availabilityList.stream()
+                .map(avail -> formatter.format(avail.getDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()))
+                .peek(dateString -> log.info("Checking date: {}", dateString))
+                .anyMatch(dateString -> dateString.equals(currentDateStr));
 
         log.info("dateExists = {}", dateExists);
-//                .findFirst().isPresent();
-//                .map(avail -> avail.getDate().toString())
-//                .anyMatch(dateString -> dateString.equals(currentDateStr));
 
-        // 바꾼 날짜 비교
-
+        return dateExists;
     }
 
-    private Availability createAvailability(Camping camping, Date date) {
+    private Availability createAvailability(long campId, Date date) {
+
+        Camping camping = campingRepository.findById(campId).orElse(null);
+
+        if (camping == null) {
+            throw new NullPointerException("해당 campId는 존재하지 않습니다.");
+        }
+
         return Availability.builder()
-                .campId(camping.getCampId())
+                .campId(campId)
                 .date(date)
                 .generalSiteAvail(camping.getGeneralSiteCnt())
                 .carSiteAvail(camping.getCarSiteCnt())
