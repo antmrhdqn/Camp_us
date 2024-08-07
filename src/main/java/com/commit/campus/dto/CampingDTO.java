@@ -6,7 +6,8 @@ import java.time.LocalDateTime;
 
 @Data
 public class CampingDTO {
-    private Long campId; // 콘텐츠 ID
+    private Long campId; // 캠핑장 ID
+    private int contentId; // 콘텐츠 ID
     private String campName; // 야영장명
     private String lineIntro; // 한줄소개
     private String intro; // 소개

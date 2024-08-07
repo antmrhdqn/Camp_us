@@ -1,10 +1,10 @@
 package com.commit.campus.entity;
 
-import lombok.AccessLevel;
 import lombok.Getter;
 import jakarta.persistence.*;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
+import org.hibernate.annotations.DynamicUpdate;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -13,6 +13,7 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
+@DynamicUpdate
 //@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Camping implements Serializable {
     @Id
