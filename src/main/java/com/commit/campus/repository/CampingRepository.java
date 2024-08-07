@@ -13,4 +13,5 @@ public interface CampingRepository extends JpaRepository<Camping, Long> {
 
     Page<Camping> findByCampIdIn(List<Long> reviewedCampIds, Pageable pageable);
 
+    List<Camping> findByContentId(int i);
 }
