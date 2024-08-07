@@ -80,11 +80,12 @@ public class ReservationServiceImpl implements ReservationService {
         String key = "reservationInfo:" + reservationId;
         Map<String, String> reservationInfo = redisCommands.hgetall(key);
 
+        // 예약 요청 만료 여부 판별
         if (reservationInfo.isEmpty()) {
             throw new RuntimeException("이미 만료된 예약입니다.");
         }
 
-        // 데이터 잘 들어오는지 확인용
+        // redis에서 가져온 데이터 잘 들어오는지 확인용
         reservationInfo.forEach((keyCheck, valueCheck) -> log.info("Key: {} / Value: {}", keyCheck, valueCheck));
 
         // 캐시에서 가져온 데이터를 dto로 매핑
@@ -175,6 +176,7 @@ public class ReservationServiceImpl implements ReservationService {
         LocalDate endDate = leavingDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
         int index = 0;
+
         // availability의 date 컬럼에 입실일자 ~ 퇴실일자 정보가 있는지 점검
         while (!currentDate.isAfter(endDate)) {
             log.info("while문 동작 중: " + index);
@@ -193,13 +195,25 @@ public class ReservationServiceImpl implements ReservationService {
 //        updateAvailabilityCount(reservationDTO, entryDate, leavingDate, -1);
     }
 
-    private void checkAvailabilityDate(Date date, List<Availability> availabilityList) {
+    private void checkAvailabilityDate(Date currentDate, List<Availability> availabilityList) {
+
+        /*
+            매개변수로 받아온 date는 입실일자 ~ 퇴실 일자부터 하나씩 증가하는 데이터
+            availability 테이블에 해당 값들이 존재하는지 체크해야 함.
+
+            1. availability에서 date 값을 꺼내와 Formatting 한 후 String에 저장
+            2. 현재 날짜와 비교
+            3. 같다면 데이터가 존재하는 것이므로 updateCount 실행
+            4. 같지 않다면 데이터가 존재하지 않으므로 createAvailability 실행
+        */
 
         log.info("checkAvailabilityDate 실행됨");
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-        String dateStr = formatter.format(date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
-        log.info("targetDateStr = {}", dateStr);
+        String currentDateStr = formatter.format(currentDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
+        log.info("targetDateStr = {}", currentDateStr);
+
+        // 바꾼 날짜 비교
 
     }
 
