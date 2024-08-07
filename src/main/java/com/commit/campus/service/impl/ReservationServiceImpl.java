@@ -201,33 +201,29 @@ public class ReservationServiceImpl implements ReservationService {
             매개변수로 받아온 date는 입실일자 ~ 퇴실 일자부터 하나씩 증가하는 데이터
             availability 테이블에 해당 값들이 존재하는지 체크해야 함.
 
-            1. availability에서 date 값을 꺼내와 Formatting 한 후 String에 저장
-            2. 현재 날짜와 비교
-            3. 같다면 데이터가 존재하는 것이므로 updateCount 실행
-            4. 같지 않다면 데이터가 존재하지 않으므로 createAvailability 실행
+            1. currentDate를 String 타입으로 Formatting
+            2. availability에서 date 값을 꺼내와 Formatting
+            3. currentDate와 date를 비교
+            4. 같다면 데이터가 존재하는 것이므로 updateCount 실행
+            5. 같지 않다면 데이터가 존재하지 않으므로 createAvailability 실행
         */
 
         log.info("checkAvailabilityDate 실행됨");
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         String currentDateStr = formatter.format(currentDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate());
-        log.info("targetDateStr = {}", currentDateStr);
+        log.info("currentDateStr = {}", currentDateStr);
+
+        String dateExists = availabilityList.stream()
+                .peek(dateString -> dateString.getDate().equals(currentDateStr)).toString();
+
+        log.info("dateExists = {}", dateExists);
+//                .findFirst().isPresent();
+//                .map(avail -> avail.getDate().toString())
+//                .anyMatch(dateString -> dateString.equals(currentDateStr));
 
         // 바꾼 날짜 비교
 
-    }
-
-    private void updateOrCreateAvailability(ReservationDTO reservationDTO, Date date, List<Availability> availabilityList) {
-
-        boolean exists = availabilityList.stream()
-                .anyMatch(a -> dateEquals(a.getDate(), date));
-
-        if (!exists) {
-            Camping camping = campingRepository.findById(reservationDTO.getCampId())
-                    .orElseThrow(() -> new RuntimeException("캠핑장 정보를 찾을 수 없습니다."));
-            Availability newAvailability = createAvailability(camping, date);
-            availabilityRepository.save(newAvailability);
-        }
     }
 
     private Availability createAvailability(Camping camping, Date date) {
