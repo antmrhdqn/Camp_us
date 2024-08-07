@@ -1,7 +1,9 @@
-package com.commit.campus.service;
+package com.commit.campus.service.impl;
 
 import com.commit.campus.dto.SignUpUserRequest;
 import com.commit.campus.entity.User;
+import com.commit.campus.service.OauthService;
+import com.commit.campus.service.UserService;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonElement;
 import com.google.gson.stream.JsonReader;
