@@ -101,7 +101,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     @Transactional
-    public void cancelReservation(String reservationId) {
+    public void cancelReservation(ReservationDTO reservationDTO) {
 
         /*
             예약 취소 요청이 들어오면
@@ -109,10 +109,20 @@ public class ReservationServiceImpl implements ReservationService {
             2. entryDate, leavingDate, campFacsType 값을 저장
             3. availability 테이블에서 위 기간의 예약 가능 카운트를 증가
         */
-        Reservation reservation = reservationRepository.findById(Long.valueOf(reservationId)).orElse(null);
+        Reservation reservation = reservationRepository.findById(reservationDTO.getReservationId()).orElse(null);
 
         String reservationStatus = "예약 취소";
         updateCancellationInfo(reservation, reservationStatus);
+
+        Date entryDate = Date.from(reservationDTO.getEntryDate().atZone(ZoneId.systemDefault()).toInstant());
+        Date leavingDate = Date.from(reservationDTO.getLeavingDate().atZone(ZoneId.systemDefault()).toInstant());
+
+        List<Availability> availabilityList = availabilityRepository.findByCampIdAndDateBetween(
+                reservationDTO.getCampId(), entryDate, leavingDate
+        );
+
+//        while(!)
+//        updateAvailabilityCount(reservationDTO, availability, CHANGE_COUNT);
     }
 
     /* 예약 등록 */
@@ -171,8 +181,9 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     private void updateAvailability(ReservationDTO reservationDTO) {
-        Date entryDate = Date.from(reservationDTO.getEntryDate().atZone(ZoneId.systemDefault()).toInstant());
-        Date leavingDate = Date.from(reservationDTO.getLeavingDate().atZone(ZoneId.systemDefault()).toInstant());
+
+        Date entryDate = setDate(reservationDTO.getEntryDate());
+        Date leavingDate = setDate(reservationDTO.getLeavingDate());
         log.info("entryDate = {}", entryDate);
         log.info("leavingDate = {}", leavingDate);
 
@@ -183,8 +194,8 @@ public class ReservationServiceImpl implements ReservationService {
         log.info("availabilityList = {}", availabilityList);
 
         // date값을 조건문에 사용(isAfter 활용)하기 위해 LocalDate 타입으로 전환
-        LocalDate currentDate = entryDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-        LocalDate endDate = leavingDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate currentDate = setLocalDate(entryDate);
+        LocalDate endDate = setLocalDate(leavingDate);
 
         int index = 0;
 
@@ -208,6 +219,14 @@ public class ReservationServiceImpl implements ReservationService {
             updateAvailabilityCount(reservationDTO, availability, -CHANGE_COUNT);
             currentDate = currentDate.plusDays(1);
         }
+    }
+
+    private Date setDate(LocalDateTime localDateTime) {
+        return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+    }
+
+    private LocalDate setLocalDate(Date date) {
+        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
     }
 
     private Availability checkAvailabilityDate(LocalDate currentDate, List<Availability> availabilityList) {
