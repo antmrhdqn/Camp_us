@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.sql.Date;
 import java.text.ParseException;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -90,8 +91,8 @@ public class ReservationController {
                 .campId(reservationRequest.getCampId())
                 .campFacsId(reservationRequest.getCampFacsId())
                 .reservationDate(reservationDate)
-                .entryDate(LocalDateTime.parse(reservationRequest.getEntryDate()))
-                .leavingDate(LocalDateTime.parse(reservationRequest.getLeavingDate()))
+                .entryDate(Date.valueOf(reservationRequest.getEntryDate()))
+                .leavingDate(Date.valueOf(reservationRequest.getLeavingDate()))
                 .gearRentalStatus(reservationRequest.getGearRentalStatus())
                 .campFacsType(facsType)
                 .build();
