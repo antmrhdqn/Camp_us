@@ -6,5 +6,5 @@ public interface ReservationService {
     String redisHealthCheck();
     String createReservation(ReservationDTO reservationDTO);
     ReservationDTO confirmReservation(String reservationId);
-    void cancelReservation(String reservationId);
+    void cancelReservation(ReservationDTO reservationDTO);
 }

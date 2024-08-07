@@ -59,9 +59,10 @@ public class ReservationController {
 
     // 예약 취소
     @PutMapping("/cancel")
-    public ResponseEntity<Void> cancelReservation(@RequestParam String reservationId) throws ParseException {
+    public ResponseEntity<Void> cancelReservation(@RequestBody ReservationRequest reservationRequest) throws ParseException {
 
-        reservationService.cancelReservation(reservationId);
+        ReservationDTO reservationDTO = mapToReservationDTO(reservationRequest);
+        reservationService.cancelReservation(reservationDTO);
 
         return ResponseEntity.ok().build();
     }
