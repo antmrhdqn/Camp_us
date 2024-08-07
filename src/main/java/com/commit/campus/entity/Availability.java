@@ -8,7 +8,9 @@ import java.util.Date;
 @Table(name = "availability")
 @Entity
 @Getter
-@Setter
+@Builder(toBuilder = true)
+@NoArgsConstructor
+@AllArgsConstructor
 @ToString
 public class Availability {
     @Id
