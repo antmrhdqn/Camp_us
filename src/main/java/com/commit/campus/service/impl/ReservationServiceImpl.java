@@ -15,6 +15,8 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -146,18 +148,26 @@ public class ReservationServiceImpl implements ReservationService {
 
     /* 예약 확정 */
     private ReservationDTO mapToReservationDTO(Map<String, String> reservationInfo) {
-        return ReservationDTO.builder()
-                .reservationId(Long.valueOf(reservationInfo.get("reservationId")))
-                .userId(Long.valueOf(reservationInfo.get("userId")))
-                .campId(Long.valueOf(reservationInfo.get("campId")))
-                .campFacsId(Long.valueOf(reservationInfo.get("campFacsId")))
-                .reservationDate(LocalDateTime.parse(reservationInfo.get("reservationDate")))
-                .entryDate(LocalDateTime.parse(reservationInfo.get("entryDate")))
-                .leavingDate(LocalDateTime.parse(reservationInfo.get("leavingDate")))
-                .reservationStatus("예약 확정")
-                .gearRentalStatus(reservationInfo.get("gearRentalStatus"))
-                .campFacsType(Integer.valueOf(reservationInfo.get("campFacsType")))
-                .build();
+
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+
+        try {
+            return ReservationDTO.builder()
+                    .reservationId(Long.valueOf(reservationInfo.get("reservationId")))
+                    .userId(Long.valueOf(reservationInfo.get("userId")))
+                    .campId(Long.valueOf(reservationInfo.get("campId")))
+                    .campFacsId(Long.valueOf(reservationInfo.get("campFacsId")))
+                    .reservationDate(LocalDateTime.parse(reservationInfo.get("reservationDate")))
+                    // 여기 파싱 오류 발생
+                    .entryDate(formatter.parse(reservationInfo.get("entryDate")))
+                    .leavingDate(formatter.parse(reservationInfo.get("leavingDate")))
+                    .reservationStatus("예약 확정")
+                    .gearRentalStatus(reservationInfo.get("gearRentalStatus"))
+                    .campFacsType(Integer.valueOf(reservationInfo.get("campFacsType")))
+                    .build();
+        } catch (ParseException e) {
+            throw new RuntimeException("Date 타입 파싱 오류");
+        }
     }
 
     private void saveReservationToDatabase(ReservationDTO reservationDTO) {
@@ -178,20 +188,18 @@ public class ReservationServiceImpl implements ReservationService {
 
     private void updateAvailability(ReservationDTO reservationDTO, boolean isIncrese) {
 
-        Date entryDate = setDate(reservationDTO.getEntryDate());
-        Date leavingDate = setDate(reservationDTO.getLeavingDate());
-        log.info("entryDate = {}", entryDate);
-        log.info("leavingDate = {}", leavingDate);
+        // date값을 조건문에 사용(isAfter 활용)하기 위해 LocalDate 타입으로 전환
+        LocalDate currentDate = setLocalDate(reservationDTO.getEntryDate());
+        LocalDate endDate = setLocalDate(reservationDTO.getLeavingDate());
+
+        Date entryDate = setDate(currentDate);
+        Date leavingDate = setDate(endDate);
 
         // 예약한 캠핑장의 입실날짜 ~ 퇴실날짜의 예약 가능 현황 가져오기
         List<Availability> availabilityList = availabilityRepository.findByCampIdAndDateBetween(
                 reservationDTO.getCampId(), entryDate, leavingDate);
         log.info("findByCampIdAndDateBetween 실행됨");
         log.info("availabilityList = {}", availabilityList);
-
-        // date값을 조건문에 사용(isAfter 활용)하기 위해 LocalDate 타입으로 전환
-        LocalDate currentDate = setLocalDate(entryDate);
-        LocalDate endDate = setLocalDate(leavingDate);
 
         int index = 0;
 
@@ -220,8 +228,8 @@ public class ReservationServiceImpl implements ReservationService {
         }
     }
 
-    private Date setDate(LocalDateTime localDateTime) {
-        return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+    private Date setDate(LocalDate localDate) {
+        return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
     }
 
     private LocalDate setLocalDate(Date date) {
@@ -266,7 +274,7 @@ public class ReservationServiceImpl implements ReservationService {
         }
 
         // LocalDate -> date 타입 변환
-        Date availDate = Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant());
+        Date availDate = setDate(date);
         log.info("availDate = {}", availDate);
 
         Availability newAvailability = Availability.builder()
