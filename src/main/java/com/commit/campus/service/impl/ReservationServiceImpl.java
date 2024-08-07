@@ -111,7 +111,7 @@ public class ReservationServiceImpl implements ReservationService {
         */
         Reservation reservation = reservationRepository.findById(Long.valueOf(reservationId)).orElse(null);
 
-        String reservationStatus = "취소";
+        String reservationStatus = "예약 취소";
         updateCancellationInfo(reservation, reservationStatus);
     }
 
@@ -315,9 +315,16 @@ public class ReservationServiceImpl implements ReservationService {
     /* 예약 취소 */
     private void updateCancellationInfo(Reservation reservation, String reservationStatus) {
 
-        // 변경할 것. reservationStatus, updated_at
-        reservation.toBuilder()
+        if(reservation.getReservationStatus().equals(reservationStatus)) {
+            throw new IllegalArgumentException("이미 취소된 예약입니다.");
+        }
+
+        Reservation updatedReservation = reservation.toBuilder()
                 .reservationStatus(reservationStatus)
-                .update
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        reservationRepository.save(updatedReservation);
+        log.info("updatedReservation {}", updatedReservation);
     }
 }
