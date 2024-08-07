@@ -133,13 +133,13 @@ public class ReservationServiceImpl implements ReservationService {
         // 캠핑장 아이디와 예약시 입력한 입퇴실 날짜가 일치하는 데이터를 모두 조회하여 리스트에 담기
         List<Availability> availabilityList = availabilityRepository.findByCampIdAndDateBetween(campId, entryDate, leavingDate);
 
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(entryDate);
+        LocalDate currentDate = entryDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate endDate = leavingDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
         // 입실 날짜부터 퇴실 날짜까지 반복하며 해당 날짜로 된 date가 존재하는지 확인
-        while (!calendar.getTime().after(leavingDate)) {
+        while (!currentDate.isAfter(endDate)) {
             log.info("while문 동작 중");
-            Date date = new java.sql.Date(calendar.getTime().getTime());
+            Date date = Date.from(currentDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
 
             // equalsDate 잘 찾는지 로그 확인용
             availabilityList.stream()
@@ -156,7 +156,7 @@ public class ReservationServiceImpl implements ReservationService {
                 Availability newAvailability = createAvailability(camping, date);
                 availabilityRepository.save(newAvailability);
             }
-            calendar.add(Calendar.DATE, 1);
+            currentDate = currentDate.plusDays(1);
         }
 
         // 예약 가능 개수 업데이트
