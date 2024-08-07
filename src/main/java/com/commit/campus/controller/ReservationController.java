@@ -85,6 +85,7 @@ public class ReservationController {
         int facsType = campingFacilitiesRepository.findById(campFacsId).get().getFacsTypeId();
 
         return ReservationDTO.builder()
+                .reservationId(reservationRequest.getReservationId())
                 .userId(Long.valueOf(reservationRequest.getUserId()))
                 .campId(reservationRequest.getCampId())
                 .campFacsId(reservationRequest.getCampFacsId())
