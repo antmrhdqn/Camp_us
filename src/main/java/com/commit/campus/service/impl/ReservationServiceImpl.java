@@ -101,12 +101,21 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     @Transactional
-    public void cancelReservation(ReservationDTO reservationDTO) {
-        Reservation reservation = findReservationById(reservationDTO.getReservationId());
-        updateReservationStatus(reservation, "취소");
-//        updateAvailabilityForCancellation(reservationDTO, reservation);
+    public void cancelReservation(String reservationId) {
+
+        /*
+            예약 취소 요청이 들어오면
+            1. reservationID로 rds에 저장된 예약 내역을 불러와 reservationStatus를 "취소"로 업데이트
+            2. entryDate, leavingDate, campFacsType 값을 저장
+            3. availability 테이블에서 위 기간의 예약 가능 카운트를 증가
+        */
+        Reservation reservation = reservationRepository.findById(Long.valueOf(reservationId)).orElse(null);
+
+        String reservationStatus = "취소";
+        updateCancellationInfo(reservation, reservationStatus);
     }
 
+    /* 예약 등록 */
     private String createReservationId(LocalDateTime reservationDate) {
         int index = 1;
         DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyMMddHHmmss");
@@ -129,6 +138,7 @@ public class ReservationServiceImpl implements ReservationService {
         redisCommands.hset(key, "campFacsType", reservationDTO.getCampFacsType().toString());
     }
 
+    /* 예약 확정 */
     private ReservationDTO mapToReservationDTO(Map<String, String> reservationInfo) {
         return ReservationDTO.builder()
                 .reservationId(Long.valueOf(reservationInfo.get("reservationId")))
@@ -155,6 +165,7 @@ public class ReservationServiceImpl implements ReservationService {
                 .leavingDate(reservationDTO.getLeavingDate())
                 .reservationStatus(reservationDTO.getReservationStatus())
                 .gearRentalStatus(reservationDTO.getGearRentalStatus())
+                .createdAt(LocalDateTime.now())
                 .build();
         reservationRepository.save(reservation);
     }
@@ -197,8 +208,6 @@ public class ReservationServiceImpl implements ReservationService {
             updateAvailabilityCount(reservationDTO, availability, -CHANGE_COUNT);
             currentDate = currentDate.plusDays(1);
         }
-
-//        updateAvailabilityCount(reservationDTO, entryDate, leavingDate, -1);
     }
 
     private Availability checkAvailabilityDate(LocalDate currentDate, List<Availability> availabilityList) {
@@ -303,15 +312,12 @@ public class ReservationServiceImpl implements ReservationService {
         availabilityRepository.save(availability);
     }
 
-    private Reservation findReservationById(Long reservationId) {
-        return reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new RuntimeException("Reservation not found: " + reservationId));
-    }
+    /* 예약 취소 */
+    private void updateCancellationInfo(Reservation reservation, String reservationStatus) {
 
-    private void updateReservationStatus(Reservation reservation, String status) {
-        Reservation updatedReservation = reservation.toBuilder()
-                .reservationStatus(status)
-                .build();
-        reservationRepository.save(updatedReservation);
+        // 변경할 것. reservationStatus, updated_at
+        reservation.toBuilder()
+                .reservationStatus(reservationStatus)
+                .update
     }
 }
