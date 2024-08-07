@@ -22,7 +22,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Slf4j
 @Service
@@ -105,7 +104,7 @@ public class ReservationServiceImpl implements ReservationService {
     public void cancelReservation(ReservationDTO reservationDTO) {
         Reservation reservation = findReservationById(reservationDTO.getReservationId());
         updateReservationStatus(reservation, "취소");
-        updateAvailabilityForCancellation(reservationDTO, reservation);
+//        updateAvailabilityForCancellation(reservationDTO, reservation);
     }
 
     private String createReservationId(LocalDateTime reservationDate) {
@@ -195,7 +194,7 @@ public class ReservationServiceImpl implements ReservationService {
             }
 
             // currentDate의 시설 예약 가능 개수 차감
-            updateAvailabilityCnt(reservationDTO, availability, -CHANGE_COUNT);
+            updateAvailabilityCount(reservationDTO, availability, -CHANGE_COUNT);
             currentDate = currentDate.plusDays(1);
         }
 
@@ -260,7 +259,7 @@ public class ReservationServiceImpl implements ReservationService {
         return newAvailability;
     }
 
-    private void updateAvailabilityCnt(ReservationDTO reservationDTO, Availability availability, int changeCount) {
+    private void updateAvailabilityCount(ReservationDTO reservationDTO, Availability availability, int changeCount) {
 
         /*
             1. 예약한 정보에서 camp id와 facsType을 가져옴
@@ -304,61 +303,6 @@ public class ReservationServiceImpl implements ReservationService {
         availabilityRepository.save(availability);
     }
 
-    private void updateAvailabilityCount(ReservationDTO reservationDTO, Date entryDate, Date leavingDate, int changeCount) {
-        Date currentDate = entryDate;
-
-        while (!currentDate.after(leavingDate)) {
-            Date date = new Date(currentDate.getTime());
-            Availability availability = availabilityRepository.findByCampIdAndDate(reservationDTO.getCampId(), date);
-
-            if (availability != null) {
-                updateAvailabilityForType(availability, reservationDTO.getCampFacsType(), changeCount);
-                availabilityRepository.save(availability);
-            }
-
-            currentDate = Date.from(currentDate.toInstant().plus(1, java.time.temporal.ChronoUnit.DAYS));
-        }
-    }
-
-    private void updateAvailabilityForType(Availability availability, int campFacsType, int changeCount) {
-        Availability updatedAvailability = Availability.builder()
-                .availId(availability.getAvailId())
-                .campId(availability.getCampId())
-                .date(availability.getDate())
-                .generalSiteAvail(availability.getGeneralSiteAvail())
-                .carSiteAvail(availability.getCarSiteAvail())
-                .glampingSiteAvail(availability.getGlampingSiteAvail())
-                .caravanSiteAvail(availability.getCaravanSiteAvail())
-                .build();
-
-        switch (campFacsType) {
-            case 1:
-                updatedAvailability = updatedAvailability.toBuilder()
-                        .generalSiteAvail(updatedAvailability.getGeneralSiteAvail() + changeCount)
-                        .build();
-                break;
-            case 2:
-                updatedAvailability = updatedAvailability.toBuilder()
-                        .carSiteAvail(updatedAvailability.getCarSiteAvail() + changeCount)
-                        .build();
-                break;
-            case 3:
-                updatedAvailability = updatedAvailability.toBuilder()
-                        .glampingSiteAvail(updatedAvailability.getGlampingSiteAvail() + changeCount)
-                        .build();
-                break;
-            case 4:
-                updatedAvailability = updatedAvailability.toBuilder()
-                        .caravanSiteAvail(updatedAvailability.getCaravanSiteAvail() + changeCount)
-                        .build();
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid camp facility type: " + campFacsType);
-        }
-
-        availabilityRepository.save(updatedAvailability);
-    }
-
     private Reservation findReservationById(Long reservationId) {
         return reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new RuntimeException("Reservation not found: " + reservationId));
@@ -369,11 +313,5 @@ public class ReservationServiceImpl implements ReservationService {
                 .reservationStatus(status)
                 .build();
         reservationRepository.save(updatedReservation);
-    }
-
-    private void updateAvailabilityForCancellation(ReservationDTO reservationDTO, Reservation reservation) {
-        Date entryDate = Date.from(reservation.getEntryDate().atZone(ZoneId.systemDefault()).toInstant());
-        Date leavingDate = Date.from(reservation.getLeavingDate().atZone(ZoneId.systemDefault()).toInstant());
-        updateAvailabilityCount(reservationDTO, entryDate, leavingDate, 1);
     }
 }
