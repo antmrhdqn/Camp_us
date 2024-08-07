@@ -20,6 +20,8 @@ public class ReservationDTO {
     private LocalDateTime leavingDate;
     private String reservationStatus;
     private String gearRentalStatus;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     private Integer campFacsType;   // 예약한 시설 유형
 }
