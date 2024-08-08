@@ -146,6 +146,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     private void adjustRating(byte oldRating, byte newRating, long campId) {
+
         updateRating(campId, oldRating, false);
         updateRating(campId, newRating, true);
     }
