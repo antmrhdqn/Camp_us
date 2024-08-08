@@ -89,7 +89,6 @@ public class ReservationServiceImpl implements ReservationService {
         }
 
         // 같은 예약 번호가 들어온 경우
-        // 있으면 false, 없으면 true
         boolean isEmpty = reservationRepository.findById(Long.valueOf(reservationId)).isEmpty();
         if (!isEmpty) {
             throw new IllegalArgumentException("이미 존재하는 예약입니다: " + reservationId);
