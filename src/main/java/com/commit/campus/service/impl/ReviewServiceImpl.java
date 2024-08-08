@@ -159,14 +159,24 @@ public class ReviewServiceImpl implements ReviewService {
 
     private void incrementReviewCnt(long campId) {
 
-        CampingSummary campingSummary = campingSummaryRepository.findById(campId)
-                .orElseGet(() -> CampingSummary.builder()
-                        .campId(campId)
-                        .bookmarkCnt(0)
-                        .reviewCnt(0)
-                        .build());
-        campingSummary.incrementReviewCnt();
-        campingSummaryRepository.save(campingSummary);
+       campingSummaryRepository.findById(campId)
+               .ifPresentOrElse(
+                       campingSummary -> {
+                           campingSummary.incrementReviewCnt();
+                           campingSummaryRepository.save(campingSummary);
+                       },
+                       () -> createNewCampingSummary(campId)
+               );
+    }
+
+    private void createNewCampingSummary(long campId) {
+
+        CampingSummary newSummary = CampingSummary.builder()
+                .campId(campId)
+                .bookmarkCnt(0)
+                .reviewCnt(1)
+                .build();
+        campingSummaryRepository.save(newSummary);
     }
 
     private void decrementReviewCnt(long campId) {
