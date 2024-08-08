@@ -119,8 +119,14 @@ public class ReviewServiceImpl implements ReviewService {
 
     private void updateMyReview(long userId, long reviewId, boolean isIncrement) {
 
-        MyReview myReview = myReviewRepository.findById(userId)
-                .orElse(new MyReview(userId));
+        myReviewRepository.findById(userId)
+                .ifPresentOrElse(
+                        myReview -> updateExistingMyReview(myReview, reviewId, isIncrement),
+                        () -> createNewMyReview(userId, reviewId)
+                );
+    }
+
+    private void updateExistingMyReview(MyReview myReview, long reviewId, boolean isIncrement) {
 
         if (isIncrement) {
             myReview.incrementReviewCnt(reviewId);
@@ -128,6 +134,13 @@ public class ReviewServiceImpl implements ReviewService {
             myReview.decrementReviewCnt(reviewId);
         }
         myReviewRepository.save(myReview);
+    }
+
+    private void createNewMyReview(long userId, long reviewId) {
+
+        MyReview newMyReview = new MyReview(userId);
+        newMyReview.incrementReviewCnt(reviewId);
+        myReviewRepository.save(newMyReview);
     }
 
     private void updateRating(long campId, byte rating, boolean isIncrement) {
