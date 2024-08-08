@@ -35,6 +35,7 @@ public class ReservationServiceImpl implements ReservationService {
     private final RedisTemplate<String, String> redisTemplate;
     private final RedisCommands<String, String> redisCommands;
 
+    int index = 1;  // reservationId 생성용 인덱스
     private static final int CHANGE_COUNT = 1;
     private static final long DEFAULT_TTL_SECONDS = 7200;
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -127,10 +128,9 @@ public class ReservationServiceImpl implements ReservationService {
     /* 예약 등록 */
     // 예약아이디 생성 (예약날짜 + 인덱스)
     private String createReservationId(LocalDateTime reservationDate) {
-        int index = 1;
         DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyMMddHHmmss");
         String formattedDate = reservationDate.format(dateFormat);
-        String indexCode = String.format("%06d", index);
+        String indexCode = String.format("%06d", index++);
         return formattedDate + indexCode;
     }
 
