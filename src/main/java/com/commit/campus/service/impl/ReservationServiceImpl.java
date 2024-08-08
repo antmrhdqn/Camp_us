@@ -88,6 +88,13 @@ public class ReservationServiceImpl implements ReservationService {
             throw new RuntimeException("이미 만료된 예약입니다.");
         }
 
+        // 같은 예약 번호가 들어온 경우
+        // 있으면 false, 없으면 true
+        boolean isEmpty = reservationRepository.findById(Long.valueOf(reservationId)).isEmpty();
+        if (!isEmpty) {
+            throw new IllegalArgumentException("이미 존재하는 예약입니다: " + reservationId);
+        }
+
         // redis에서 가져온 데이터 잘 들어오는지 확인용
         reservationInfo.forEach((keyCheck, valueCheck) -> log.info("Key: {} / Value: {}", keyCheck, valueCheck));
 
