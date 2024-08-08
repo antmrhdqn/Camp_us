@@ -12,10 +12,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -82,7 +83,7 @@ public class ReservationController {
     private ReservationDTO mapToReservationDTO(ReservationRequest reservationRequest) throws ParseException {
 
         LocalDateTime reservationDate = LocalDateTime.now();
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         long campFacsId = reservationRequest.getCampFacsId();
         int facsType = campingFacilitiesRepository.findById(campFacsId).get().getFacsTypeId();
@@ -93,8 +94,8 @@ public class ReservationController {
                 .campId(reservationRequest.getCampId())
                 .campFacsId(reservationRequest.getCampFacsId())
                 .reservationDate(reservationDate)
-                .entryDate(formatter.parse(reservationRequest.getEntryDate()))
-                .leavingDate(formatter.parse(reservationRequest.getLeavingDate()))
+                .entryDate(LocalDate.parse(reservationRequest.getEntryDate(), dateTimeFormatter))
+                .leavingDate(LocalDate.parse(reservationRequest.getLeavingDate(), dateTimeFormatter))
                 .gearRentalStatus(reservationRequest.getGearRentalStatus())
                 .campFacsType(facsType)
                 .build();
