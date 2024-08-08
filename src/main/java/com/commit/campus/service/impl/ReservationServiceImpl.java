@@ -96,8 +96,8 @@ public class ReservationServiceImpl implements ReservationService {
         saveReservationToDatabase(reservationDTO);
 
         // 예약 가능 개수 차감
-        boolean isIncrement = true;
-        updateAvailability(reservationDTO, isIncrement);
+        boolean isDecrese = true;
+        updateAvailability(reservationDTO, isDecrese);
 
         return reservationDTO;
     }
@@ -119,8 +119,8 @@ public class ReservationServiceImpl implements ReservationService {
         updateCancellationInfo(reservation, reservationStatus);
 
         // 예약 가능 개수 증가
-        boolean isIncrement = false;
-        updateAvailability(reservationDTO, isIncrement);
+        boolean isDecrese = false;
+        updateAvailability(reservationDTO, isDecrese);
     }
 
     /* 예약 등록 */
@@ -186,10 +186,10 @@ public class ReservationServiceImpl implements ReservationService {
         reservationRepository.save(reservation);
     }
 
-    private void updateAvailability(ReservationDTO reservationDTO, boolean isIncrese) {
+    private void updateAvailability(ReservationDTO reservationDTO, boolean isDecrese) {
 
         // date값을 조건문에 사용(isAfter 활용)하기 위해 LocalDate 타입으로 전환
-        LocalDate currentDate = setLocalDate(reservationDTO.getEntryDate());
+        LocalDate currentDate = reservationDTO.getEntryDate());
         LocalDate endDate = setLocalDate(reservationDTO.getLeavingDate());
 
         Date entryDate = setDate(currentDate);
@@ -219,7 +219,7 @@ public class ReservationServiceImpl implements ReservationService {
                 log.info("{} 날짜로 예약 가능 현황 생성", currentDate);
             }
 
-            if(isIncrese) {
+            if(isDecrese) {
                 updateAvailabilityCount(reservationDTO, availability, -CHANGE_COUNT);
             } else {
                 updateAvailabilityCount(reservationDTO, availability, CHANGE_COUNT);
