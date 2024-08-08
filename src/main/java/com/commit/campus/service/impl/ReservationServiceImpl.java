@@ -15,15 +15,12 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -81,17 +78,24 @@ public class ReservationServiceImpl implements ReservationService {
     @Transactional
     public ReservationDTO confirmReservation(String reservationId) {
         String key = "reservationInfo:" + reservationId;
+        Long reservationPk = Long.valueOf(reservationId);
         Map<String, String> reservationInfo = redisCommands.hgetall(key);
 
         // 예약 요청 만료 여부 판별
         if (reservationInfo.isEmpty()) {
-            throw new RuntimeException("이미 만료된 예약입니다.");
+            throw new RuntimeException("이미 만료되었거나 존재하지 않는 예약입니다.");
         }
 
         // 같은 예약 번호가 들어온 경우
-        boolean isEmpty = reservationRepository.findById(Long.valueOf(reservationId)).isEmpty();
-        if (!isEmpty) {
-            throw new IllegalArgumentException("이미 존재하는 예약입니다: " + reservationId);
+        Optional<Reservation> optionalReservation = reservationRepository.findById(reservationPk);
+
+        if (optionalReservation.isPresent()) {
+            String reservationStatus = optionalReservation.get().getReservationStatus();
+            if (reservationStatus.equals("예약 취소")) {
+                throw new IllegalStateException("이미 취소된 예약입니다.");
+            } else {
+                throw new IllegalArgumentException("이미 존재하는 예약입니다: " + reservationPk);
+            }
         }
 
         // redis에서 가져온 데이터 잘 들어오는지 확인용
