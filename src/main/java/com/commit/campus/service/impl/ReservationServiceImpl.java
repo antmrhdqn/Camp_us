@@ -1,9 +1,9 @@
 package com.commit.campus.service.impl;
 
 import com.commit.campus.dto.ReservationDTO;
+import com.commit.campus.entity.Reservation;
 import com.commit.campus.entity.Availability;
 import com.commit.campus.entity.Camping;
-import com.commit.campus.entity.Reservation;
 import com.commit.campus.repository.AvailabilityRepository;
 import com.commit.campus.repository.CampingRepository;
 import com.commit.campus.repository.ReservationRepository;
