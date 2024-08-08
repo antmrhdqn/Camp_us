@@ -2,8 +2,8 @@ package com.commit.campus.dto;
 
 import lombok.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Getter
 @Builder
@@ -17,8 +17,8 @@ public class ReservationDTO {
     private Long campId;
     private Long campFacsId;
     private LocalDateTime reservationDate;
-    private Date entryDate;
-    private Date leavingDate;
+    private LocalDate entryDate;
+    private LocalDate leavingDate;
     private String reservationStatus;
     private String gearRentalStatus;
     private LocalDateTime createdAt;
