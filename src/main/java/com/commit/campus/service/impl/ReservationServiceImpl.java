@@ -37,6 +37,7 @@ public class ReservationServiceImpl implements ReservationService {
 
     private static final int CHANGE_COUNT = 1;
     private static final long DEFAULT_TTL_SECONDS = 7200;
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Autowired
     public ReservationServiceImpl(ReservationRepository reservationRepository,
@@ -124,6 +125,7 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     /* 예약 등록 */
+    // 예약아이디 생성 (예약날짜 + 인덱스)
     private String createReservationId(LocalDateTime reservationDate) {
         int index = 1;
         DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyMMddHHmmss");
@@ -149,25 +151,18 @@ public class ReservationServiceImpl implements ReservationService {
     /* 예약 확정 */
     private ReservationDTO mapToReservationDTO(Map<String, String> reservationInfo) {
 
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-
-        try {
-            return ReservationDTO.builder()
-                    .reservationId(Long.valueOf(reservationInfo.get("reservationId")))
-                    .userId(Long.valueOf(reservationInfo.get("userId")))
-                    .campId(Long.valueOf(reservationInfo.get("campId")))
-                    .campFacsId(Long.valueOf(reservationInfo.get("campFacsId")))
-                    .reservationDate(LocalDateTime.parse(reservationInfo.get("reservationDate")))
-                    // 여기 파싱 오류 발생
-                    .entryDate(formatter.parse(reservationInfo.get("entryDate")))
-                    .leavingDate(formatter.parse(reservationInfo.get("leavingDate")))
-                    .reservationStatus("예약 확정")
-                    .gearRentalStatus(reservationInfo.get("gearRentalStatus"))
-                    .campFacsType(Integer.valueOf(reservationInfo.get("campFacsType")))
-                    .build();
-        } catch (ParseException e) {
-            throw new RuntimeException("Date 타입 파싱 오류");
-        }
+        return ReservationDTO.builder()
+                .reservationId(Long.valueOf(reservationInfo.get("reservationId")))
+                .userId(Long.valueOf(reservationInfo.get("userId")))
+                .campId(Long.valueOf(reservationInfo.get("campId")))
+                .campFacsId(Long.valueOf(reservationInfo.get("campFacsId")))
+                .reservationDate(LocalDateTime.parse(reservationInfo.get("reservationDate")))
+                .entryDate(LocalDate.parse(reservationInfo.get("entryDate"), DATE_FORMAT))
+                .leavingDate(LocalDate.parse(reservationInfo.get("leavingDate"), DATE_FORMAT))
+                .reservationStatus("예약 확정")
+                .gearRentalStatus(reservationInfo.get("gearRentalStatus"))
+                .campFacsType(Integer.valueOf(reservationInfo.get("campFacsType")))
+                .build();
     }
 
     private void saveReservationToDatabase(ReservationDTO reservationDTO) {
@@ -186,18 +181,17 @@ public class ReservationServiceImpl implements ReservationService {
         reservationRepository.save(reservation);
     }
 
+    // 예약 가능 테이블 업데이트(데이터 추가, 이용가능 개수 변경)
     private void updateAvailability(ReservationDTO reservationDTO, boolean isDecrease) {
 
-        // date값을 조건문에 사용(isAfter 활용)하기 위해 LocalDate 타입으로 전환
-        LocalDate currentDate = reservationDTO.getEntryDate());
-        LocalDate endDate = setLocalDate(reservationDTO.getLeavingDate());
-
-        Date entryDate = setDate(currentDate);
-        Date leavingDate = setDate(endDate);
+        LocalDate currentDate = reservationDTO.getEntryDate();
+        LocalDate endDate = reservationDTO.getLeavingDate();
 
         // 예약한 캠핑장의 입실날짜 ~ 퇴실날짜의 예약 가능 현황 가져오기
         List<Availability> availabilityList = availabilityRepository.findByCampIdAndDateBetween(
-                reservationDTO.getCampId(), entryDate, leavingDate);
+                reservationDTO.getCampId(),
+                reservationDTO.getEntryDate(),
+                reservationDTO.getLeavingDate());
         log.info("findByCampIdAndDateBetween 실행됨");
         log.info("availabilityList = {}", availabilityList);
 
@@ -228,14 +222,7 @@ public class ReservationServiceImpl implements ReservationService {
         }
     }
 
-    private Date setDate(LocalDate localDate) {
-        return Date.from(localDate.atStartOfDay(ZoneId.systemDefault()).toInstant());
-    }
-
-    private LocalDate setLocalDate(Date date) {
-        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-    }
-
+    // 예약 가능 여부 판별
     private Availability checkAvailabilityDate(LocalDate currentDate, List<Availability> availabilityList) {
 
         /*
@@ -249,14 +236,13 @@ public class ReservationServiceImpl implements ReservationService {
 
         log.info("checkAvailabilityDate 실행됨");
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        String currentDateStr = formatter.format(currentDate);
+        String currentDateStr = DATE_FORMAT.format(currentDate);
         log.info("currentDateStr = {}", currentDateStr);
 
         // 스트림을 사용하여 조건을 확인하고 로깅
         Availability availability = availabilityList.stream()
-                .filter(avail -> formatter.format(avail.getDate().toInstant().atZone(ZoneId.systemDefault())).equals(currentDateStr))
-                .peek(avail -> log.info("Checking date: " + formatter.format(avail.getDate().toInstant().atZone(ZoneId.systemDefault()))))
+                .filter(avail -> DATE_FORMAT.format(avail.getDate()).equals(currentDateStr))
+                .peek(avail -> log.info("Checking date: " + DATE_FORMAT.format(avail.getDate())))
                 .findFirst()
                 .orElse(null);
 
@@ -265,17 +251,13 @@ public class ReservationServiceImpl implements ReservationService {
         return availability;
     }
 
-    private Availability createAvailability(long campId, LocalDate date) {
+    private Availability createAvailability(long campId, LocalDate availDate) {
 
         Camping camping = campingRepository.findById(campId).orElse(null);
 
         if (camping == null) {
             throw new NullPointerException("해당 campId는 존재하지 않습니다.");
         }
-
-        // LocalDate -> date 타입 변환
-        Date availDate = setDate(date);
-        log.info("availDate = {}", availDate);
 
         Availability newAvailability = Availability.builder()
             .campId(campId)
