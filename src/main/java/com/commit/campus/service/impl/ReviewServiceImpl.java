@@ -9,6 +9,7 @@ import com.commit.campus.entity.Review;
 import com.commit.campus.repository.*;
 import com.commit.campus.service.ReviewService;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -20,6 +21,7 @@ import java.time.LocalDateTime;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
@@ -28,15 +30,6 @@ public class ReviewServiceImpl implements ReviewService {
     private final RatingSummaryRepository ratingSummaryRepository;
     private final CampingSummaryRepository campingSummaryRepository;
     private final ModelMapper modelMapper;
-
-    public ReviewServiceImpl(ReviewRepository reviewRepository, MyReviewRepository myReviewRepository, UserRepository userRepository, RatingSummaryRepository ratingSummaryRepository, CampingSummaryRepository campingSummaryRepository, ModelMapper modelMapper) {
-        this.reviewRepository = reviewRepository;
-        this.myReviewRepository = myReviewRepository;
-        this.userRepository = userRepository;
-        this.ratingSummaryRepository = ratingSummaryRepository;
-        this.campingSummaryRepository = campingSummaryRepository;
-        this.modelMapper = modelMapper;
-    }
 
     @Override
     public Page<ReviewDTO> getReviewsByCampId(long campId, Pageable pageable) {
