@@ -2,13 +2,13 @@ package com.commit.campus.service.impl;
 
 import com.commit.campus.common.exceptions.NotAuthorizedException;
 import com.commit.campus.common.exceptions.ReviewAlreadyExistsException;
+import com.commit.campus.common.exceptions.ReviewNotFoundException;
 import com.commit.campus.dto.ReviewDTO;
 import com.commit.campus.entity.CampingSummary;
 import com.commit.campus.entity.MyReview;
 import com.commit.campus.entity.Review;
 import com.commit.campus.repository.*;
 import com.commit.campus.service.ReviewService;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -56,7 +56,7 @@ public class ReviewServiceImpl implements ReviewService {
     public void updateReview(ReviewDTO reviewDTO, long userId) {
 
         Review oldReview = findReviewById(reviewDTO.getReviewId());
-        byte oldRating = oldReview.getRating();
+        int oldRating = oldReview.getRating();
 
         verifyReviewPermission(oldReview.getUserId(), userId, "수정");
 
@@ -136,7 +136,7 @@ public class ReviewServiceImpl implements ReviewService {
         myReviewRepository.save(newMyReview);
     }
 
-    private void updateRating(long campId, byte rating, boolean isIncrement) {
+    private void updateRating(long campId, int rating, boolean isIncrement) {
 
         if (isIncrement) {
             ratingSummaryRepository.incrementRating(campId, rating);
@@ -145,7 +145,7 @@ public class ReviewServiceImpl implements ReviewService {
         }
     }
 
-    private void adjustRating(byte oldRating, byte newRating, long campId) {
+    private void adjustRating(int oldRating, int newRating, long campId) {
 
         updateRating(campId, oldRating, false);
         updateRating(campId, newRating, true);
@@ -176,7 +176,7 @@ public class ReviewServiceImpl implements ReviewService {
     private void decrementReviewCnt(long campId) {
 
         CampingSummary campingSummary = campingSummaryRepository.findById(campId)
-                .orElseThrow(() -> new EntityNotFoundException("해당 캠핑장의 리뷰 정보가 존재하지 않습니다."));
+                .orElseThrow(() -> new ReviewNotFoundException("해당 캠핑장의 리뷰 정보가 존재하지 않습니다."));
 
         campingSummary.decrementReviewCnt();
         campingSummaryRepository.save(campingSummary);
@@ -185,7 +185,7 @@ public class ReviewServiceImpl implements ReviewService {
     private Review findReviewById(long reviewId) {
 
         return reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new EntityNotFoundException("리뷰를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ReviewNotFoundException("리뷰를 찾을 수 없습니다."));
     }
 
     private Review updateReviewFromDTO(Review review, ReviewDTO reviewDTO) {
