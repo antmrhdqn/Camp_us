@@ -84,7 +84,7 @@ dependencies {
 }
 
 tasks.named('bootJar') {
-	mainClass.set('com.commit.camp_reserve.CampReserveApplication')
+	mainClass.set('com.commit.campus.CampReserveApplication')
 }
 tasks.named('test') {
 	useJUnitPlatform()
