@@ -78,13 +78,13 @@ public class AdminController {
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/{campId}")
+    @DeleteMapping("/camp/{campId}")
     public ResponseEntity<Void> deleteCampground(@PathVariable Long campId) {
         adminService.deleteCampground(campId);
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/{reviewId}")
+    @DeleteMapping("/review/{reviewId}")
     public ResponseEntity<Void> deleteReview(@PathVariable Long reviewId) {
         adminService.deleteReview(reviewId);
         return ResponseEntity.ok().build();
