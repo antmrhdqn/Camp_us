@@ -12,9 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -35,7 +32,7 @@ public class ReservationController {
     @PostMapping("/create")
     public ResponseEntity<ReservationView> createReservation(@RequestBody ReservationRequest reservationRequest) {
 
-        ReservationDTO reservationDTO = mapToReservationDTO(reservationRequest);
+        ReservationDTO reservationDTO = ReservationDTO.mapToReservationDTO(reservationRequest, campingFacilitiesRepository);
 
         String reservationId = reservationService.createReservation(reservationDTO);
 
@@ -70,26 +67,5 @@ public class ReservationController {
         // 날짜 or 시설 변경을 원할 시에는 예약 취소후 재 예약
 
         return ResponseEntity.ok().build();
-    }
-
-    private ReservationDTO mapToReservationDTO(ReservationRequest reservationRequest) {
-
-        LocalDateTime reservationDate = LocalDateTime.now();
-        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-        long campFacsId = reservationRequest.getCampFacsId();
-        int facsType = campingFacilitiesRepository.findById(campFacsId).get().getFacsTypeId();
-
-        return ReservationDTO.builder()
-                .reservationId(reservationRequest.getReservationId())
-                .userId(Long.valueOf(reservationRequest.getUserId()))
-                .campId(reservationRequest.getCampId())
-                .campFacsId(reservationRequest.getCampFacsId())
-                .reservationDate(reservationDate)
-                .entryDate(LocalDate.parse(reservationRequest.getEntryDate(), dateTimeFormatter))
-                .leavingDate(LocalDate.parse(reservationRequest.getLeavingDate(), dateTimeFormatter))
-                .gearRentalStatus(reservationRequest.getGearRentalStatus())
-                .campFacsType(facsType)
-                .build();
     }
 }
