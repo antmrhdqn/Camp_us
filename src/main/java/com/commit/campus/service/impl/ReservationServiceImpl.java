@@ -337,11 +337,10 @@ public class ReservationServiceImpl implements ReservationService {
 
     // Redis 락 획득
     private boolean acquireLock(String lockKey) {
-        return Boolean.TRUE.equals(
-                redisCommands.set(
-                        lockKey, "locked", SetArgs.Builder.nx().ex(LOCK_TIMEOUT_SECONDS)
-                )
+        String result = redisCommands.set(
+                lockKey, "locked", SetArgs.Builder.nx().ex(LOCK_TIMEOUT_SECONDS)
         );
+        return "OK".equals(result); // "OK"인지 확인하여 락이 성공적으로 설정되었는지 확인
     }
 
     private void releaseLock(String lockKey) {
