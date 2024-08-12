@@ -140,7 +140,7 @@ public class ReservationServiceImpl implements ReservationService {
             // 예약 가능 수량 업데이트
             updateAvailability(reservationDTO, false);
 
-            // 데이터베이스 동기화 (필요한 경우)
+            // 데이터베이스 동기화
             syncCancellationToDatabase(reservationDTO);
 
         } finally {
