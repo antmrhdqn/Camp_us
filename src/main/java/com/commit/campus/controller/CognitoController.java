@@ -18,9 +18,8 @@ public class CognitoController {
 
     @ResponseBody
     @GetMapping("/login/oauth2/code/cognito")
-    public String authStatus(@RequestParam String code, HttpServletResponse response) {
+    public String authStatus(@RequestParam String code) {
         String tokens = cognitoService.getTokens(code);
-        response.addHeader("Authorization", "Bearer " + tokens);
         return tokens;
     }
 }
