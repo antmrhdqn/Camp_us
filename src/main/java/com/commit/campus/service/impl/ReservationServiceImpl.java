@@ -68,6 +68,7 @@ public class ReservationServiceImpl implements ReservationService {
     @Transactional
     public ReservationDTO confirmReservation(String reservationId) {
         String lockKey = "lock:reservation:" + reservationId;
+        String campLockKey = null;
         try {
             if (!acquireLock(lockKey)) {
                 throw new ConcurrentModificationException("해당 예약은 현재 처리 중입니다. 잠시 후 다시 시도해 주세요.");
@@ -79,6 +80,14 @@ public class ReservationServiceImpl implements ReservationService {
             // 예약 요청 만료 여부 판별
             if (reservationInfo.isEmpty()) {
                 throw new RuntimeException("이미 만료되었거나 존재하지 않는 예약입니다.");
+            }
+
+            // 캠핑장에 대한 락 적용
+            String campId = reservationInfo.get("campId");
+            campLockKey = "lock:camp:" + campId;
+
+            if (!acquireLock(campLockKey)) {
+                throw new ConcurrentModificationException("동일한 캠핑장에 대한 다른 예약 요청이 처리 중입니다. 잠시 후 다시 시도해 주세요.");
             }
 
             // Redis에서 예약 상태 확인
@@ -104,6 +113,9 @@ public class ReservationServiceImpl implements ReservationService {
             return reservationDTO;
         } finally {
             releaseLock(lockKey);
+            if (campLockKey != null) {
+                releaseLock(campLockKey);
+            }
         }
     }
 
@@ -111,6 +123,7 @@ public class ReservationServiceImpl implements ReservationService {
     @Transactional
     public void cancelReservation(String reservationId) {
         String lockKey = "lock:reservation:" + reservationId;
+        String campLockKey = null;
         String reservationKey = "reservationInfo:" + reservationId;
 
         try {
@@ -123,6 +136,14 @@ public class ReservationServiceImpl implements ReservationService {
 
             if (reservationInfo.isEmpty()) {
                 throw new IllegalArgumentException("해당 예약이 존재하지 않습니다.");
+            }
+
+            // 캠핑장에 대한 락 적용
+            String campId = reservationInfo.get("campId");
+            campLockKey = "lock:camp:" + campId;
+
+            if (!acquireLock(campLockKey)) {
+                throw new ConcurrentModificationException("동일한 캠핑장에 대한 다른 예약 요청이 처리 중입니다. 잠시 후 다시 시도해 주세요.");
             }
 
             String currentStatus = reservationInfo.get("reservationStatus");
@@ -145,6 +166,9 @@ public class ReservationServiceImpl implements ReservationService {
 
         } finally {
             releaseLock(lockKey);
+            if (campLockKey != null) {
+                releaseLock(campLockKey);
+            }
         }
     }
 
@@ -274,11 +298,8 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     private Availability createAvailability(long campId, LocalDate availDate) {
-        Camping camping = campingRepository.findById(campId).orElse(null);
-
-        if (camping == null) {
-            throw new NullPointerException("해당 campId는 존재하지 않습니다.");
-        }
+        Camping camping = campingRepository.findById(campId)
+                .orElseThrow(() -> new NullPointerException("해당 campId는 존재하지 않습니다."));
 
         Availability newAvailability = Availability.builder()
                 .campId(campId)
