@@ -40,7 +40,7 @@ public class LettuceConfig {
     }
 
     @Bean
-    public RedisCommands<String, String> redissyncCommands(StatefulRedisConnection<String, String> connection) {
+    public RedisCommands<String, String> redisSyncCommands(StatefulRedisConnection<String, String> connection) {
         // 동기 명령어 객체 생성
         return connection.sync();
     }

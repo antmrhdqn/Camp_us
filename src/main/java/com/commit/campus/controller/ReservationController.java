@@ -2,15 +2,18 @@ package com.commit.campus.controller;
 
 import com.commit.campus.dto.ReservationDTO;
 import com.commit.campus.entity.Reservation;
+import com.commit.campus.repository.CampingFacilitiesRepository;
 import com.commit.campus.service.ReservationService;
-import com.commit.campus.view.ReservationRequest;
-import com.commit.campus.view.ReservationResponse;
+import com.commit.campus.request.ReservationRequest;
+import com.commit.campus.view.ReservationView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.ParseException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -19,10 +22,12 @@ import java.util.List;
 public class ReservationController {
 
     private final ReservationService reservationService;
+    private final CampingFacilitiesRepository campingFacilitiesRepository;
 
     @Autowired
-    public ReservationController(ReservationService reservationService) {
+    public ReservationController(ReservationService reservationService, CampingFacilitiesRepository campingFacilitiesRepository) {
         this.reservationService = reservationService;
+        this.campingFacilitiesRepository = campingFacilitiesRepository;
     }
 
     @GetMapping("/redis_check")
@@ -32,29 +37,35 @@ public class ReservationController {
 
     // 예약 등록
     @PostMapping("/create")
-    public ResponseEntity<String> createReservation(@RequestBody ReservationRequest reservationRequest) {
+    public ResponseEntity<ReservationView> createReservation(@RequestBody ReservationRequest reservationRequest) throws ParseException {
 
         ReservationDTO reservationDTO = mapToReservationDTO(reservationRequest);
 
         String reservationId = reservationService.createReservation(reservationDTO);
 
-        // 고객이 예약 페이지에 접속한 시점에 예약 가능 현황을 하나 차감
-        // 만료 시간을 설정하여 만료 전까지 예약 확정 요청이 들어오지 않으면 자동 취소(자동으로 예약 취소 api 요청 호출)
-        // 만료 시간은 1일로 설정
+        ReservationView reservationView = new ReservationView(reservationId);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(reservationId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(reservationView);
     }
 
     // 예약 확정(결제)
     @PostMapping("/confirm")
-    public ResponseEntity<ReservationResponse> finalizeReservation(@RequestParam String reservationId) {
+    public ResponseEntity<ReservationView> finalizeReservation(@RequestParam String reservationId) {
 
         reservationService.confirmReservation(reservationId);
 
+        return ResponseEntity.ok().build();
+    }
 
-        // 프론트에서 결제 버튼(기능은 구현x)을 누르면 예약 확정이 되며 만료 시간 해제됨.
-        // 그밖에 변동 사항은 없음.
-        // +) 추후 이 시점에 고객에게 예약 확정 알림 발송
+    // 예약 취소
+    @PutMapping("/cancel")
+    public ResponseEntity<Void> cancelReservation(@RequestBody ReservationRequest reservationRequest) throws ParseException {
+
+        ReservationDTO reservationDTO = mapToReservationDTO(reservationRequest);
+        reservationService.cancelReservation(reservationDTO);
+
+        // 기존 날짜의 예약 가능 건수 차감한 것을 되돌림
+        // 예약 히스토리의 상태값 변경
 
         return ResponseEntity.ok().build();
     }
@@ -69,28 +80,22 @@ public class ReservationController {
         return ResponseEntity.ok().build();
     }
 
-    // 예약 취소
-    @PutMapping("/cancel")
-    public ResponseEntity<Void> cancelReservation(@RequestBody List<Reservation> reservations, @RequestHeader("Authorization") String token) {
+    private ReservationDTO mapToReservationDTO(ReservationRequest reservationRequest) throws ParseException {
 
-        // 기존 날짜의 예약 가능 건수 차감한 것을 되돌림
-        // 예약 히스토리의 상태값 변경
+        LocalDateTime reservationDate = LocalDateTime.now();
 
-        return ResponseEntity.ok().build();
-    }
+        long campFacsId = reservationRequest.getCampFacsId();
+        int facsType = campingFacilitiesRepository.findById(campFacsId).get().getFacsTypeId();
 
-
-    private ReservationDTO mapToReservationDTO(ReservationRequest reservationRequest) {
-
-        ReservationDTO reservationDTO = new ReservationDTO();
-        reservationDTO.setUserId(reservationRequest.getUserId());
-        reservationDTO.setCampId(reservationRequest.getCampId());
-        reservationDTO.setCampFacsId(reservationRequest.getCampFacsId());
-        reservationDTO.setReservationDate(reservationRequest.getReservationDate());
-        reservationDTO.setEntryDate(reservationRequest.getEntryDate());
-        reservationDTO.setLeavingDate(reservationRequest.getLeavingDate());
-        reservationDTO.setGearRentalStatus(reservationRequest.getGearRentalStatus());
-
-        return reservationDTO;
+        return ReservationDTO.builder()
+                .userId(Long.valueOf(reservationRequest.getUserId()))
+                .campId(reservationRequest.getCampId())
+                .campFacsId(reservationRequest.getCampFacsId())
+                .reservationDate(reservationDate)
+                .entryDate(LocalDateTime.parse(reservationRequest.getEntryDate()))
+                .leavingDate(LocalDateTime.parse(reservationRequest.getLeavingDate()))
+                .gearRentalStatus(reservationRequest.getGearRentalStatus())
+                .campFacsType(facsType)
+                .build();
     }
 }

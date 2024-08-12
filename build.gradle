@@ -69,14 +69,14 @@ dependencies {
 	// Swagger UI
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.6.0'
   
-  // Spring data redis
-  implementation('org.springframework.boot:spring-boot-starter-data-redis')
+	// Spring data redis
+	implementation('org.springframework.boot:spring-boot-starter-data-redis')
 
-  // redis lettuce
-  implementation 'io.lettuce:lettuce-core:6.3.2.RELEASE'
+	// redis lettuce
+	implementation 'io.lettuce:lettuce-core:6.3.2.RELEASE'
 
-  // @Value 어노테이션 사용
-  implementation 'org.springframework.boot:spring-boot-configuration-processor'
+	// @Value 어노테이션 사용
+	implementation 'org.springframework.boot:spring-boot-configuration-processor'
 
 	// cognito
 	implementation 'software.amazon.awssdk:cognitoidentityprovider:2.17.81'

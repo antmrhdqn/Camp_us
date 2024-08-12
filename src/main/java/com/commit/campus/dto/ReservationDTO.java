@@ -1,23 +1,25 @@
 package com.commit.campus.dto;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Getter
-@Setter
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @ToString
 public class ReservationDTO {
 
-    private String reservationId;
-    private Integer userId;
+    private Long reservationId;
+    private Long userId;
     private Long campId;
     private Long campFacsId;
     private LocalDateTime reservationDate;
-    private Date entryDate;
-    private Date leavingDate;
+    private LocalDateTime entryDate;
+    private LocalDateTime leavingDate;
+    private String reservationStatus;
     private String gearRentalStatus;
+
+    private Integer campFacsType;   // 예약한 시설 유형
 }
