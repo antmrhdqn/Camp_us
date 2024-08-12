@@ -274,11 +274,8 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     private Availability createAvailability(long campId, LocalDate availDate) {
-        Camping camping = campingRepository.findById(campId).orElse(null);
-
-        if (camping == null) {
-            throw new NullPointerException("해당 campId는 존재하지 않습니다.");
-        }
+        Camping camping = campingRepository.findById(campId)
+                .orElseThrow(() -> new NullPointerException("해당 campId는 존재하지 않습니다."));
 
         Availability newAvailability = Availability.builder()
                 .campId(campId)
