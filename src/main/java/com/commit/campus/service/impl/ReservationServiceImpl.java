@@ -22,7 +22,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -75,7 +74,6 @@ public class ReservationServiceImpl implements ReservationService {
             }
 
             String key = "reservationInfo:" + reservationId;
-            Long reservationPk = Long.valueOf(reservationId);
             Map<String, String> reservationInfo = redisCommands.hgetall(key);
 
             // 예약 요청 만료 여부 판별
@@ -83,23 +81,19 @@ public class ReservationServiceImpl implements ReservationService {
                 throw new RuntimeException("이미 만료되었거나 존재하지 않는 예약입니다.");
             }
 
-            // 같은 예약 번호가 들어온 경우
-            Optional<Reservation> optionalReservation = reservationRepository.findById(reservationPk);
-
-            if (optionalReservation.isPresent()) {
-                String reservationStatus = optionalReservation.get().getReservationStatus();
-                if (reservationStatus.equals("예약 취소")) {
-                    throw new IllegalStateException("이미 취소된 예약입니다.");
-                } else {
-                    throw new IllegalStateException("이미 존재하는 예약입니다: " + reservationPk);
-                }
+            // Redis에서 예약 상태 확인
+            String reservationStatus = reservationInfo.get("reservationStatus");
+            if (CANCELLED_STATUS.equals(reservationStatus)) {
+                throw new IllegalStateException("이미 취소된 예약입니다.");
+            } else if (CONFIRMATION_STATUS.equals(reservationStatus)) {
+                throw new IllegalStateException("이미 확정된 예약입니다: " + reservationId);
             }
-
-            // redis에서 가져온 데이터 잘 들어오는지 확인용
-            reservationInfo.forEach((keyCheck, valueCheck) -> log.info("Key: {} / Value: {}", keyCheck, valueCheck));
 
             // 캐시에서 가져온 데이터를 dto로 매핑
             ReservationDTO reservationDTO = mapToReservationDTO(reservationInfo);
+
+            // 예약 상태 업데이트
+            redisCommands.hset(key, "reservationStatus", CONFIRMATION_STATUS);
 
             // 예약 정보 db에 저장
             saveReservationToDatabase(reservationDTO);
@@ -342,19 +336,19 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     /* 예약 취소 */
-    private void updateCancellationInfo(Reservation reservation, String reservationStatus) {
-        if (reservation.getReservationStatus().equals(reservationStatus)) {
-            throw new IllegalArgumentException("이미 취소된 예약입니다.");
-        }
-
-        Reservation updatedReservation = reservation.toBuilder()
-                .reservationStatus(reservationStatus)
-                .updatedAt(LocalDateTime.now())
-                .build();
-
-        reservationRepository.save(updatedReservation);
-        log.info("updatedReservation {}", updatedReservation);
-    }
+//    private void updateCancellationInfo(Reservation reservation, String reservationStatus) {
+//        if (reservation.getReservationStatus().equals(reservationStatus)) {
+//            throw new IllegalArgumentException("이미 취소된 예약입니다.");
+//        }
+//
+//        Reservation updatedReservation = reservation.toBuilder()
+//                .reservationStatus(reservationStatus)
+//                .updatedAt(LocalDateTime.now())
+//                .build();
+//
+//        reservationRepository.save(updatedReservation);
+//        log.info("updatedReservation {}", updatedReservation);
+//    }
 
     // Redis 락 획득
     private boolean acquireLock(String lockKey) {
