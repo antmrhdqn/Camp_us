@@ -12,8 +12,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -35,7 +33,7 @@ public class ReservationController {
 
     // 예약 등록
     @PostMapping("/create")
-    public ResponseEntity<ReservationView> createReservation(@RequestBody ReservationRequest reservationRequest) throws ParseException {
+    public ResponseEntity<ReservationView> createReservation(@RequestBody ReservationRequest reservationRequest) {
 
         ReservationDTO reservationDTO = mapToReservationDTO(reservationRequest);
 
@@ -74,7 +72,7 @@ public class ReservationController {
         return ResponseEntity.ok().build();
     }
 
-    private ReservationDTO mapToReservationDTO(ReservationRequest reservationRequest) throws ParseException {
+    private ReservationDTO mapToReservationDTO(ReservationRequest reservationRequest) {
 
         LocalDateTime reservationDate = LocalDateTime.now();
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
