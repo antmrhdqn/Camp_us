@@ -1,5 +1,6 @@
 package com.commit.campus.service.impl;
 
+import com.commit.campus.common.exceptions.ReviewNotFoundException;
 import com.commit.campus.dto.CampingDTO;
 import com.commit.campus.dto.ReviewDTO;
 import com.commit.campus.entity.Camping;
@@ -40,7 +41,7 @@ public class MyReviewServiceImpl implements MyReviewService {
     public Page<ReviewDTO> getMyReviews(long userId, Pageable pageable) {
 
         MyReview myReview = myReviewRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("작성된 리뷰가 존재하지 않습니다."));
+                .orElseThrow(() -> new ReviewNotFoundException("작성된 리뷰가 존재하지 않습니다."));
 
         List<Long> reviewIds = myReview.getReviewIds();
 
@@ -55,7 +56,7 @@ public class MyReviewServiceImpl implements MyReviewService {
     public Page<CampingDTO> getReviewedCampings(long userId, Pageable pageable) {
 
         MyReview myReview = myReviewRepository.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("작성된 리뷰가 존재하지 않습니다."));
+                .orElseThrow(() -> new ReviewNotFoundException("작성된 리뷰가 존재하지 않습니다."));
 
         List<Long> reviewIds = myReview.getReviewIds();
 
