@@ -335,21 +335,6 @@ public class ReservationServiceImpl implements ReservationService {
         availabilityRepository.save(availability);
     }
 
-    /* 예약 취소 */
-//    private void updateCancellationInfo(Reservation reservation, String reservationStatus) {
-//        if (reservation.getReservationStatus().equals(reservationStatus)) {
-//            throw new IllegalArgumentException("이미 취소된 예약입니다.");
-//        }
-//
-//        Reservation updatedReservation = reservation.toBuilder()
-//                .reservationStatus(reservationStatus)
-//                .updatedAt(LocalDateTime.now())
-//                .build();
-//
-//        reservationRepository.save(updatedReservation);
-//        log.info("updatedReservation {}", updatedReservation);
-//    }
-
     // Redis 락 획득
     private boolean acquireLock(String lockKey) {
         return Boolean.TRUE.equals(
