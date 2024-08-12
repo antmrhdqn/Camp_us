@@ -3,6 +3,7 @@ package com.commit.campus.entity;
 import lombok.*;
 import jakarta.persistence.*;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 @Table(name = "availability")
@@ -22,7 +23,7 @@ public class Availability {
     private Long campId;
 
     @Column(name = "date", nullable = false)
-    private Date date;
+    private LocalDate date;
 
     @Column(name = "general_site_avail")
     private int generalSiteAvail;

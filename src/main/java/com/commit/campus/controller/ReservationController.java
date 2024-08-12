@@ -13,7 +13,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @RestController
@@ -64,9 +67,6 @@ public class ReservationController {
         ReservationDTO reservationDTO = mapToReservationDTO(reservationRequest);
         reservationService.cancelReservation(reservationDTO);
 
-        // 기존 날짜의 예약 가능 건수 차감한 것을 되돌림
-        // 예약 히스토리의 상태값 변경
-
         return ResponseEntity.ok().build();
     }
 
@@ -83,17 +83,19 @@ public class ReservationController {
     private ReservationDTO mapToReservationDTO(ReservationRequest reservationRequest) throws ParseException {
 
         LocalDateTime reservationDate = LocalDateTime.now();
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         long campFacsId = reservationRequest.getCampFacsId();
         int facsType = campingFacilitiesRepository.findById(campFacsId).get().getFacsTypeId();
 
         return ReservationDTO.builder()
+                .reservationId(reservationRequest.getReservationId())
                 .userId(Long.valueOf(reservationRequest.getUserId()))
                 .campId(reservationRequest.getCampId())
                 .campFacsId(reservationRequest.getCampFacsId())
                 .reservationDate(reservationDate)
-                .entryDate(LocalDateTime.parse(reservationRequest.getEntryDate()))
-                .leavingDate(LocalDateTime.parse(reservationRequest.getLeavingDate()))
+                .entryDate(LocalDate.parse(reservationRequest.getEntryDate(), dateTimeFormatter))
+                .leavingDate(LocalDate.parse(reservationRequest.getLeavingDate(), dateTimeFormatter))
                 .gearRentalStatus(reservationRequest.getGearRentalStatus())
                 .campFacsType(facsType)
                 .build();

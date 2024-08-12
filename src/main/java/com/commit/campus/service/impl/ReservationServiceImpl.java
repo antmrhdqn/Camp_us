@@ -17,11 +17,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -33,8 +32,10 @@ public class ReservationServiceImpl implements ReservationService {
     private final RedisTemplate<String, String> redisTemplate;
     private final RedisCommands<String, String> redisCommands;
 
+    int index = 1;  // reservationId 생성용 인덱스
     private static final int CHANGE_COUNT = 1;
     private static final long DEFAULT_TTL_SECONDS = 7200;
+    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     @Autowired
     public ReservationServiceImpl(ReservationRepository reservationRepository,
@@ -77,11 +78,24 @@ public class ReservationServiceImpl implements ReservationService {
     @Transactional
     public ReservationDTO confirmReservation(String reservationId) {
         String key = "reservationInfo:" + reservationId;
+        Long reservationPk = Long.valueOf(reservationId);
         Map<String, String> reservationInfo = redisCommands.hgetall(key);
 
         // 예약 요청 만료 여부 판별
         if (reservationInfo.isEmpty()) {
-            throw new RuntimeException("이미 만료된 예약입니다.");
+            throw new RuntimeException("이미 만료되었거나 존재하지 않는 예약입니다.");
+        }
+
+        // 같은 예약 번호가 들어온 경우
+        Optional<Reservation> optionalReservation = reservationRepository.findById(reservationPk);
+
+        if (optionalReservation.isPresent()) {
+            String reservationStatus = optionalReservation.get().getReservationStatus();
+            if (reservationStatus.equals("예약 취소")) {
+                throw new IllegalStateException("이미 취소된 예약입니다.");
+            } else {
+                throw new IllegalArgumentException("이미 존재하는 예약입니다: " + reservationPk);
+            }
         }
 
         // redis에서 가져온 데이터 잘 들어오는지 확인용
@@ -94,7 +108,8 @@ public class ReservationServiceImpl implements ReservationService {
         saveReservationToDatabase(reservationDTO);
 
         // 예약 가능 개수 차감
-        updateAvailability(reservationDTO);
+        boolean isDecrease = true;
+        updateAvailability(reservationDTO, isDecrease);
 
         return reservationDTO;
     }
@@ -102,16 +117,30 @@ public class ReservationServiceImpl implements ReservationService {
     @Override
     @Transactional
     public void cancelReservation(ReservationDTO reservationDTO) {
-        Reservation reservation = findReservationById(reservationDTO.getReservationId());
-        updateReservationStatus(reservation, "취소");
-//        updateAvailabilityForCancellation(reservationDTO, reservation);
+
+        /*
+            예약 취소 요청이 들어오면
+            1. reservationID로 rds에 저장된 예약 내역을 불러와 reservationStatus를 "취소"로 업데이트
+            2. entryDate, leavingDate, campFacsType 값을 저장
+            3. availability 테이블에서 위 기간의 예약 가능 카운트를 증가
+        */
+        Reservation reservation = reservationRepository.findById(reservationDTO.getReservationId()).orElse(null);
+
+        // 예약 내역 변경
+        String reservationStatus = "예약 취소";
+        updateCancellationInfo(reservation, reservationStatus);
+
+        // 예약 가능 개수 증가
+        boolean isDecrease = false;
+        updateAvailability(reservationDTO, isDecrease);
     }
 
+    /* 예약 등록 */
+    // 예약아이디 생성 (예약날짜 + 인덱스)
     private String createReservationId(LocalDateTime reservationDate) {
-        int index = 1;
         DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyMMddHHmmss");
         String formattedDate = reservationDate.format(dateFormat);
-        String indexCode = String.format("%06d", index);
+        String indexCode = String.format("%06d", index++);
         return formattedDate + indexCode;
     }
 
@@ -129,15 +158,17 @@ public class ReservationServiceImpl implements ReservationService {
         redisCommands.hset(key, "campFacsType", reservationDTO.getCampFacsType().toString());
     }
 
+    /* 예약 확정 */
     private ReservationDTO mapToReservationDTO(Map<String, String> reservationInfo) {
+
         return ReservationDTO.builder()
                 .reservationId(Long.valueOf(reservationInfo.get("reservationId")))
                 .userId(Long.valueOf(reservationInfo.get("userId")))
                 .campId(Long.valueOf(reservationInfo.get("campId")))
                 .campFacsId(Long.valueOf(reservationInfo.get("campFacsId")))
                 .reservationDate(LocalDateTime.parse(reservationInfo.get("reservationDate")))
-                .entryDate(LocalDateTime.parse(reservationInfo.get("entryDate")))
-                .leavingDate(LocalDateTime.parse(reservationInfo.get("leavingDate")))
+                .entryDate(LocalDate.parse(reservationInfo.get("entryDate"), DATE_FORMAT))
+                .leavingDate(LocalDate.parse(reservationInfo.get("leavingDate"), DATE_FORMAT))
                 .reservationStatus("예약 확정")
                 .gearRentalStatus(reservationInfo.get("gearRentalStatus"))
                 .campFacsType(Integer.valueOf(reservationInfo.get("campFacsType")))
@@ -155,25 +186,24 @@ public class ReservationServiceImpl implements ReservationService {
                 .leavingDate(reservationDTO.getLeavingDate())
                 .reservationStatus(reservationDTO.getReservationStatus())
                 .gearRentalStatus(reservationDTO.getGearRentalStatus())
+                .createdAt(LocalDateTime.now())
                 .build();
         reservationRepository.save(reservation);
     }
 
-    private void updateAvailability(ReservationDTO reservationDTO) {
-        Date entryDate = Date.from(reservationDTO.getEntryDate().atZone(ZoneId.systemDefault()).toInstant());
-        Date leavingDate = Date.from(reservationDTO.getLeavingDate().atZone(ZoneId.systemDefault()).toInstant());
-        log.info("entryDate = {}", entryDate);
-        log.info("leavingDate = {}", leavingDate);
+    // 예약 가능 테이블 업데이트(데이터 추가, 이용가능 개수 변경)
+    private void updateAvailability(ReservationDTO reservationDTO, boolean isDecrease) {
+
+        LocalDate currentDate = reservationDTO.getEntryDate();
+        LocalDate endDate = reservationDTO.getLeavingDate();
 
         // 예약한 캠핑장의 입실날짜 ~ 퇴실날짜의 예약 가능 현황 가져오기
         List<Availability> availabilityList = availabilityRepository.findByCampIdAndDateBetween(
-                reservationDTO.getCampId(), entryDate, leavingDate);
+                reservationDTO.getCampId(),
+                reservationDTO.getEntryDate(),
+                reservationDTO.getLeavingDate());
         log.info("findByCampIdAndDateBetween 실행됨");
         log.info("availabilityList = {}", availabilityList);
-
-        // date값을 조건문에 사용(isAfter 활용)하기 위해 LocalDate 타입으로 전환
-        LocalDate currentDate = entryDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-        LocalDate endDate = leavingDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
         int index = 0;
 
@@ -193,14 +223,16 @@ public class ReservationServiceImpl implements ReservationService {
                 log.info("{} 날짜로 예약 가능 현황 생성", currentDate);
             }
 
-            // currentDate의 시설 예약 가능 개수 차감
-            updateAvailabilityCount(reservationDTO, availability, -CHANGE_COUNT);
+            if(isDecrease) {
+                updateAvailabilityCount(reservationDTO, availability, -CHANGE_COUNT);
+            } else {
+                updateAvailabilityCount(reservationDTO, availability, CHANGE_COUNT);
+            }
             currentDate = currentDate.plusDays(1);
         }
-
-//        updateAvailabilityCount(reservationDTO, entryDate, leavingDate, -1);
     }
 
+    // 예약 가능 여부 판별
     private Availability checkAvailabilityDate(LocalDate currentDate, List<Availability> availabilityList) {
 
         /*
@@ -214,14 +246,13 @@ public class ReservationServiceImpl implements ReservationService {
 
         log.info("checkAvailabilityDate 실행됨");
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        String currentDateStr = formatter.format(currentDate);
+        String currentDateStr = DATE_FORMAT.format(currentDate);
         log.info("currentDateStr = {}", currentDateStr);
 
         // 스트림을 사용하여 조건을 확인하고 로깅
         Availability availability = availabilityList.stream()
-                .filter(avail -> formatter.format(avail.getDate().toInstant().atZone(ZoneId.systemDefault())).equals(currentDateStr))
-                .peek(avail -> log.info("Checking date: " + formatter.format(avail.getDate().toInstant().atZone(ZoneId.systemDefault()))))
+                .filter(avail -> DATE_FORMAT.format(avail.getDate()).equals(currentDateStr))
+                .peek(avail -> log.info("Checking date: " + DATE_FORMAT.format(avail.getDate())))
                 .findFirst()
                 .orElse(null);
 
@@ -230,17 +261,13 @@ public class ReservationServiceImpl implements ReservationService {
         return availability;
     }
 
-    private Availability createAvailability(long campId, LocalDate date) {
+    private Availability createAvailability(long campId, LocalDate availDate) {
 
         Camping camping = campingRepository.findById(campId).orElse(null);
 
         if (camping == null) {
             throw new NullPointerException("해당 campId는 존재하지 않습니다.");
         }
-
-        // LocalDate -> date 타입 변환
-        Date availDate = Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant());
-        log.info("availDate = {}", availDate);
 
         Availability newAvailability = Availability.builder()
             .campId(campId)
@@ -303,15 +330,19 @@ public class ReservationServiceImpl implements ReservationService {
         availabilityRepository.save(availability);
     }
 
-    private Reservation findReservationById(Long reservationId) {
-        return reservationRepository.findById(reservationId)
-                .orElseThrow(() -> new RuntimeException("Reservation not found: " + reservationId));
-    }
+    /* 예약 취소 */
+    private void updateCancellationInfo(Reservation reservation, String reservationStatus) {
 
-    private void updateReservationStatus(Reservation reservation, String status) {
+        if(reservation.getReservationStatus().equals(reservationStatus)) {
+            throw new IllegalArgumentException("이미 취소된 예약입니다.");
+        }
+
         Reservation updatedReservation = reservation.toBuilder()
-                .reservationStatus(status)
+                .reservationStatus(reservationStatus)
+                .updatedAt(LocalDateTime.now())
                 .build();
+
         reservationRepository.save(updatedReservation);
+        log.info("updatedReservation {}", updatedReservation);
     }
 }

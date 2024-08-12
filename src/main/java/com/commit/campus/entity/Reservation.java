@@ -4,11 +4,14 @@ import lombok.*;
 import jakarta.persistence.*;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Date;
 
 @Table(name = "reservation")
 @Entity
 @Getter
+@ToString
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
@@ -30,16 +33,22 @@ public class Reservation implements Serializable {
     private LocalDateTime reservationDate;  // 예약 날짜
 
     @Column(name = "entry_date")
-    private LocalDateTime entryDate;  // 입실 날짜
+    private LocalDate entryDate;  // 입실 날짜
 
     @Column(name = "leaving_date")
-    private LocalDateTime leavingDate;  // 퇴실 날짜
+    private LocalDate leavingDate;  // 퇴실 날짜
 
     @Column(name = "reservation_status")
     private String reservationStatus;  // 예약 상태
 
     @Column(name = "gear_rental_status")
     private String gearRentalStatus;  // 장비 대여 상태
+
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 
     // fk
     @ManyToOne

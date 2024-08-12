@@ -2,6 +2,7 @@ package com.commit.campus.dto;
 
 import lombok.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Getter
@@ -16,10 +17,12 @@ public class ReservationDTO {
     private Long campId;
     private Long campFacsId;
     private LocalDateTime reservationDate;
-    private LocalDateTime entryDate;
-    private LocalDateTime leavingDate;
+    private LocalDate entryDate;
+    private LocalDate leavingDate;
     private String reservationStatus;
     private String gearRentalStatus;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     private Integer campFacsType;   // 예약한 시설 유형
 }
