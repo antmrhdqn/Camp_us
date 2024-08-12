@@ -29,7 +29,6 @@ public class ReservationServiceImpl implements ReservationService {
     private final ReservationRepository reservationRepository;
     private final AvailabilityRepository availabilityRepository;
     private final CampingRepository campingRepository;
-    private final RedisTemplate<String, String> redisTemplate;
     private final RedisCommands<String, String> redisCommands;
 
     int index = 1;  // reservationId 생성용 인덱스
@@ -42,24 +41,11 @@ public class ReservationServiceImpl implements ReservationService {
     public ReservationServiceImpl(ReservationRepository reservationRepository,
                                   AvailabilityRepository availabilityRepository,
                                   CampingRepository campingRepository,
-                                  RedisTemplate<String, String> redisTemplate,
                                   RedisCommands<String, String> redisCommands) {
         this.reservationRepository = reservationRepository;
         this.availabilityRepository = availabilityRepository;
         this.campingRepository = campingRepository;
-        this.redisTemplate = redisTemplate;
         this.redisCommands = redisCommands;
-    }
-
-    @Override
-    public String redisHealthCheck() {
-        try {
-            redisTemplate.opsForValue().set("health_check", "OK");
-            String result = redisTemplate.opsForValue().get("health_check");
-            return "OK".equals(result) ? "Redis is running" : "Redis connection failed";
-        } catch (Exception e) {
-            return "Connection failed: " + e.getMessage();
-        }
     }
 
     @Override
