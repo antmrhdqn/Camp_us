@@ -1,4 +1,4 @@
-package com.commit.campus.common.config;
+package com.commit.campus.common.filter;
 
 import com.commit.campus.dto.LoginRequest;
 import com.commit.campus.service.UserService;
