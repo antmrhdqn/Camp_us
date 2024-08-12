@@ -33,11 +33,6 @@ public class ReservationController {
         this.campingFacilitiesRepository = campingFacilitiesRepository;
     }
 
-    @GetMapping("/redis_check")
-    public String redisCheck() {
-        return reservationService.redisHealthCheck();
-    }
-
     // 예약 등록
     @PostMapping("/create")
     public ResponseEntity<ReservationView> createReservation(@RequestBody ReservationRequest reservationRequest) throws ParseException {
@@ -62,10 +57,9 @@ public class ReservationController {
 
     // 예약 취소
     @PutMapping("/cancel")
-    public ResponseEntity<Void> cancelReservation(@RequestBody ReservationRequest reservationRequest) throws ParseException {
+    public ResponseEntity<Void> cancelReservation(@RequestParam String reservationId) {
 
-        ReservationDTO reservationDTO = mapToReservationDTO(reservationRequest);
-        reservationService.cancelReservation(reservationDTO);
+        reservationService.cancelReservation(reservationId);
 
         return ResponseEntity.ok().build();
     }

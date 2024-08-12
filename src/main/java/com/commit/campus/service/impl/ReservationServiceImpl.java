@@ -10,6 +10,7 @@ import com.commit.campus.repository.ReservationRepository;
 import com.commit.campus.service.ReservationService;
 import io.lettuce.core.SetArgs;
 import io.lettuce.core.api.sync.RedisCommands;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -114,25 +115,55 @@ public class ReservationServiceImpl implements ReservationService {
 
     @Override
     @Transactional
-    public void cancelReservation(ReservationDTO reservationDTO) {
-        String lockKey = "lock:reservation:" + reservationDTO.getReservationId();
+    public void cancelReservation(String reservationId) {
+        String lockKey = "lock:reservation:" + reservationId;
+        String reservationKey = "reservationInfo:" + reservationId;
+
         try {
             if (!acquireLock(lockKey)) {
-                throw new RuntimeException("해당 예약은 현재 처리 중입니다. 잠시 후 다시 시도해 주세요.");
+                throw new ConcurrentModificationException("해당 예약은 현재 처리 중입니다. 잠시 후 다시 시도해 주세요.");
             }
 
-            // 예약 취소 로직 실행
-            Reservation reservation = reservationRepository.findById(reservationDTO.getReservationId()).orElse(null);
-            if (reservation == null) {
+            // Redis에서 예약 정보 조회
+            Map<String, String> reservationInfo = redisCommands.hgetall(reservationKey);
+
+            if (reservationInfo.isEmpty()) {
                 throw new IllegalArgumentException("해당 예약이 존재하지 않습니다.");
             }
 
-            updateCancellationInfo(reservation, CANCELLED_STATUS);
+            String currentStatus = reservationInfo.get("reservationStatus");
+            if (CANCELLED_STATUS.equals(currentStatus)) {
+                throw new IllegalStateException("이미 취소된 예약입니다.");
+            }
 
+            // 예약 상태를 취소로 업데이트
+            redisCommands.hset(reservationKey, "reservationStatus", CANCELLED_STATUS);
+            redisCommands.hset(reservationKey, "updatedAt", LocalDateTime.now().toString());
+
+            // ReservationDTO 생성
+            ReservationDTO reservationDTO = mapToReservationDTO(reservationInfo);
+
+            // 예약 가능 수량 업데이트
             updateAvailability(reservationDTO, false);
+
+            // 데이터베이스 동기화 (필요한 경우)
+            syncCancellationToDatabase(reservationDTO);
+
         } finally {
             releaseLock(lockKey);
         }
+    }
+
+    private void syncCancellationToDatabase(ReservationDTO reservationDTO) {
+        Reservation reservation = reservationRepository.findById(reservationDTO.getReservationId())
+                .orElseThrow(() -> new EntityNotFoundException("예약을 찾을 수 없습니다: " + reservationDTO.getReservationId()));
+
+        Reservation updatedReservation = reservation.toBuilder()
+                .reservationStatus(CANCELLED_STATUS)
+                .updatedAt(LocalDateTime.now())
+                .build();
+
+        reservationRepository.save(updatedReservation);
     }
 
     /* 예약 등록 */
