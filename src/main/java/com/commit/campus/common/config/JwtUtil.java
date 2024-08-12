@@ -31,14 +31,20 @@ public class JwtUtil {
     private final UserService userService;
     private final PublicKey rsaPublicKey;
     private final CognitoUserService cognitoUserService;
+    private static final String ALGORITHM_RS256 = "RS256";
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
+
 
     public JwtUtil(
             @Value("${token.secret}") String hs512secretKey,
             @Value("${token.expiration_time}") long accessTokenExpTime,
             @Value("${spring.security.oauth2.client.provider.cognito.jwk-set-uri}") String jwksUrl,
             UserService userService,
-            CognitoUserService cognitoUserService) {
+            CognitoUserService cognitoUserService, RestTemplate restTemplate, ObjectMapper objectMapper) {
         this.cognitoUserService = cognitoUserService;
+        this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
         byte[] decodedKey = Base64.getUrlDecoder().decode(hs512secretKey);
         this.hs512Key = Keys.hmacShaKeyFor(decodedKey);
         this.accessTokenExpTime = accessTokenExpTime;
@@ -48,9 +54,7 @@ public class JwtUtil {
 
     private PublicKey getRsaPublicKey(String jwksUrl) {
         try {
-            RestTemplate restTemplate = new RestTemplate();
             String jwks = restTemplate.getForObject(jwksUrl, String.class);
-            ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jwksNode = objectMapper.readTree(jwks);
             JsonNode keys = jwksNode.get("keys");
 
@@ -75,7 +79,7 @@ public class JwtUtil {
         String algorithm = jwsClaims.getHeader().getAlgorithm();
 
         UserDetails userDetails;
-        if ("RS256".equals(algorithm)) {
+        if (ALGORITHM_RS256.equals(algorithm)) {
             // RSA 서명 알고리즘인 경우 CognitoUserService로 보냄
             userDetails = cognitoUserService.loadUserByUsername(this.getUserId(claims));
         } else {
