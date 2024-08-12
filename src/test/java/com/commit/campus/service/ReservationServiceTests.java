@@ -67,20 +67,6 @@ public class ReservationServiceTests {
                 .updatedAt(null)
                 .build();
 
-        reservation2 = Reservation.builder()
-                .reservationId(20240807000002L)
-                .userId(2)
-                .campId(1000)
-                .campFacsId(3)
-                .reservationDate(LocalDateTime.parse("2024-07-03T00:00:00"))
-                .entryDate(LocalDate.parse("2024-08-01"))
-                .leavingDate(LocalDate.parse("2024-08-03"))
-                .reservationStatus("예약 확정")
-                .gearRentalStatus("N")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(null)
-                .build();
-
         reservationDTO = new ReservationDTO();
     }
 
@@ -182,5 +168,10 @@ public class ReservationServiceTests {
 
         verify(redisCommands, times(1)).hgetall(key);
         verify(reservationRepository, times(0)).findById(anyLong());
+    }
+
+    @Test
+    void confirmReservation_동시에_30명_예약() {
+
     }
 }

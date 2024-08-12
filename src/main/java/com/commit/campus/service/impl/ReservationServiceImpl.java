@@ -127,7 +127,7 @@ public class ReservationServiceImpl implements ReservationService {
         Reservation reservation = reservationRepository.findById(reservationDTO.getReservationId()).orElse(null);
 
         // 예약 내역 변경
-        String reservationStatus = "예약 취소";
+        String reservationStatus = "cancelled";
         updateCancellationInfo(reservation, reservationStatus);
 
         // 예약 가능 개수 증가
@@ -169,7 +169,7 @@ public class ReservationServiceImpl implements ReservationService {
                 .reservationDate(LocalDateTime.parse(reservationInfo.get("reservationDate")))
                 .entryDate(LocalDate.parse(reservationInfo.get("entryDate"), DATE_FORMAT))
                 .leavingDate(LocalDate.parse(reservationInfo.get("leavingDate"), DATE_FORMAT))
-                .reservationStatus("예약 확정")
+                .reservationStatus("confirmation")
                 .gearRentalStatus(reservationInfo.get("gearRentalStatus"))
                 .campFacsType(Integer.valueOf(reservationInfo.get("campFacsType")))
                 .build();
