@@ -8,16 +8,17 @@ import com.commit.campus.repository.AvailabilityRepository;
 import com.commit.campus.repository.CampingRepository;
 import com.commit.campus.repository.ReservationRepository;
 import com.commit.campus.service.ReservationService;
+import io.lettuce.core.SetArgs;
 import io.lettuce.core.api.sync.RedisCommands;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -36,6 +37,8 @@ public class ReservationServiceImpl implements ReservationService {
     private static final long DEFAULT_TTL_SECONDS = 7200;
     private static final long LOCK_TIMEOUT_SECONDS = 10;  // 락의 타임아웃 설정
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final String CONFIRMATION_STATUS = "confirmation";
+    private static final String CANCELLED_STATUS = "cancelled";
 
     @Autowired
     public ReservationServiceImpl(ReservationRepository reservationRepository,
@@ -67,7 +70,7 @@ public class ReservationServiceImpl implements ReservationService {
         String lockKey = "lock:reservation:" + reservationId;
         try {
             if (!acquireLock(lockKey)) {
-                throw new RuntimeException("해당 예약은 현재 처리 중입니다. 잠시 후 다시 시도해 주세요.");
+                throw new ConcurrentModificationException("해당 예약은 현재 처리 중입니다. 잠시 후 다시 시도해 주세요.");
             }
 
             String key = "reservationInfo:" + reservationId;
@@ -87,7 +90,7 @@ public class ReservationServiceImpl implements ReservationService {
                 if (reservationStatus.equals("예약 취소")) {
                     throw new IllegalStateException("이미 취소된 예약입니다.");
                 } else {
-                    throw new IllegalArgumentException("이미 존재하는 예약입니다: " + reservationPk);
+                    throw new IllegalStateException("이미 존재하는 예약입니다: " + reservationPk);
                 }
             }
 
@@ -101,8 +104,7 @@ public class ReservationServiceImpl implements ReservationService {
             saveReservationToDatabase(reservationDTO);
 
             // 예약 가능 개수 차감
-            boolean isDecrease = true;
-            updateAvailability(reservationDTO, isDecrease);
+            updateAvailability(reservationDTO, true);
 
             return reservationDTO;
         } finally {
@@ -125,11 +127,9 @@ public class ReservationServiceImpl implements ReservationService {
                 throw new IllegalArgumentException("해당 예약이 존재하지 않습니다.");
             }
 
-            String reservationStatus = "cancelled";
-            updateCancellationInfo(reservation, reservationStatus);
+            updateCancellationInfo(reservation, CANCELLED_STATUS);
 
-            boolean isDecrease = false;
-            updateAvailability(reservationDTO, isDecrease);
+            updateAvailability(reservationDTO, false);
         } finally {
             releaseLock(lockKey);
         }
@@ -168,7 +168,7 @@ public class ReservationServiceImpl implements ReservationService {
                 .reservationDate(LocalDateTime.parse(reservationInfo.get("reservationDate")))
                 .entryDate(LocalDate.parse(reservationInfo.get("entryDate"), DATE_FORMAT))
                 .leavingDate(LocalDate.parse(reservationInfo.get("leavingDate"), DATE_FORMAT))
-                .reservationStatus("confirmation")
+                .reservationStatus(CONFIRMATION_STATUS)
                 .gearRentalStatus(reservationInfo.get("gearRentalStatus"))
                 .campFacsType(Integer.valueOf(reservationInfo.get("campFacsType")))
                 .build();
@@ -327,16 +327,13 @@ public class ReservationServiceImpl implements ReservationService {
 
     // Redis 락 획득
     private boolean acquireLock(String lockKey) {
-        String lockValue = String.valueOf(System.nanoTime() + LOCK_TIMEOUT_SECONDS * 1000000);
-        Boolean success = redisCommands.setnx(lockKey, lockValue);
-        if (Boolean.TRUE.equals(success)) {
-            redisCommands.expire(lockKey, LOCK_TIMEOUT_SECONDS);
-            return true;
-        }
-        return false;
+        return Boolean.TRUE.equals(
+                redisCommands.set(
+                        lockKey, "locked", SetArgs.Builder.nx().ex(LOCK_TIMEOUT_SECONDS)
+                )
+        );
     }
 
-    // Redis 락 해제
     private void releaseLock(String lockKey) {
         redisCommands.del(lockKey);
     }
