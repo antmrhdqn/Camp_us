@@ -7,7 +7,6 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbEnhancedClient;
 import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable;
 import software.amazon.awssdk.enhanced.dynamodb.Key;
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema;
-import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
 
 @Repository
 @Slf4j
@@ -19,31 +18,31 @@ public class RatingSummaryRepository {
         this.ratingSummaryTable = dynamoDbEnhancedClient.table("RATING_SUMMARY", TableSchema.fromBean(RatingSummary.class));
     }
 
-    public void ratingUpdate(Long campId, Byte rating) {
+    public void incrementRating(Long campId, Byte rating) {
+        updateRatingSummary(campId, rating, true);
+    }
+
+    public void decrementRating(Long campId, Byte rating) {
+        updateRatingSummary(campId, rating, false);
+    }
+
+    private void updateRatingSummary(Long campId, Byte rating, boolean isAdding) {
         Key key = Key.builder().partitionValue(campId).build();
-        log.info("서머리 확인 key {}", key);
-        AttributeValue partitionValue = key.partitionKeyValue();
-        log.info("Partition key value: {}", partitionValue.n());
         RatingSummary ratingSummary = ratingSummaryTable.getItem(key);
-        log.info("check RatingSummary {}", ratingSummary);
-        if (ratingSummary != null) {
-            log.info("Found item: {}", ratingSummary);
-        } else {
-            log.info("No item found for key: {}", key);
+
+        if (ratingSummary == null) {
+            ratingSummary = new RatingSummary();
+            ratingSummary.setCampId(campId);
+            ratingSummary.setTotalRating(0);
+            ratingSummary.setCountRating(0);
         }
 
-        if (ratingSummary != null) {
-
-            log.info("Found existing item: {}", ratingSummary);
+        if (isAdding) {
             ratingSummary.setTotalRating(ratingSummary.getTotalRating() + rating);
             ratingSummary.setCountRating(ratingSummary.getCountRating() + 1);
         } else {
-
-            log.info("No existing item found for key: {}", key);
-            ratingSummary = new RatingSummary();
-            ratingSummary.setCampId(campId);
-            ratingSummary.setTotalRating(rating);
-            ratingSummary.setCountRating(1);
+            ratingSummary.setTotalRating(ratingSummary.getTotalRating() - rating);
+            ratingSummary.setCountRating(ratingSummary.getCountRating() - 1);
         }
 
         ratingSummaryTable.putItem(ratingSummary);

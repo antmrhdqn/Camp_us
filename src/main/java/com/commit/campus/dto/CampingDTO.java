@@ -3,6 +3,7 @@ package com.commit.campus.dto;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class CampingDTO {
@@ -36,4 +37,19 @@ public class CampingDTO {
     private String firstImageUrl; // 대표이미지
     private LocalDateTime createdDate; // 등록일
     private LocalDateTime modifiedDate; // 최종수정일
+    
+    private int bookmarkCnt;
+    private int reviewCnt;
+  
+    private List<CampingFacilitiesDTO> campingFacilities;
+    private CampingStatisticsDTO campingStatistics;  // CampingStatisticsDTO 필드 추가
+  
+    // 필드에 대한 getter와 setter 추가
+    public List<CampingFacilitiesDTO> getCampingFacilities() {
+        return campingFacilities;
+    }
+
+    public void setCampingFacilities(List<CampingFacilitiesDTO> campingFacilities) {
+        this.campingFacilities = campingFacilities;
+    }
 }

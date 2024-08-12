@@ -1,9 +1,6 @@
 package com.commit.campus.dto;
 
-import lombok.Builder;
 import lombok.Data;
-import lombok.Getter;
-
 import java.time.LocalDateTime;
 
 @Data
@@ -16,5 +13,5 @@ public class ReviewDTO {
     private byte rating;
     private LocalDateTime reviewCreatedDate;
     private LocalDateTime reviewModificationDate;
-    private String reviewImageUrl;
+    private String reviewImageUrl; // TODO : 추후 타입 변경
 }

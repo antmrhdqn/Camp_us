@@ -1,8 +1,9 @@
 package com.commit.campus.controller;
 
+import com.commit.campus.dto.UpdateReviewRequest;
 import com.commit.campus.view.ReviewView;
 import com.commit.campus.dto.ReviewDTO;
-import com.commit.campus.dto.ReviewRequest;
+import com.commit.campus.dto.CreateReviewRequest;
 import com.commit.campus.service.ReviewService;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -40,12 +41,12 @@ public class ReviewController {
 
     // 리뷰 등록
     @PostMapping
-    public ResponseEntity<Void> createReview(@RequestBody ReviewRequest reviewRequest) {
+    public ResponseEntity<Void> createReview(@RequestBody CreateReviewRequest createReviewRequest) {
 
         long userId = 1; // TODO: 토큰에서 빼내야함
 
-        log.info("컨트롤러 확인 request {}", reviewRequest);
-        ReviewDTO reviewDTO = modelMapper.map(reviewRequest, ReviewDTO.class);
+        log.info("컨트롤러 확인 request {}", createReviewRequest);
+        ReviewDTO reviewDTO = modelMapper.map(createReviewRequest, ReviewDTO.class);
         reviewDTO.setUserId(userId);
         log.info("컨트롤러 확인 DTO {}", reviewDTO);
         reviewService.createReview(reviewDTO);
@@ -54,21 +55,23 @@ public class ReviewController {
     }
 
     // 리뷰 수정
-    @PutMapping("/{reviewId}")
-    public ResponseEntity<Void> updateReview(@PathVariable long reviewId, @RequestBody ReviewRequest reviewRequest) {
+    @PutMapping
+    public ResponseEntity<Void> updateReview(
+            @RequestBody UpdateReviewRequest reviewRequest) {
 
+        long userId = 1; // TODO: 토큰에서 빼내야 함
         ReviewDTO reviewDTO = modelMapper.map(reviewRequest, ReviewDTO.class);
-        reviewService.updateReview(reviewId, reviewDTO);
+        reviewService.updateReview(reviewDTO, userId);
 
         return ResponseEntity.noContent().build();
     }
 
     // 리뷰 삭제
     @DeleteMapping("/{reviewId}")
-
     public ResponseEntity<Void> deleteReview(@PathVariable long reviewId) {
 
-        reviewService.deleteReview(reviewId);
+        long userId = 1; // TODO: 토큰에서 빼내야 함
+        reviewService.deleteReview(reviewId, userId);
 
         return ResponseEntity.noContent().build();
     }
