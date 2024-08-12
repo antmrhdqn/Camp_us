@@ -50,6 +50,7 @@ public class ReservationServiceTests {
 
     private String reservationId;
     private String lockKey;
+    private String campLockKey;
     private String redisKey;
 
     private Map<String, String> reservationInfo;
@@ -60,6 +61,7 @@ public class ReservationServiceTests {
         reservationId = "1234567890";
         lockKey = "lock:reservation:" + reservationId;
         redisKey = "reservationInfo:" + reservationId;
+        campLockKey = "lock:camp:1000"; // 캠핑장 ID를 기반으로 한 락 키
 
         reservationInfo = new HashMap<>();
         reservationInfo.put("reservationId", reservationId);
@@ -89,6 +91,7 @@ public class ReservationServiceTests {
     void confirmReservation_예약_확정_성공() {
 
         when(redisCommands.set(eq(lockKey), eq("locked"), any())).thenReturn("OK");
+        when(redisCommands.set(eq(campLockKey), eq("locked"), any())).thenReturn("OK");
         when(redisCommands.hgetall(redisKey)).thenReturn(reservationInfo);
 
         ReservationDTO confirmedReservation = reservationServiceImpl.confirmReservation(reservationId);
@@ -101,6 +104,7 @@ public class ReservationServiceTests {
         verify(reservationRepository).save(reservationCaptor.capture());
         assertEquals("confirmation", reservationCaptor.getValue().getReservationStatus());
         verify(redisCommands).del(lockKey);
+        verify(redisCommands).del(campLockKey);
     }
 
     @Test
@@ -108,12 +112,8 @@ public class ReservationServiceTests {
 
         reservationInfo.put("reservationStatus", "confirmation");
         when(redisCommands.set(eq(lockKey), eq("locked"), any())).thenReturn("OK");
+        when(redisCommands.set(eq(campLockKey), eq("locked"), any())).thenReturn("OK");
         when(redisCommands.hgetall(redisKey)).thenReturn(reservationInfo);
-
-        Reservation existingReservation = Reservation.builder()
-                .reservationId(Long.valueOf(reservationId))
-                .reservationStatus("confirmation")
-                .build();
 
         // Act & Assert
         IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
@@ -123,6 +123,7 @@ public class ReservationServiceTests {
         assertEquals("이미 확정된 예약입니다: " + reservationId, exception.getMessage());
 
         verify(redisCommands).del(lockKey);
+        verify(redisCommands).del(campLockKey);
     }
 
     @Test
@@ -130,6 +131,7 @@ public class ReservationServiceTests {
         // Arrange
         reservationInfo.put("reservationStatus", "cancelled");
         when(redisCommands.set(eq(lockKey), eq("locked"), any())).thenReturn("OK");
+        when(redisCommands.set(eq(campLockKey), eq("locked"), any())).thenReturn("OK");
         when(redisCommands.hgetall(redisKey)).thenReturn(reservationInfo);
 
         // Act & Assert
@@ -140,6 +142,7 @@ public class ReservationServiceTests {
         assertEquals("이미 취소된 예약입니다.", exception.getMessage());
 
         verify(redisCommands).del(lockKey);
+        verify(redisCommands).del(campLockKey);
     }
 
     @Test
@@ -156,6 +159,7 @@ public class ReservationServiceTests {
         assertEquals("이미 만료되었거나 존재하지 않는 예약입니다.", exception.getMessage());
 
         verify(redisCommands).del(lockKey);
+        // 여기서는 campLockKey가 설정되지 않으므로 확인할 필요가 없습니다.
     }
 
     @Test
@@ -176,6 +180,7 @@ public class ReservationServiceTests {
         // Arrange
         reservationInfo.put("reservationStatus", "pending");
         when(redisCommands.set(eq(lockKey), eq("locked"), any())).thenReturn("OK");
+        when(redisCommands.set(eq(campLockKey), eq("locked"), any())).thenReturn("OK");
         when(redisCommands.hgetall(redisKey)).thenReturn(reservationInfo);
         when(reservationRepository.findById(Long.valueOf(reservationId))).thenReturn(Optional.of(Reservation.builder().reservationId(Long.valueOf(reservationId)).build()));
 
@@ -187,6 +192,7 @@ public class ReservationServiceTests {
         verify(reservationRepository).save(reservationCaptor.capture());
         assertEquals("cancelled", reservationCaptor.getValue().getReservationStatus());
         verify(redisCommands).del(lockKey);
+        verify(redisCommands).del(campLockKey);
     }
 
     @Test
@@ -194,6 +200,7 @@ public class ReservationServiceTests {
         // Arrange
         reservationInfo.put("reservationStatus", "cancelled");
         when(redisCommands.set(eq(lockKey), eq("locked"), any())).thenReturn("OK");
+        when(redisCommands.set(eq(campLockKey), eq("locked"), any())).thenReturn("OK");
         when(redisCommands.hgetall(redisKey)).thenReturn(reservationInfo);
 
         // Act & Assert
@@ -204,5 +211,6 @@ public class ReservationServiceTests {
         assertEquals("이미 취소된 예약입니다.", exception.getMessage());
 
         verify(redisCommands).del(lockKey);
+        verify(redisCommands).del(campLockKey);
     }
 }
