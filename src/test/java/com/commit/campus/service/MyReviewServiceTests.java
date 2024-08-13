@@ -1,5 +1,6 @@
 package com.commit.campus.service;
 
+import com.commit.campus.common.exceptions.ReviewNotFoundException;
 import com.commit.campus.dto.CampingDTO;
 import com.commit.campus.dto.ReviewDTO;
 import com.commit.campus.entity.Camping;
@@ -127,7 +128,7 @@ class MyReviewServiceTests {
 
         when(myReviewRepository.findById(userId)).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> myReviewService.getMyReviews(userId, pageable));
+        assertThrows(ReviewNotFoundException.class, () -> myReviewService.getMyReviews(userId, pageable));
         verify(myReviewRepository).findById(userId);
         verify(reviewRepository, never()).findByReviewIdIn(any(), any());
     }
@@ -163,7 +164,7 @@ class MyReviewServiceTests {
 
         when(myReviewRepository.findById(userId)).thenReturn(Optional.empty());
 
-        assertThrows(EntityNotFoundException.class, () -> myReviewService.getReviewedCampings(userId, pageable));
+        assertThrows(ReviewNotFoundException.class, () -> myReviewService.getReviewedCampings(userId, pageable));
         verify(myReviewRepository).findById(userId);
         verify(reviewRepository, never()).findByReviewIdIn(any());
         verify(campingRepository, never()).findByCampIdIn(any(), any());

@@ -10,7 +10,6 @@ import com.commit.campus.repository.CampingRepository;
 import com.commit.campus.repository.MyReviewRepository;
 import com.commit.campus.repository.ReviewRepository;
 import com.commit.campus.service.MyReviewService;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
