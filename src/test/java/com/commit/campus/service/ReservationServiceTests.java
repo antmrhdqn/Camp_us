@@ -1,7 +1,6 @@
 package com.commit.campus.service;
 
 import com.commit.campus.dto.ReservationDTO;
-import com.commit.campus.entity.Availability;
 import com.commit.campus.entity.Camping;
 import com.commit.campus.entity.Reservation;
 import com.commit.campus.repository.AvailabilityRepository;
@@ -12,166 +11,206 @@ import io.lettuce.core.api.sync.RedisCommands;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.data.redis.core.RedisTemplate;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class ReservationServiceTests {
 
-    @Mock private ReservationRepository reservationRepository;
-    @Mock private AvailabilityRepository availabilityRepository;
-    @Mock private CampingRepository campingRepository;
-    @Mock private RedisTemplate<String, String> redisTemplate;
-    @Mock private RedisCommands<String, String> redisCommands;
+    @Mock
+    private ReservationRepository reservationRepository;
+
+    @Mock
+    private AvailabilityRepository availabilityRepository;
+
+    @Mock
+    private CampingRepository campingRepository;
+
+    @Mock
+    private RedisCommands<String, String> redisCommands;
 
     @InjectMocks
     private ReservationServiceImpl reservationServiceImpl;
 
-    private Reservation reservation, reservation2;
-    private ReservationDTO reservationDTO, reservationDTO2;
-    private Availability availability;
-    private Camping camping;
+    @Captor
+    private ArgumentCaptor<Reservation> reservationCaptor;
+
+    private String reservationId;
+    private String lockKey;
+    private String campLockKey;
+    private String redisKey;
+
+    private Map<String, String> reservationInfo;
+    private ReservationDTO reservationDTO;
 
     @BeforeEach
     void setUp() {
-        camping = new Camping();
+        reservationId = "1234567890";
+        lockKey = "lock:reservation:" + reservationId;
+        redisKey = "reservationInfo:" + reservationId;
+        campLockKey = "lock:camp:1000"; // 캠핑장 ID를 기반으로 한 락 키
+
+        reservationInfo = new HashMap<>();
+        reservationInfo.put("reservationId", reservationId);
+        reservationInfo.put("userId", "1");
+        reservationInfo.put("campId", "1000");
+        reservationInfo.put("campFacsId", "3");
+        reservationInfo.put("reservationDate", LocalDateTime.now().toString());
+        reservationInfo.put("entryDate", LocalDate.now().toString());
+        reservationInfo.put("leavingDate", LocalDate.now().plusDays(2).toString());
+        reservationInfo.put("reservationStatus", "pending");
+        reservationInfo.put("gearRentalStatus", "N");
+        reservationInfo.put("campFacsType", "3");
+
+        reservationDTO = new ReservationDTO();
+
+        Camping camping = new Camping();
         camping.setCampId(1000L);
         camping.setGeneralSiteCnt(10);
         camping.setCarSiteCnt(5);
         camping.setGlampingSiteCnt(2);
         camping.setCaravanSiteCnt(3);
 
-        reservation = Reservation.builder()
-                .reservationId(20240807000001L)
-                .userId(1)
-                .campId(1000)
-                .campFacsId(3)
-                .reservationDate(LocalDateTime.parse("2024-06-30T00:00:00"))
-                .entryDate(LocalDate.parse("2024-08-01"))
-                .leavingDate(LocalDate.parse("2024-08-02"))
-                .reservationStatus("예약 확정")
-                .gearRentalStatus("N")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(null)
-                .build();
-
-        reservationDTO = new ReservationDTO();
+        lenient().when(campingRepository.findById(1000L)).thenReturn(Optional.of(camping));
     }
 
     @Test
     void confirmReservation_예약_확정_성공() {
-        String reservationId = "20240807000001";
-        String key = "reservationInfo:" + reservationId;
 
-        Map<String, String> reservationInfo = new HashMap<>();
-        reservationInfo.put("reservationId", "20240807000001");
-        reservationInfo.put("userId", "1");
-        reservationInfo.put("campId", "1000");
-        reservationInfo.put("campFacsId", "3");
-        reservationInfo.put("reservationDate", "2024-06-30T00:00:00");
-        reservationInfo.put("entryDate", "2024-08-01");
-        reservationInfo.put("leavingDate", "2024-08-02");
-        reservationInfo.put("gearRentalStatus", "N");
-        reservationInfo.put("campFacsType", "3");
-
-        when(redisCommands.hgetall(key)).thenReturn(reservationInfo);
-        when(reservationRepository.findById(Long.valueOf(reservationId))).thenReturn(Optional.empty());
-        when(campingRepository.findById(1000L)).thenReturn(Optional.of(camping));
+        when(redisCommands.set(eq(lockKey), eq("locked"), any())).thenReturn("OK");
+        when(redisCommands.set(eq(campLockKey), eq("locked"), any())).thenReturn("OK");
+        when(redisCommands.hgetall(redisKey)).thenReturn(reservationInfo);
 
         ReservationDTO confirmedReservation = reservationServiceImpl.confirmReservation(reservationId);
 
         assertNotNull(confirmedReservation);
-        assertEquals(20240807000001L, confirmedReservation.getReservationId());
-        assertEquals(1L, confirmedReservation.getUserId());
-        assertEquals(1000L, confirmedReservation.getCampId());
-        assertEquals(3L, confirmedReservation.getCampFacsId());
-        assertEquals(LocalDateTime.parse("2024-06-30T00:00:00"), confirmedReservation.getReservationDate());
-        assertEquals(LocalDate.parse("2024-08-01"), confirmedReservation.getEntryDate());
-        assertEquals(LocalDate.parse("2024-08-02"), confirmedReservation.getLeavingDate());
+        assertEquals(reservationId, confirmedReservation.getReservationId().toString());
+        assertEquals("confirmation", confirmedReservation.getReservationStatus());
 
-        verify(redisCommands, times(1)).hgetall(key);
-        verify(reservationRepository, times(1)).findById(Long.valueOf(reservationId));
-        verify(reservationRepository, times(1)).save(any(Reservation.class));
-        verify(availabilityRepository, times(1)).findByCampIdAndDateBetween(anyLong(), any(LocalDate.class), any(LocalDate.class));
+        verify(redisCommands).hset(redisKey, "reservationStatus", "confirmation");
+        verify(reservationRepository).save(reservationCaptor.capture());
+        assertEquals("confirmation", reservationCaptor.getValue().getReservationStatus());
+        verify(redisCommands).del(lockKey);
+        verify(redisCommands).del(campLockKey);
     }
 
     @Test
     void confirmReservation_예약_존재_예외() {
-        String reservationId = "20240807000001";
-        String key = "reservationInfo:" + reservationId;
 
-        Map<String, String> reservationInfo = new HashMap<>();
-        reservationInfo.put("reservationId", "20240807000001");
+        reservationInfo.put("reservationStatus", "confirmation");
+        when(redisCommands.set(eq(lockKey), eq("locked"), any())).thenReturn("OK");
+        when(redisCommands.set(eq(campLockKey), eq("locked"), any())).thenReturn("OK");
+        when(redisCommands.hgetall(redisKey)).thenReturn(reservationInfo);
 
-        when(redisCommands.hgetall(key)).thenReturn(reservationInfo);
-        when(reservationRepository.findById(Long.valueOf(reservationId))).thenReturn(Optional.of(reservation));
-
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+        // Act & Assert
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
             reservationServiceImpl.confirmReservation(reservationId);
         });
 
-        assertEquals("이미 존재하는 예약입니다: 20240807000001", exception.getMessage());
+        assertEquals("이미 확정된 예약입니다: " + reservationId, exception.getMessage());
 
-        verify(redisCommands, times(1)).hgetall(key);
-        verify(reservationRepository, times(1)).findById(Long.valueOf(reservationId));
+        verify(redisCommands).del(lockKey);
+        verify(redisCommands).del(campLockKey);
     }
 
     @Test
     void confirmReservation_예약_취소_예외() {
-        String reservationId = "20240807000001";
-        String key = "reservationInfo:" + reservationId;
+        // Arrange
+        reservationInfo.put("reservationStatus", "cancelled");
+        when(redisCommands.set(eq(lockKey), eq("locked"), any())).thenReturn("OK");
+        when(redisCommands.set(eq(campLockKey), eq("locked"), any())).thenReturn("OK");
+        when(redisCommands.hgetall(redisKey)).thenReturn(reservationInfo);
 
-        reservation = reservation.toBuilder()
-                .reservationStatus("예약 취소")
-                .build();
-
-        Map<String, String> reservationInfo = new HashMap<>();
-        reservationInfo.put("reservationId", "20240807000001");
-
-        when(redisCommands.hgetall(key)).thenReturn(reservationInfo);
-        when(reservationRepository.findById(Long.valueOf(reservationId))).thenReturn(Optional.of(reservation));
-
+        // Act & Assert
         IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
             reservationServiceImpl.confirmReservation(reservationId);
         });
 
         assertEquals("이미 취소된 예약입니다.", exception.getMessage());
 
-        verify(redisCommands, times(1)).hgetall(key);
-        verify(reservationRepository, times(1)).findById(Long.valueOf(reservationId));
+        verify(redisCommands).del(lockKey);
+        verify(redisCommands).del(campLockKey);
     }
 
     @Test
     void confirmReservation_만료된_예약_예외() {
-        String reservationId = "20240807000001";
-        String key = "reservationInfo:" + reservationId;
+        // Arrange
+        when(redisCommands.set(eq(lockKey), eq("locked"), any())).thenReturn("OK");
+        when(redisCommands.hgetall(redisKey)).thenReturn(new HashMap<>());
 
-        when(redisCommands.hgetall(key)).thenReturn(new HashMap<>());
-
+        // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
             reservationServiceImpl.confirmReservation(reservationId);
         });
 
         assertEquals("이미 만료되었거나 존재하지 않는 예약입니다.", exception.getMessage());
 
-        verify(redisCommands, times(1)).hgetall(key);
-        verify(reservationRepository, times(0)).findById(anyLong());
+        verify(redisCommands).del(lockKey);
+        // 여기서는 campLockKey가 설정되지 않으므로 확인할 필요가 없습니다.
     }
 
     @Test
-    void confirmReservation_동시에_30명_예약() {
+    void confirmReservation_동시_요청_실패() {
+        // Arrange
+        when(redisCommands.set(eq(lockKey), eq("locked"), any())).thenReturn(null);
 
+        // Act & Assert
+        ConcurrentModificationException exception = assertThrows(ConcurrentModificationException.class, () -> {
+            reservationServiceImpl.confirmReservation(reservationId);
+        });
+
+        assertEquals("해당 예약은 현재 처리 중입니다. 잠시 후 다시 시도해 주세요.", exception.getMessage());
+    }
+
+    @Test
+    void cancelReservation_예약_취소_성공() {
+        // Arrange
+        reservationInfo.put("reservationStatus", "pending");
+        when(redisCommands.set(eq(lockKey), eq("locked"), any())).thenReturn("OK");
+        when(redisCommands.set(eq(campLockKey), eq("locked"), any())).thenReturn("OK");
+        when(redisCommands.hgetall(redisKey)).thenReturn(reservationInfo);
+        when(reservationRepository.findById(Long.valueOf(reservationId))).thenReturn(Optional.of(Reservation.builder().reservationId(Long.valueOf(reservationId)).build()));
+
+        // Act
+        reservationServiceImpl.cancelReservation(reservationId);
+
+        // Assert
+        verify(redisCommands).hset(redisKey, "reservationStatus", "cancelled");
+        verify(reservationRepository).save(reservationCaptor.capture());
+        assertEquals("cancelled", reservationCaptor.getValue().getReservationStatus());
+        verify(redisCommands).del(lockKey);
+        verify(redisCommands).del(campLockKey);
+    }
+
+    @Test
+    void cancelReservation_예약_취소_예외() {
+        // Arrange
+        reservationInfo.put("reservationStatus", "cancelled");
+        when(redisCommands.set(eq(lockKey), eq("locked"), any())).thenReturn("OK");
+        when(redisCommands.set(eq(campLockKey), eq("locked"), any())).thenReturn("OK");
+        when(redisCommands.hgetall(redisKey)).thenReturn(reservationInfo);
+
+        // Act & Assert
+        IllegalStateException exception = assertThrows(IllegalStateException.class, () -> {
+            reservationServiceImpl.cancelReservation(reservationId);
+        });
+
+        assertEquals("이미 취소된 예약입니다.", exception.getMessage());
+
+        verify(redisCommands).del(lockKey);
+        verify(redisCommands).del(campLockKey);
     }
 }
