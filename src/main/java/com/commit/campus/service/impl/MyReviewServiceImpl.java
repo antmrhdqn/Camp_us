@@ -2,7 +2,6 @@ package com.commit.campus.service.impl;
 
 import com.commit.campus.common.exceptions.ReviewNotFoundException;
 import com.commit.campus.dto.CampingDTO;
-import com.commit.campus.dto.MyReviewDTO;
 import com.commit.campus.dto.ReviewDTO;
 import com.commit.campus.entity.Camping;
 import com.commit.campus.entity.MyReview;
@@ -11,16 +10,15 @@ import com.commit.campus.repository.CampingRepository;
 import com.commit.campus.repository.MyReviewRepository;
 import com.commit.campus.repository.ReviewRepository;
 import com.commit.campus.service.MyReviewService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @Transactional
@@ -40,10 +38,10 @@ public class MyReviewServiceImpl implements MyReviewService {
     }
 
     @Override
-    public Page<ReviewDTO> getMyReviews(long userId, Pageable pageable) throws ReviewNotFoundException {
+    public Page<ReviewDTO> getMyReviews(long userId, Pageable pageable) {
 
         MyReview myReview = myReviewRepository.findById(userId)
-                .orElseThrow(() -> new ReviewNotFoundException("작성된 리뷰가 존재하지 않습니다.", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ReviewNotFoundException("작성된 리뷰가 존재하지 않습니다."));
 
         List<Long> reviewIds = myReview.getReviewIds();
 
@@ -55,10 +53,10 @@ public class MyReviewServiceImpl implements MyReviewService {
     }
 
     @Override
-    public Page<CampingDTO> getReviewedCampings(long userId, Pageable pageable) throws ReviewNotFoundException {
+    public Page<CampingDTO> getReviewedCampings(long userId, Pageable pageable) {
 
         MyReview myReview = myReviewRepository.findById(userId)
-                .orElseThrow(() -> new ReviewNotFoundException("작성된 리뷰가 존재하지 않습니다.", HttpStatus.NOT_FOUND));
+                .orElseThrow(() -> new ReviewNotFoundException("작성된 리뷰가 존재하지 않습니다."));
 
         List<Long> reviewIds = myReview.getReviewIds();
 

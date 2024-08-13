@@ -5,6 +5,6 @@ import lombok.Data;
 @Data
 public class ReviewView {
     private String reviewContent;
-    private byte rating;
+    private int rating;
     private String reviewImageUrl;
 }

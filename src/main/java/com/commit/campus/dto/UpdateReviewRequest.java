@@ -6,7 +6,7 @@ import lombok.Data;
 public class UpdateReviewRequest {
     private long reviewId;
     private String reviewContent;
-    private byte rating;
+    private int rating;
     private String reviewImageUrl; // TODO : 추후 타입 변경
 
 }

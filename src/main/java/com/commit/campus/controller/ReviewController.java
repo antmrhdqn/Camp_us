@@ -45,10 +45,8 @@ public class ReviewController {
 
         long userId = 1; // TODO: 토큰에서 빼내야함
 
-        log.info("컨트롤러 확인 request {}", createReviewRequest);
         ReviewDTO reviewDTO = modelMapper.map(createReviewRequest, ReviewDTO.class);
         reviewDTO.setUserId(userId);
-        log.info("컨트롤러 확인 DTO {}", reviewDTO);
         reviewService.createReview(reviewDTO);
 
         return ResponseEntity.noContent().build();

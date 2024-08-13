@@ -18,15 +18,15 @@ public class RatingSummaryRepository {
         this.ratingSummaryTable = dynamoDbEnhancedClient.table("RATING_SUMMARY", TableSchema.fromBean(RatingSummary.class));
     }
 
-    public void incrementRating(Long campId, Byte rating) {
+    public void incrementRating(Long campId, int rating) {
         updateRatingSummary(campId, rating, true);
     }
 
-    public void decrementRating(Long campId, Byte rating) {
+    public void decrementRating(Long campId, int rating) {
         updateRatingSummary(campId, rating, false);
     }
 
-    private void updateRatingSummary(Long campId, Byte rating, boolean isAdding) {
+    private void updateRatingSummary(Long campId, int rating, boolean isAdding) {
         Key key = Key.builder().partitionValue(campId).build();
         RatingSummary ratingSummary = ratingSummaryTable.getItem(key);
 

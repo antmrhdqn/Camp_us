@@ -2,7 +2,6 @@ package com.commit.campus.service;
 
 import com.commit.campus.common.exceptions.NotAuthorizedException;
 import com.commit.campus.common.exceptions.ReviewAlreadyExistsException;
-import com.commit.campus.common.exceptions.ReviewNotFoundException;
 import com.commit.campus.dto.ReviewDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,5 +13,5 @@ public interface ReviewService {
 
     void updateReview(ReviewDTO reviewDTO, long userId);
 
-    void deleteReview(long reviewId, long userId) throws ReviewNotFoundException, NotAuthorizedException;
+    void deleteReview(long reviewId, long userId) throws NotAuthorizedException;
 }
