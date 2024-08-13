@@ -19,10 +19,14 @@ public class LettuceConfig {
     @Value("${spring.data.redis.host}")
     public String host;
 
+    @Value("${spring.data.redis.password}")
+    private String password;
+
     @Bean
     public RedisClient redisClient() {
         // Redis 서버 URL 설정
-        return RedisClient.create("redis://localhost:"+ port);
+//        return RedisClient.create("redis://localhost:"+ port);
+        return RedisClient.create("redis://:" + password + "@" + host + ":" + port); // TODO: EC2에 설치된 레디스 연결 시 변경
     }
 
     @Bean
