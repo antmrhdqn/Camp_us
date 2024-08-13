@@ -1,6 +1,6 @@
 package com.commit.campus.controller;
 
-import com.commit.campus.service.OauthServiceImpl;
+import com.commit.campus.service.impl.OauthServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

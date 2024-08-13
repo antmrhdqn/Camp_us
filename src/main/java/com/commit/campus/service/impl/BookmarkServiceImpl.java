@@ -9,6 +9,7 @@ import com.commit.campus.repository.CampingSummaryRepository;
 import com.commit.campus.service.BookmarkService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,6 +29,7 @@ public class BookmarkServiceImpl implements BookmarkService {
     }
 
     @Override
+    @Transactional
     public void saveBookmark(BookmarkRequest bookmarkRequest, Long userId) {
         LocalDateTime currentTime = LocalDateTime.now();
 
@@ -56,7 +58,6 @@ public class BookmarkServiceImpl implements BookmarkService {
                     .build();
             campingSummaryRepository.save(newCampingSummary);
         }
-
     }
 
     @Override

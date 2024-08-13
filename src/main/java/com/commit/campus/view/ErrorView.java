@@ -4,11 +4,11 @@ import lombok.Data;
 
 @Data
 public class ErrorView {
-    private String errorCode;
+    private String errorType;
     private String message;
 
     public ErrorView(String errorCode, String message) {
-        this.errorCode = errorCode;
+        this.errorType = errorCode;
         this.message = message;
     }
 }

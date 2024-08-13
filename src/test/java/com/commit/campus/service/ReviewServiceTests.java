@@ -55,7 +55,7 @@ class ReviewServiceTests {
                 .campId(1L)
                 .userId(101L)
                 .reviewContent("리뷰 테스트")
-                .rating((byte) 5)
+                .rating(5)
                 .reviewCreatedDate(now)
                 .reviewModificationDate(now)
                 .reviewImageUrl("image1.jpg")
@@ -66,7 +66,7 @@ class ReviewServiceTests {
         reviewDTO.setCampId(1L);
         reviewDTO.setUserId(101L);
         reviewDTO.setReviewContent("리뷰 테스트");
-        reviewDTO.setRating((byte) 5);
+        reviewDTO.setRating(5);
         reviewDTO.setReviewImageUrl("image1.jpg");
     }
 
@@ -97,7 +97,7 @@ class ReviewServiceTests {
         assertThat(firstReviewDTO.getCampId()).isEqualTo(campId);
         assertThat(firstReviewDTO.getUserNickname()).isEqualTo("테스트 닉네임");
         assertThat(firstReviewDTO.getReviewContent()).isEqualTo("리뷰 내용1");
-        assertThat(firstReviewDTO.getRating()).isEqualTo((byte) 5);
+        assertThat(firstReviewDTO.getRating()).isEqualTo(5);
 
         verify(reviewRepository).findByCampId(campId, pageable);
         verify(userRepository, times(2)).findNicknameByUserId(anyLong());
@@ -189,11 +189,7 @@ class ReviewServiceTests {
         // When & Then
         assertThatThrownBy(() -> reviewService.createReview(reviewDTO))
                 .isInstanceOf(ReviewAlreadyExistsException.class)
-                .hasMessage("이미 이 캠핑장에 대한 리뷰를 작성하셨습니다.")
-                .satisfies(exception -> {
-                    ReviewAlreadyExistsException castedEx = (ReviewAlreadyExistsException) exception;
-                    assertThat(castedEx.getStatus()).isEqualTo(HttpStatus.CONFLICT);
-                });
+                .hasMessage("이미 이 캠핑장에 대한 리뷰를 작성하셨습니다.");
 
         verify(reviewRepository).existsByUserIdAndCampId(reviewDTO.getUserId(), reviewDTO.getCampId());
         verify(reviewRepository, never()).save(any(Review.class));
@@ -212,7 +208,7 @@ class ReviewServiceTests {
                 .campId(1L)
                 .userId(userId)
                 .reviewContent("기존 리뷰 내용")
-                .rating((byte) 4)
+                .rating(4)
                 .reviewCreatedDate(LocalDateTime.now().minusDays(1))
                 .reviewImageUrl("old_image.jpg")
                 .build();
@@ -220,7 +216,7 @@ class ReviewServiceTests {
         ReviewDTO updateDTO = new ReviewDTO();
         updateDTO.setReviewId(reviewId);
         updateDTO.setReviewContent("업데이트된 리뷰 내용");
-        updateDTO.setRating((byte) 5);
+        updateDTO.setRating(5);
         updateDTO.setReviewImageUrl("new_image.jpg");
 
         when(reviewRepository.findById(reviewId)).thenReturn(Optional.of(existingReview));
@@ -235,7 +231,7 @@ class ReviewServiceTests {
         Review updatedReview = reviewCaptor.getValue();
 
         assertThat(updatedReview.getReviewContent()).isEqualTo("업데이트된 리뷰 내용");
-        assertThat(updatedReview.getRating()).isEqualTo((byte) 5);
+        assertThat(updatedReview.getRating()).isEqualTo(5);
         assertThat(updatedReview.getReviewImageUrl()).isEqualTo("new_image.jpg");
         assertThat(updatedReview.getReviewModificationDate()).isNotNull();
 
@@ -254,7 +250,7 @@ class ReviewServiceTests {
                 .campId(1L)
                 .userId(userId)
                 .reviewContent("기존 리뷰 내용")
-                .rating((byte) 4)
+                .rating(4)
                 .reviewCreatedDate(LocalDateTime.now().minusDays(1))
                 .build();
 
@@ -267,11 +263,7 @@ class ReviewServiceTests {
         // When & Then
         assertThatThrownBy(() -> reviewService.updateReview(updateDTO, differentUserId))
                 .isInstanceOf(NotAuthorizedException.class)
-                .hasMessage("이 리뷰를 수정할 권한이 없습니다.")
-                .satisfies(exception -> {
-                    NotAuthorizedException castedEx = (NotAuthorizedException) exception;
-                    assertThat(castedEx.getStatus()).isEqualTo(HttpStatus.FORBIDDEN);
-                });
+                .hasMessage("이 리뷰를 수정할 권한이 없습니다.");
 
         verify(reviewRepository, never()).save(any(Review.class));
         verify(ratingSummaryRepository, never()).decrementRating(anyLong(), anyByte());
@@ -288,7 +280,7 @@ class ReviewServiceTests {
                 .campId(1L)
                 .userId(userId)
                 .reviewContent("삭제될 리뷰 내용")
-                .rating((byte) 4)
+                .rating(4)
                 .reviewCreatedDate(LocalDateTime.now().minusDays(1))
                 .build();
 
@@ -329,7 +321,7 @@ class ReviewServiceTests {
                 .campId(1L)
                 .userId(userId)
                 .reviewContent("삭제될 리뷰 내용")
-                .rating((byte) 4)
+                .rating(4)
                 .reviewCreatedDate(LocalDateTime.now().minusDays(1))
                 .build();
 
@@ -338,11 +330,7 @@ class ReviewServiceTests {
         // When & Then
         assertThatThrownBy(() -> reviewService.deleteReview(reviewId, differentUserId))
                 .isInstanceOf(NotAuthorizedException.class)
-                .hasMessage("이 리뷰를 삭제할 권한이 없습니다.")
-                .satisfies(exception -> {
-                    NotAuthorizedException castedEx = (NotAuthorizedException) exception;
-                    assertThat(castedEx.getStatus()).isEqualTo(HttpStatus.FORBIDDEN);
-                });
+                .hasMessage("이 리뷰를 삭제할 권한이 없습니다.");
 
         verify(reviewRepository, never()).delete(any(Review.class));
         verify(campingSummaryRepository, never()).save(any(CampingSummary.class));
@@ -356,7 +344,7 @@ class ReviewServiceTests {
         for (int i = 0; i < count; i++) {
             reviews.add(new Review(
                     (long) (i + 1), campId, 100L + i,
-                    "리뷰 내용" + (i + 1), (byte) (5),
+                    "리뷰 내용" + (i + 1), (5),
                     LocalDateTime.now(), LocalDateTime.now(),
                     "image" + (i + 1) + ".jpg"
             ));

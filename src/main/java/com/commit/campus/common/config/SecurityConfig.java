@@ -1,5 +1,7 @@
 package com.commit.campus.common.config;
 
+import com.commit.campus.common.filter.AuthenticationFilter;
+import com.commit.campus.common.filter.JwtFilter;
 import com.commit.campus.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;

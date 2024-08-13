@@ -1,5 +1,6 @@
-package com.commit.campus.common.config;
+package com.commit.campus.common.filter;
 
+import com.commit.campus.common.config.JwtUtil;
 import com.commit.campus.service.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

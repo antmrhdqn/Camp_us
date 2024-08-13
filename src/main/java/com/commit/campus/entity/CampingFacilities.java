@@ -10,6 +10,7 @@ import lombok.Setter;
 @Entity
 @Getter
 @Setter
+@Table(name = "camping_facilities")
 //@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CampingFacilities {
 

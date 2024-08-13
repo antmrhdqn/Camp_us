@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "review")
-@Builder
+@Builder(toBuilder = true)
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,7 +29,7 @@ public class Review {
     private String reviewContent;
 
     @Column(name = "rating")
-    private byte rating;
+    private int rating;
 
     @Column(name = "review_created_date", updatable = false, columnDefinition = "DATETIME DEFAULT CURRENT_TIMESTAMP")
     private LocalDateTime reviewCreatedDate;

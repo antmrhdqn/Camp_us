@@ -7,5 +7,5 @@ public class MyReviewView {
     private long reviewId;
     private long campId;
     private String reviewContent;
-    private byte rating;
+    private int rating;
 }

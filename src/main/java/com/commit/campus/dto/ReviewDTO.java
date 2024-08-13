@@ -10,7 +10,7 @@ public class ReviewDTO {
     private long userId;
     private String userNickname;
     private String reviewContent;
-    private byte rating;
+    private int rating;
     private LocalDateTime reviewCreatedDate;
     private LocalDateTime reviewModificationDate;
     private String reviewImageUrl; // TODO : 추후 타입 변경
