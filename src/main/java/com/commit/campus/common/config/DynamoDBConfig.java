@@ -19,7 +19,7 @@ public class DynamoDBConfig {
         return DynamoDbClient.builder()
                 .region(Region.AP_NORTHEAST_2)
                 .credentialsProvider(DefaultCredentialsProvider.create())
-                .endpointOverride(URI.create("http://localhost:8000")) // AWS DynamoDB 연결 시 제거
+//                .endpointOverride(URI.create("http://localhost:8000")) // AWS DynamoDB 연결 시 제거
                 .build();
     }
 
