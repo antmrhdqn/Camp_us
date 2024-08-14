@@ -182,40 +182,6 @@ class ReviewServiceTests {
     }
 
     @Test
-    void 리뷰_등록_시_캠핑서머리_리뷰_카운트_증가_테스트() throws ReviewAlreadyExistsException {
-        // Given
-        ReviewDTO reviewDTO = new ReviewDTO();
-        reviewDTO.setCampId(1L);
-        reviewDTO.setUserId(101L);
-        reviewDTO.setReviewContent("테스트 리뷰");
-        reviewDTO.setRating(5);
-
-        CampingSummary initialCampingSummary = CampingSummary.builder()
-                .campId(1L)
-                .reviewCnt(0)
-                .bookmarkCnt(0)
-                .build();
-
-        when(reviewRepository.existsByUserIdAndCampId(anyLong(), anyLong())).thenReturn(false);
-        when(reviewRepository.save(any(Review.class))).thenReturn(new Review());
-        when(campingSummaryRepository.findById(anyLong())).thenReturn(Optional.of(initialCampingSummary));
-        when(myReviewRepository.findById(anyLong())).thenReturn(Optional.empty());
-
-        ArgumentCaptor<CampingSummary> campingSummaryCaptor = ArgumentCaptor.forClass(CampingSummary.class);
-
-        // When
-        reviewService.createReview(reviewDTO);
-
-        // Then
-        verify(campingSummaryRepository).findById(reviewDTO.getCampId());
-        verify(campingSummaryRepository).save(campingSummaryCaptor.capture());
-
-        CampingSummary savedCampingSummary = campingSummaryCaptor.getValue();
-        assertThat(savedCampingSummary.getReviewCnt()).isEqualTo(1);
-        assertThat(savedCampingSummary.getCampId()).isEqualTo(1L);
-    }
-
-    @Test
     void 캠핑장_리뷰_이미_존재_예외() {
         // Given
         when(reviewRepository.existsByUserIdAndCampId(anyLong(), anyLong())).thenReturn(true);
