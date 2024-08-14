@@ -8,6 +8,6 @@ import org.springframework.data.repository.query.Param;
 public interface UserRepository extends JpaRepository<User, Long> {
     User findUserByEmail(String email);
 
-    @Query(value = "SELECT nickname FROM user WHERE userid = :userId", nativeQuery = true)
+    @Query(value = "SELECT nickname FROM user WHERE user_id = :userId", nativeQuery = true)
     String findNicknameByUserId(@Param("userId") long userId);
 }
