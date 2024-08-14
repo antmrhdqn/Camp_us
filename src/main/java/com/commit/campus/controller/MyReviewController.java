@@ -1,7 +1,9 @@
 package com.commit.campus.controller;
 
+import com.commit.campus.common.CustomResolver;
 import com.commit.campus.dto.CampingDTO;
 import com.commit.campus.dto.ReviewDTO;
+import com.commit.campus.entity.User;
 import com.commit.campus.service.MyReviewService;
 import com.commit.campus.service.ReviewService;
 import com.commit.campus.view.MyReviewView;
@@ -32,9 +34,10 @@ public class MyReviewController {
     // 내 리뷰 정보 조회 TODO:레디스 캐시 사용
     @GetMapping
     public ResponseEntity<Page<MyReviewView>> getMyReviews(
-            @PageableDefault(sort = "reviewCreatedDate") Pageable pageable) {
+            @PageableDefault(sort = "reviewCreatedDate") Pageable pageable,
+            @CustomResolver User authenticationUser) {
 
-        long userId = 1; // TODO: 토큰에서 빼야 함
+        long userId = authenticationUser.getUserId();
 
         Page<ReviewDTO> dtoPage = myReviewService.getMyReviews(userId, pageable);
 
@@ -45,18 +48,15 @@ public class MyReviewController {
     // 리뷰 작성한 캠핑장 조회
     @GetMapping("/campings")
     public ResponseEntity<Page<ReviewedCampingView>> getReviewedCampings(
-            @PageableDefault(sort = "campId") Pageable pageable) {
+            @PageableDefault(sort = "campId") Pageable pageable,
+            @CustomResolver User authenticationUser) {
 
-        long userId = 1; // TODO: 토큰에서 빼야 함
+        long userId = authenticationUser.getUserId();
 
         Page<CampingDTO> dtoPage = myReviewService.getReviewedCampings(userId, pageable);
 
         Page<ReviewedCampingView> viewPage = dtoPage.map(campingDTO -> modelMapper.map(campingDTO, ReviewedCampingView.class));
 
         return ResponseEntity.ok(viewPage);
-
     }
-
-    // 내 리뷰 정보 삭제
-
 }
