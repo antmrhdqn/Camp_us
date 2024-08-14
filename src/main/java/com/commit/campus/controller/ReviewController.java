@@ -1,6 +1,8 @@
 package com.commit.campus.controller;
 
+import com.commit.campus.common.CustomResolver;
 import com.commit.campus.dto.UpdateReviewRequest;
+import com.commit.campus.entity.User;
 import com.commit.campus.view.ReviewView;
 import com.commit.campus.dto.ReviewDTO;
 import com.commit.campus.dto.CreateReviewRequest;
@@ -41,9 +43,11 @@ public class ReviewController {
 
     // 리뷰 등록
     @PostMapping
-    public ResponseEntity<Void> createReview(@RequestBody CreateReviewRequest createReviewRequest) {
+    public ResponseEntity<Void> createReview(
+            @RequestBody CreateReviewRequest createReviewRequest,
+            @CustomResolver User authenticationUser) {
 
-        long userId = 1; // TODO: 토큰에서 빼내야함
+        long userId = authenticationUser.getUserId();
 
         ReviewDTO reviewDTO = modelMapper.map(createReviewRequest, ReviewDTO.class);
         reviewDTO.setUserId(userId);
@@ -55,9 +59,10 @@ public class ReviewController {
     // 리뷰 수정
     @PutMapping
     public ResponseEntity<Void> updateReview(
-            @RequestBody UpdateReviewRequest reviewRequest) {
+            @RequestBody UpdateReviewRequest reviewRequest,
+            @CustomResolver User authenticationUser) {
 
-        long userId = 1; // TODO: 토큰에서 빼내야 함
+        long userId = authenticationUser.getUserId();
         ReviewDTO reviewDTO = modelMapper.map(reviewRequest, ReviewDTO.class);
         reviewService.updateReview(reviewDTO, userId);
 
@@ -66,9 +71,11 @@ public class ReviewController {
 
     // 리뷰 삭제
     @DeleteMapping("/{reviewId}")
-    public ResponseEntity<Void> deleteReview(@PathVariable long reviewId) {
+    public ResponseEntity<Void> deleteReview(
+            @PathVariable long reviewId,
+            @CustomResolver User authenticationUser) {
 
-        long userId = 1; // TODO: 토큰에서 빼내야 함
+        long userId = authenticationUser.getUserId();
         reviewService.deleteReview(reviewId, userId);
 
         return ResponseEntity.noContent().build();

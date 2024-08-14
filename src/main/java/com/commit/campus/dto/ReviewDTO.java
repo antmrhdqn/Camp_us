@@ -13,5 +13,5 @@ public class ReviewDTO {
     private int rating;
     private LocalDateTime reviewCreatedDate;
     private LocalDateTime reviewModificationDate;
-    private String reviewImageUrl; // TODO : 추후 타입 변경
+    private String reviewImageUrl;
 }
