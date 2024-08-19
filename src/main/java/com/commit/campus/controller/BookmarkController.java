@@ -50,6 +50,7 @@ public class BookmarkController {
                 .map(bookmarkDTO -> {
                     BookmarkedCampingDTO campingData = campingService.getBookmarkedCamping(bookmarkDTO.getCampId());
                     return BookmarkView.builder()
+                            .campId(campingData.getCampId())
                             .campName(Optional.ofNullable(campingData.getCampName()).orElse(""))
                             .doName(campingData.getDoName())
                             .sigunguName(campingData.getSigunguName())

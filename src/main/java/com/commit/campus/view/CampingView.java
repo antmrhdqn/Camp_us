@@ -43,6 +43,9 @@ public class CampingView {
     @Schema(description = "리뷰 수")
     private int reviewCnt;  // 리뷰 수
 
+    private String doName;
+    private String sigunguName;
+
     // Camping 엔티티 객체를 받아서 ViewModel 객체를 초기화하는 생성자
     public CampingView(Camping entity) {
         this.campId = entity.getCampId();
@@ -55,6 +58,8 @@ public class CampingView {
         this.firstImageUrl = entity.getFirstImageUrl();
         this.glampingSiteCnt = entity.getGlampingSiteCnt();
         this.caravanSiteCnt = entity.getCaravanSiteCnt();
+        this.doName = entity.getDoName();
+        this.sigunguName = entity.getSigunguName();
         if (entity.getCampingSummary() != null) {
             this.bookmarkCnt = entity.getCampingSummary().getBookmarkCnt();
             this.reviewCnt = entity.getCampingSummary().getReviewCnt();
@@ -94,6 +99,8 @@ public class CampingView {
         this.caravanSiteCnt = dto.getCaravanSiteCnt();
         this.bookmarkCnt = dto.getBookmarkCnt();
         this.reviewCnt = dto.getReviewCnt();
+        this.doName = dto.getDoName();
+        this.sigunguName = dto.getSigunguName();
         this.facilities = dto.getCampingFacilities().stream()
                 .map(fac -> {
                     CampingFacilitiesDTO facilitiesDTO = new CampingFacilitiesDTO();

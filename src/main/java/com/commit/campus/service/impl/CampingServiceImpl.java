@@ -108,6 +108,7 @@ public class CampingServiceImpl implements CampingService {
             return new IllegalArgumentException("Invalid campId: " + campId);
         });
         return BookmarkedCampingDTO.builder()
+                .campId(camping.getCampId())
                 .campName(camping.getCampName())
                 .doName(camping.getDoName())
                 .sigunguName(camping.getSigunguName())
