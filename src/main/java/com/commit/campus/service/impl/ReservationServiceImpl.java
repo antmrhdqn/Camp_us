@@ -101,6 +101,9 @@ public class ReservationServiceImpl implements ReservationService {
             // 캐시에서 가져온 데이터를 dto로 매핑
             ReservationDTO reservationDTO = mapToReservationDTO(reservationInfo);
 
+            // 예약 가능 여부 확인
+            checkAvailabilityBeforeConfirming(reservationDTO);
+
             // 예약 상태 업데이트
             redisCommands.hset(key, "reservationStatus", CONFIRMATION_STATUS);
 
@@ -115,6 +118,40 @@ public class ReservationServiceImpl implements ReservationService {
             releaseLock(lockKey);
             if (campLockKey != null) {
                 releaseLock(campLockKey);
+            }
+        }
+    }
+
+    /* 예약 확정 전 예약 가능 여부 확인 */
+    private void checkAvailabilityBeforeConfirming(ReservationDTO reservationDTO) {
+        LocalDate entryDate = reservationDTO.getEntryDate();
+        LocalDate leavingDate = reservationDTO.getLeavingDate();
+        long campId = reservationDTO.getCampId();
+        int campFacsType = reservationDTO.getCampFacsType();
+
+        List<Availability> availabilityList = availabilityRepository.findByCampIdAndDateBetween(campId, entryDate, leavingDate);
+
+        for (Availability availability : availabilityList) {
+            int availableCount;
+            switch (campFacsType) {
+                case 1:
+                    availableCount = availability.getGeneralSiteAvail();
+                    break;
+                case 2:
+                    availableCount = availability.getCarSiteAvail();
+                    break;
+                case 3:
+                    availableCount = availability.getGlampingSiteAvail();
+                    break;
+                case 4:
+                    availableCount = availability.getCaravanSiteAvail();
+                    break;
+                default:
+                    throw new IllegalArgumentException("잘못된 시설 유형입니다: " + campFacsType);
+            }
+
+            if (availableCount <= 0) {
+                throw new IllegalStateException("해당 캠핑장의 예약이 마감되었습니다..");
             }
         }
     }
