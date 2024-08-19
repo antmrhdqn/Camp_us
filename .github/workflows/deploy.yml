@@ -1,0 +1,97 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [ main, develop ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Validate Gradle wrapper
+        uses: gradle/wrapper-validation-action@v1
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Cache Gradle packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.gradle/caches
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Set yml file
+        uses: microsoft/variable-substitution@v1
+        with:
+          files: '**/application.yml'
+        env:
+          spring.datasource.url: ${{ secrets.DB_URL }}
+          spring.datasource.hikari.username: ${{ secrets.DB_USERNAME }}
+          spring.datasource.hikari.password: ${{ secrets.DB_PASSWORD }}
+          spring.data.redis.host: ${{ secrets.REDIS_HOST }}
+          spring.data.redis.password: ${{ secrets.REDIS_PASSWORD }}
+          spring.security.oauth2.client.registration.cognito.clientId: ${{ secrets.COGNITO_CLIENT_ID }}
+          spring.security.oauth2.client.registration.cognito.clientSecret: ${{ secrets.COGNITO_CLIENT_SECRET }}
+          spring.security.oauth2.client.registration.kakao.client-id: ${{ secrets.KAKAO_CLIENT_ID }}
+          spring.security.oauth2.client.registration.kakao.client-secret: ${{ secrets.KAKAO_CLIENT_SECRET }}
+          token.secret: ${{ secrets.TOKEN_SECRET }}
+          elastic.apm.server_url: ${{ secrets.APM_URL }}
+          gocamping.api.encoding-key: ${{ secrets.GOCAMPING_ENCODING_KEY }}
+          gocamping.api.decoding-key: ${{ secrets.GOCAMPING_DECODING_KEY }}
+          cognito.issuer-uri: ${{ secrets.COGNITO_ISSUER_URI }}
+          cognito.token-uri: ${{ secrets.COGNITO_TOKEN_URI }}
+          cognito.jwk-set-uri: ${{ secrets.COGNITO_JWK_SET_URI }}
+
+      - name: Build and test with Gradle
+        env:
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          REDIS_HOST: ${{ secrets.REDIS_HOST }}
+          REDIS_PASSWORD: ${{ secrets.REDIS_PASSWORD }}
+          COGNITO_CLIENT_ID: ${{ secrets.COGNITO_CLIENT_ID }}
+          COGNITO_CLIENT_SECRET: ${{ secrets.COGNITO_CLIENT_SECRET }}
+          KAKAO_CLIENT_ID: ${{ secrets.KAKAO_CLIENT_ID }}
+          KAKAO_CLIENT_SECRET: ${{ secrets.KAKAO_CLIENT_SECRET }}
+          TOKEN_SECRET: ${{ secrets.TOKEN_SECRET }}
+          APM_URL: ${{ secrets.APM_URL }}
+          GOCAMPING_DECODING_KEY: ${{ secrets.GOCAMPING_DECODING_KEY }}
+          GOCAMPING_ENCODING_KEY: ${{ secrets.GOCAMPING_ENCODING_KEY }}
+          COGNITO_ISSUER_URI: ${{ secrets.COGNITO_ISSUER_URI }}
+          COGNITO_TOKEN_URI: ${{ secrets.COGNITO_TOKEN_URI }}
+          COGNITO_JWK_SET_URI: ${{ secrets.COGNITO_JWK_SET_URI }}
+        run: ./gradlew build test
+
+      - name: Copy JAR to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "build/libs/*.jar"
+          target: "/home/ubuntu"
+          debug: true
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/ubuntu
+            ./deploy.sh
