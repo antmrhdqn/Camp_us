@@ -43,7 +43,6 @@
 ![image](https://github.com/user-attachments/assets/f54f0d0f-3d7b-4586-b82c-aa1aa0e008b3)
 
 ## 2-4. API 명세서
-URL : http://campus-lb-1449885861.ap-northeast-2.elb.amazonaws.com/swagger-ui/index.html
 ![image](https://github.com/user-attachments/assets/29656bfc-81dd-430b-bdac-f6cb875aa8f8)
 
 
