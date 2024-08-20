@@ -40,6 +40,7 @@
 ## 2-2. DB 모델링
 
 ## 2-3. 시스템 아키텍쳐
+![image](https://github.com/user-attachments/assets/f54f0d0f-3d7b-4586-b82c-aa1aa0e008b3)
 
 ## 2-4. API 명세서
 
