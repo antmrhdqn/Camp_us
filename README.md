@@ -39,7 +39,30 @@
 
 ## 2-1. WBS
 
+![스크린샷 2024-08-20 오후 5 39 21](https://github.com/user-attachments/assets/e837cbdc-2c4b-452f-9403-b2e4c1860314)
+
+![스크린샷 2024-08-20 오후 5 39 31](https://github.com/user-attachments/assets/14358f15-cfb2-45ac-9fce-c3cca2073c20)
+
+![스크린샷 2024-08-20 오후 5 39 40](https://github.com/user-attachments/assets/6110686a-caa0-43cf-94ce-dfc8909a273e)
+
+![스크린샷 2024-08-20 오후 5 39 54](https://github.com/user-attachments/assets/80cf9bcd-3023-4059-aee8-62f24c393867)
+
+![스크린샷 2024-08-20 오후 5 40 06](https://github.com/user-attachments/assets/8dc40866-46de-42f7-84f6-0c50c26a8155)
+
+![스크린샷 2024-08-20 오후 5 40 13](https://github.com/user-attachments/assets/13981c14-d90f-4247-8279-26282c483cba)
+
+![스크린샷 2024-08-20 오후 5 40 20](https://github.com/user-attachments/assets/246668e6-e527-4498-b48a-746d0bdb535e)
+
+![스크린샷 2024-08-20 오후 5 40 25](https://github.com/user-attachments/assets/b9a97451-bf75-4ab6-9252-c82501f0a5d1)
+
+![스크린샷 2024-08-20 오후 5 40 39](https://github.com/user-attachments/assets/d33ddd17-570f-4ee2-abb7-d7d1631492cf)
+
 ## 2-2. DB 모델링
+
+![스크린샷 2024-08-20 오후 5 43 09](https://github.com/user-attachments/assets/a13d49b4-f428-49d1-a803-c0114d3ec251)
+
+![스크린샷 2024-08-20 오후 5 43 21](https://github.com/user-attachments/assets/34d92b9d-d408-4587-88dc-602544313fd1)
+
 
 ## 2-3. 시스템 아키텍쳐
 ![image](https://github.com/user-attachments/assets/a1bc41f8-a38a-484c-bd25-d56ba5c99f33)
