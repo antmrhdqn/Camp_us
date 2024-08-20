@@ -1,4 +1,4 @@
-# CAMP US
+![image](https://github.com/user-attachments/assets/c09fa2e2-57eb-4e8e-a022-b9db6a127d10)# CAMP US
 
 ### 팀명: COMM1T
 
@@ -43,6 +43,8 @@
 ![image](https://github.com/user-attachments/assets/f54f0d0f-3d7b-4586-b82c-aa1aa0e008b3)
 
 ## 2-4. API 명세서
+URL : http://campus-lb-1449885861.ap-northeast-2.elb.amazonaws.com/swagger-ui/index.html
+![image](https://github.com/user-attachments/assets/8d28afa0-7f8f-4b6a-82da-3812d33990bd)
 
 ## 2-5. 부하 테스트
 
