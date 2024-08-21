@@ -73,7 +73,10 @@
 ![image](https://github.com/user-attachments/assets/29656bfc-81dd-430b-bdac-f6cb875aa8f8)
 
 
-## 2-5. 부하 테스트
+## 2-5. 부하 테스트 
+<a href="https://github.com/1COMM1T/Camp_us/wiki/%EB%B6%80%ED%95%98-%ED%85%8C%EC%8A%A4%ED%8A%B8" target="_blank">
+<img src="https://img.shields.io/badge/부하 테스트-005AF0.svg?style=flat-square&logo=GitHub&logoColor=white"/>
+</a>
 
 ## 2-6. 고도화 방안
 
