@@ -72,6 +72,8 @@ https://github.com/orgs/1COMM1T/projects/2/views/4
 ![image](https://github.com/user-attachments/assets/a1bc41f8-a38a-484c-bd25-d56ba5c99f33)
 
 ## 예약 시퀀스 아키텍쳐
+![image](https://github.com/user-attachments/assets/2cb6c313-8597-45ee-b098-0e0772e0a942)
+
 
 ## API 명세서
 ![image](https://github.com/user-attachments/assets/29656bfc-81dd-430b-bdac-f6cb875aa8f8)
