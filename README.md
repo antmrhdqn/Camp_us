@@ -27,22 +27,22 @@
 ---
 
 # Skill Set
-BackEnd - Java 21, SpringBoot 3.3.1, Spring Security 6.3.1, AWS Cognito 2.17.81
-DB/Cache - MySQL 8.4, Redis, AWS DynamoDB
-Infra - AWS LoadBalancer, AWS EC2, AWS Lambda
-Test - Locust
+BackEnd - Java 21, SpringBoot 3.3.1, Spring Security 6.3.1, AWS Cognito 2.17.81  
+DB/Cache - MySQL 8.4, Redis, AWS DynamoDB  
+Infra - AWS LoadBalancer, AWS EC2, AWS Lambda  
+Test - Locust  
 
 ---
 
 # 프로젝트
 
 ## Summary
-- Spring Security와 AWS Cognito를 사용한 유저, 관리자 회원 체계 분리
-- MySQL 과 AWS DynamoDB를 사용한 하이브리드 데이터베이스 구축
-- Redis를 사용한 동시성 처리
-- Caffein Cache를 이용한 캐싱 처리
-- Locust를 활용한 부하테스트
-- Spring Scheduler와 AWS Lambda를 이용한 캠핑장 데이터 최신화
+- Spring Security와 AWS Cognito를 사용한 유저, 관리자 회원 체계 분리  
+- MySQL 과 AWS DynamoDB를 사용한 하이브리드 데이터베이스 구축  
+- Redis를 사용한 동시성 처리  
+- Caffein Cache를 이용한 캐싱 처리  
+- Locust를 활용한 부하테스트  
+- Spring Scheduler와 AWS Lambda를 이용한 캠핑장 데이터 최신화  
 
 
 ## WBS
