@@ -34,6 +34,8 @@ Test - Locust
 
 ---
 
+
+
 # 프로젝트
 
 ## Summary
@@ -44,6 +46,13 @@ Test - Locust
 - Locust를 활용한 부하테스트  
 - Spring Scheduler와 AWS Lambda를 이용한 캠핑장 데이터 최신화  
 
+## 담당사항
+- AWS 클라우드 인프라 구축 및 관리
+- AWS SDK 버전 선정
+- 리뷰 도메인 설계 및 구축
+- DynamoDB 활용한 서머리 테이블 구축
+- Caffein Cache 설계 및 적용
+- GitHub Action을 활용한 CI 구축
 
 ## WBS
 GitHub Projects를 활용하여 스프린트 계획 수립 및 전체 프로젝트 일정을 체계적으로 관리하였습니다.  
