@@ -43,7 +43,7 @@
 ## 2-1. WBS
 
 ![ANY_0822190051](https://github.com/user-attachments/assets/3ec386ee-4864-4e84-92ca-7bba6fc07984)
-
+https://github.com/orgs/1COMM1T/projects/2/views/4
 
 ## 2-2. DB 모델링
 
