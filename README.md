@@ -71,11 +71,3 @@ https://github.com/orgs/1COMM1T/projects/2/views/4
  GitHub Wiki를 통해 효율적으로 지식을 공유하고, 팀원 모두가 동일한 자료를 통해 지식 수준을 유지하도록 하였습니다.  
 [GitHub 위키로 이동](https://github.com/1COMM1T/Camp_us/wiki)
 
-
-## 고도화 방안
-
-- 성능 테스트의 튜닝 포인트를 기반으로 next plan 작성
-- 캐시를 도입하여 조회 성능을 향상
-- AI 챗봇 도입
-
-
