@@ -47,9 +47,7 @@ https://github.com/orgs/1COMM1T/projects/2/views/4
 
 ## 2-2. DB 모델링
 
-![스크린샷 2024-08-20 오후 5 43 09](https://github.com/user-attachments/assets/a13d49b4-f428-49d1-a803-c0114d3ec251)
-
-![스크린샷 2024-08-20 오후 5 43 21](https://github.com/user-attachments/assets/34d92b9d-d408-4587-88dc-602544313fd1)
+![upscaled_image](https://github.com/user-attachments/assets/35838876-2387-499c-a295-f996d87a1353)
 
 
 ## 2-3. 시스템 아키텍쳐
