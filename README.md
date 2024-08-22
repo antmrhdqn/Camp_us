@@ -4,17 +4,20 @@
 
 ### 팀원
 
+- 🐹 팀원 : **김동환**
+[<img src="https://img.shields.io/badge/Github-Link-181717?logo=Github">](https://github.com/antmrhdqn)
+
+- 🎀 팀원 : **박찬호**
+[<img src="https://img.shields.io/badge/Github-Link-181717?logo=Github">](https://github.com/Yuharee)
+
 - 🦊 팀원 : **백동현**
 [<img src="https://img.shields.io/badge/Github-Link-181717?logo=Github">](https://github.com/dongh810)
 
 - 🧸 팀원 : **손세림**
 [<img src="https://img.shields.io/badge/Github-Link-181717?logo=Github">](https://github.com/bucky1005)
 
-- 🎀 팀원 : **박찬호**
-[<img src="https://img.shields.io/badge/Github-Link-181717?logo=Github">](https://github.com/Yuharee)
 
-- 🐹 팀원 : **김동환**
-[<img src="https://img.shields.io/badge/Github-Link-181717?logo=Github">](https://github.com/antmrhdqn)
+
 
 ---
 
@@ -68,15 +71,9 @@
 ![image](https://github.com/user-attachments/assets/a1bc41f8-a38a-484c-bd25-d56ba5c99f33)
 
 
-
 ## 2-4. API 명세서
 ![image](https://github.com/user-attachments/assets/29656bfc-81dd-430b-bdac-f6cb875aa8f8)
 
-
-## 2-5. 부하 테스트 
-<a href="https://github.com/1COMM1T/Camp_us/wiki/%EB%B6%80%ED%95%98-%ED%85%8C%EC%8A%A4%ED%8A%B8" target="_blank">
-<img src="https://img.shields.io/badge/부하 테스트-005AF0.svg?style=flat-square&logo=GitHub&logoColor=white"/>
-</a>
 
 ## 2-6. 고도화 방안
 
