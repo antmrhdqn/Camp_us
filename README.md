@@ -6,12 +6,12 @@
 
 - **김동환**
 [<img src="https://img.shields.io/badge/Github-Link-181717?logo=Github">](https://github.com/antmrhdqn)
-
-- **박찬호**
-[<img src="https://img.shields.io/badge/Github-Link-181717?logo=Github">](https://github.com/Yuharee)
  
 - **백동현**
 [<img src="https://img.shields.io/badge/Github-Link-181717?logo=Github">](https://github.com/dongh810)
+
+- **박찬호**
+[<img src="https://img.shields.io/badge/Github-Link-181717?logo=Github">](https://github.com/Yuharee)
 
 - **손세림**
 [<img src="https://img.shields.io/badge/Github-Link-181717?logo=Github">](https://github.com/bucky1005)
@@ -30,7 +30,7 @@
 BackEnd - Java 21, SpringBoot 3.3.1, Spring Security 6.3.1, AWS Cognito 2.17.81  
 DB/Cache - MySQL 8.4, Redis, AWS DynamoDB  
 Infra - AWS LoadBalancer, AWS EC2, AWS Lambda  
-Test - Locust  
+Test - Locust
 
 ---
 
