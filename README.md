@@ -58,7 +58,6 @@ Test - Locust
 
 ## WBS
 GitHub Projects를 활용하여 스프린트 계획 수립 및 전체 프로젝트 일정을 체계적으로 관리하였습니다.  
-**프로젝트 일정** : 2024.07.04 ~ 2024.08.21 
 
 ![ANY_0822190051](https://github.com/user-attachments/assets/3ec386ee-4864-4e84-92ca-7bba6fc07984)  
 
