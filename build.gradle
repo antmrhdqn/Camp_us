@@ -87,6 +87,10 @@ dependencies {
 
 	// APM
 	implementation 'co.elastic.apm:elastic-apm-agent:1.51.0'
+
+	// caffeine cache
+	implementation 'com.github.ben-manes.caffeine:caffeine:3.1.8'
+	implementation 'org.springframework.boot:spring-boot-starter-cache'
 }
 
 tasks.named('bootJar') {

@@ -53,7 +53,7 @@ public class CampingController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    @GetMapping("/sortedByBookmarks")
+    @GetMapping("/sortedByBookmarks") // /v1/campings?sort=bookmarks
     @Operation(summary = "찜한 수로 정렬된 캠핑장 리스트 조회", description = "찜한 수에 따라 정렬된 캠핑장 리스트를 조회합니다.")
     public ResponseEntity<List<CampingView>> getCampingsSortedByBookmarks() {
         List<CampingDTO> campings = campingService.getAllCampingsSortedByBookmarks();
@@ -63,7 +63,7 @@ public class CampingController {
         return ResponseEntity.ok(viewModels);
     }
 
-    @GetMapping("/sortedByReviews")
+    @GetMapping("/sortedByReviews") // /v1/campings?sort=reviews
     @Operation(summary = "리뷰 수로 정렬된 캠핑장 리스트 조회", description = "리뷰 수에 따라 정렬된 캠핑장 리스트를 조회합니다.")
     public ResponseEntity<List<CampingView>> getCampingsSortedByReviews() {
         List<CampingDTO> campings = campingService.getAllCampingsSortedByReviews();

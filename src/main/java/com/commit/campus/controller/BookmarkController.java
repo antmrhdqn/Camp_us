@@ -8,6 +8,7 @@ import com.commit.campus.entity.User;
 import com.commit.campus.service.BookmarkService;
 import com.commit.campus.service.CampingService;
 import com.commit.campus.view.BookmarkView;
+import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +32,7 @@ public class BookmarkController {
     }
 
     @PostMapping
+    @Operation(summary = "캠핑장 찜하기 등록", description = "선택한 캠핑장을 찜 리스트에 추가합니다.")
     public ResponseEntity<Void> saveBookmark(@RequestBody BookmarkRequest bookmarkRequest, @CustomResolver User authenticationUser) {
         Long userId = authenticationUser.getUserId();
 

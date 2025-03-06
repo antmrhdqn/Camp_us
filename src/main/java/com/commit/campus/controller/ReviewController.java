@@ -7,6 +7,7 @@ import com.commit.campus.view.ReviewView;
 import com.commit.campus.dto.ReviewDTO;
 import com.commit.campus.dto.CreateReviewRequest;
 import com.commit.campus.service.ReviewService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/v1/reviews")
 @Slf4j
+@Tag(name = "Review API", description = "리뷰 관련 엔드포인트")
 public class ReviewController {
 
     private final ReviewService reviewService;
