@@ -1,19 +1,21 @@
-# CAMP US
+# CAMP US 
+
+### 프로젝트 일정 : 2024.07.04 ~ 2024.08.21
 
 ### 팀명: COMM1T
-
+ 
 ### 팀원
-
-- 🐹 팀원 : **김동환**
+ 
+- **김동환** 
 [<img src="https://img.shields.io/badge/Github-Link-181717?logo=Github">](https://github.com/antmrhdqn)
-
-- 🎀 팀원 : **박찬호**
-[<img src="https://img.shields.io/badge/Github-Link-181717?logo=Github">](https://github.com/Yuharee)
-
-- 🦊 팀원 : **백동현**
+  
+- **백동현**
 [<img src="https://img.shields.io/badge/Github-Link-181717?logo=Github">](https://github.com/dongh810)
 
-- 🧸 팀원 : **손세림**
+- **박찬호**
+[<img src="https://img.shields.io/badge/Github-Link-181717?logo=Github">](https://github.com/Yuharee)
+
+- **손세림**
 [<img src="https://img.shields.io/badge/Github-Link-181717?logo=Github">](https://github.com/bucky1005)
 
 
@@ -30,7 +32,7 @@
 BackEnd - Java 21, SpringBoot 3.3.1, Spring Security 6.3.1, AWS Cognito 2.17.81  
 DB/Cache - MySQL 8.4, Redis, AWS DynamoDB  
 Infra - AWS LoadBalancer, AWS EC2, AWS Lambda  
-Test - Locust  
+Test - Locust
 
 ---
 
@@ -56,7 +58,6 @@ Test - Locust
 
 ## WBS
 GitHub Projects를 활용하여 스프린트 계획 수립 및 전체 프로젝트 일정을 체계적으로 관리하였습니다.  
-**프로젝트 일정** : 2024.07.04 ~ 2024.08.21 
 
 ![ANY_0822190051](https://github.com/user-attachments/assets/3ec386ee-4864-4e84-92ca-7bba6fc07984)  
 
