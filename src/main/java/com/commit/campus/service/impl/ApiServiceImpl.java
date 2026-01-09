@@ -14,6 +14,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -59,28 +63,63 @@ public class ApiServiceImpl implements ApiService {
 
     @Override
     public void saveCampingData() {
-        try {
-            String campingData = callCampingApi();
+        // 1. 저장 시작 전에 기존 데이터 싹 비우기 (딱 한 번만 실행)
+        campingFacilitiesRepository.deleteAll();
+        campingRepository.deleteAll();
+        log.info("=== 기존 데이터 삭제 완료 ===");
 
-            JsonNode rootNode = objectMapper.readTree(campingData);
-            JsonNode itemsNode = rootNode.path("response").path("body").path("items").path("item");
+        int pageNo = 1; // 1페이지부터 시작
+        int numOfRows = 500; // 한 번에 500개씩만 요청 (안전하게)
 
-            List<GoCampingDTO> campingDTOList = objectMapper.convertValue(itemsNode, new TypeReference<List<GoCampingDTO>>() {});
+        while (true) {
+            try {
+                log.info("=== 페이지 {} 요청 중... ===", pageNo);
 
-            // 테이블 초기화
-            campingFacilitiesRepository.deleteAll();
-            campingRepository.deleteAll();
+                // API 호출 (페이지 번호를 바꿔가며 호출해야 함)
+                String campingData = campingApiClient.getBaseList(
+                        numOfRows,
+                        pageNo,
+                        VALIDATION_CHECK_OS_KIND,
+                        VALIDATION_CHECK_APP_NAME,
+                        serviceKey,
+                        RESPONSE_FIFE_FORMAT
+                );
 
-            for (GoCampingDTO campingDTO : campingDTOList) {
+                JsonNode rootNode = objectMapper.readTree(campingData);
+                JsonNode itemsNode = rootNode.path("response").path("body").path("items").path("item");
 
-                Camping campingEntity = mapToEntity(campingDTO);
-                campingRepository.save(campingEntity);
+                // 데이터가 없으면 반복 종료 (다 가져왔다는 뜻)
+                if (itemsNode.isMissingNode() || itemsNode.isNull() || itemsNode.isEmpty()) {
+                    log.info("=== 더 이상 데이터가 없습니다. 총 {} 페이지 저장 완료 ===", pageNo - 1);
+                    break;
+                }
 
-                List<CampingFacilities> facilities = checkCampFacsType(campingEntity, campingDTO);
-                campingFacilitiesRepository.saveAll(facilities);
+                List<GoCampingDTO> campingDTOList = objectMapper.convertValue(itemsNode, new TypeReference<List<GoCampingDTO>>() {});
+
+                // 저장 로직
+                for (GoCampingDTO campingDTO : campingDTOList) {
+                    Camping campingEntity = mapToEntity(campingDTO);
+                    campingRepository.save(campingEntity);
+
+                    List<CampingFacilities> facilities = checkCampFacsType(campingEntity, campingDTO);
+                    campingFacilitiesRepository.saveAll(facilities);
+                }
+
+                log.info("=== 페이지 {} 저장 성공 ({} 개) ===", pageNo, campingDTOList.size());
+
+                // 가져온 개수가 요청한 개수보다 적으면 마지막 페이지이므로 종료
+                if (campingDTOList.size() < numOfRows) {
+                    log.info("=== 모든 데이터 저장 완료 ===");
+                    break;
+                }
+
+                pageNo++; // 다음 페이지로
+
+            } catch (Exception e) {
+                log.error("페이지 {} 저장 중 에러 발생: {}", pageNo, e.getMessage());
+                // 에러가 나도 다음 페이지는 시도해보려면 continue, 멈추려면 break
+                break;
             }
-        } catch (Exception e) {
-            log.error("Error while saving camping data", e);
         }
     }
 
@@ -104,8 +143,8 @@ public class ApiServiceImpl implements ApiService {
         campingEntity.setTel(campingDTO.getTel());
         campingEntity.setHomepage(campingDTO.getHomepage());
         campingEntity.setStaffCount(campingDTO.getStaffCount());
-        campingEntity.setCreatedDate(campingDTO.getCreatedDate());
-        campingEntity.setLastModifiedDate(campingDTO.getModifiedDate());
+        campingEntity.setCreatedDate(parseSafeDateTime(campingDTO.getCreatedDate()));
+        campingEntity.setLastModifiedDate(parseSafeDateTime(campingDTO.getModifiedDate()));
         campingEntity.setGeneralSiteCnt(campingDTO.getGeneral_site_cnt());
         campingEntity.setCarSiteCnt(campingDTO.getCar_site_cnt());
         campingEntity.setGlampingSiteCnt(campingDTO.getGlamping_site_cnt());
@@ -160,5 +199,25 @@ public class ApiServiceImpl implements ApiService {
         facilitiesEntity.setPersonalCaravanStatus(campingDTO.getPersonalCaravanStatus());
 
         return facilitiesEntity;
+    }
+
+    // 날짜 변환기: "2023-01-01 13:00:00"도 처리하고 "2023-01-01"도 처리함
+    private LocalDateTime parseSafeDateTime(String dateStr) {
+        if (dateStr == null || dateStr.trim().isEmpty()) {
+            return null;
+        }
+        try {
+            // 1. "yyyy-MM-dd HH:mm:ss" 포맷 시도
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            return LocalDateTime.parse(dateStr, formatter);
+        } catch (DateTimeParseException e) {
+            try {
+                // 2. 실패하면 "yyyy-MM-dd" (날짜만 있는 경우) 시도
+                return LocalDate.parse(dateStr).atStartOfDay(); // 00:00:00 시간을 자동으로 붙여줌
+            } catch (DateTimeParseException ex) {
+                // 3. 이것도 아니면 그냥 null (데이터가 꼬인 경우)
+                return null;
+            }
+        }
     }
 }

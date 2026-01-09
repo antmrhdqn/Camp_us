@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
-import java.time.LocalDateTime;
 
 @Getter
 @Builder
@@ -64,10 +63,10 @@ public class GoCampingDTO {
     private int staffCount;  // 상주관리인원
 
     @JsonProperty("createdtime")
-    private LocalDateTime createdDate;  // 등록일
+    private String createdDate;  // 등록일
 
     @JsonProperty("modifiedtime")
-    private LocalDateTime modifiedDate; // 수정일
+    private String modifiedDate; // 수정일
 
     @JsonProperty("gnrlSiteCo")
     private Integer general_site_cnt;   // 주요시설 일반야영장
