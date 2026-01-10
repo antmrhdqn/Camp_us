@@ -72,7 +72,7 @@ GitHub Projects를 활용하여 스프린트 계획 수립 및 전체 프로젝�
 ![image](https://github.com/user-attachments/assets/a1bc41f8-a38a-484c-bd25-d56ba5c99f33)
 
 ## 예약 시퀀스 아키텍쳐
-![image](https://github.com/user-attachments/assets/2cb6c313-8597-45ee-b098-0e0772e0a942)
+<img width="5720" height="7470" alt="Mermaid Chart - Create complex, visual diagrams with text -2026-01-10-082848" src="https://github.com/user-attachments/assets/ee1fc5a1-fe42-4f9d-b8ec-f0fb7d1e753d" />
 
 
 ## API 명세서
