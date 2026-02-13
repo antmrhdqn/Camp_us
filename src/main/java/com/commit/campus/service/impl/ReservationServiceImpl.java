@@ -8,20 +8,22 @@ import com.commit.campus.repository.AvailabilityRepository;
 import com.commit.campus.repository.CampingRepository;
 import com.commit.campus.repository.ReservationRepository;
 import com.commit.campus.service.ReservationService;
-import io.lettuce.core.SetArgs;
+//import io.lettuce.core.SetArgs;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import io.lettuce.core.api.sync.RedisCommands;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
+import org.springframework.transaction.support.TransactionTemplate;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Slf4j
 @Service
@@ -32,9 +34,14 @@ public class ReservationServiceImpl implements ReservationService {
     private final CampingRepository campingRepository;
     private final RedisCommands<String, String> redisCommands;
 
-    int index = 1;  // reservationId 생성용 인덱스
+    // 2. TransactionTemplate 필드 추가
+    private final TransactionTemplate transactionTemplate;
+    private final RedissonClient redissonClient;  // 추가
+
+    int index = 1;
     private static final int CHANGE_COUNT = 1;
     private static final long DEFAULT_TTL_SECONDS = 7200;
+    private static final long LOCK_WAIT_TIME = 0;      // 대기 안 함
     private static final long LOCK_TIMEOUT_SECONDS = 10;  // 락의 타임아웃 설정
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
     private static final String CONFIRMATION_STATUS = "confirmation";
@@ -44,11 +51,15 @@ public class ReservationServiceImpl implements ReservationService {
     public ReservationServiceImpl(ReservationRepository reservationRepository,
                                   AvailabilityRepository availabilityRepository,
                                   CampingRepository campingRepository,
-                                  RedisCommands<String, String> redisCommands) {
+                                  RedisCommands<String, String> redisCommands,
+                                  TransactionTemplate transactionTemplate,
+                                  RedissonClient redissonClient) {  // 추가
         this.reservationRepository = reservationRepository;
         this.availabilityRepository = availabilityRepository;
         this.campingRepository = campingRepository;
         this.redisCommands = redisCommands;
+        this.transactionTemplate = transactionTemplate;
+        this.redissonClient = redissonClient;  // 추가
     }
 
     @Override
