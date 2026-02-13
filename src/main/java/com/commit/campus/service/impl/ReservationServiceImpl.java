@@ -65,15 +65,17 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    @Transactional
+//    @Transactional  트랜잭션템플릿을 쓰기 위해 제거
     public ReservationDTO confirmReservation(String reservationId) {
         String lockKey = "lock:reservation:" + reservationId;
         String campLockKey = null;
         try {
+            // 예약 락 획득
             if (!acquireLock(lockKey)) {
                 throw new ConcurrentModificationException("해당 예약은 현재 처리 중입니다. 잠시 후 다시 시도해 주세요.");
             }
 
+            // Redis 조회
             String key = "reservationInfo:" + reservationId;
             Map<String, String> reservationInfo = redisCommands.hgetall(key);
 
@@ -90,35 +92,41 @@ public class ReservationServiceImpl implements ReservationService {
                 throw new ConcurrentModificationException("동일한 캠핑장에 대한 다른 예약 요청이 처리 중입니다. 잠시 후 다시 시도해 주세요.");
             }
 
-            // Redis에서 예약 상태 확인
-            String reservationStatus = reservationInfo.get("reservationStatus");
-            if (CANCELLED_STATUS.equals(reservationStatus)) {
-                throw new IllegalStateException("이미 취소된 예약입니다.");
-            } else if (CONFIRMATION_STATUS.equals(reservationStatus)) {
-                throw new IllegalStateException("이미 확정된 예약입니다: " + reservationId);
-            }
 
-            // 캐시에서 가져온 데이터를 dto로 매핑
-            ReservationDTO reservationDTO = mapToReservationDTO(reservationInfo);
+            // 트랜잭션 시작
+            return transactionTemplate.execute(status -> {
+                // Redis에서 예약 상태 확인
+                String reservationStatus = reservationInfo.get("reservationStatus");
+                if (CANCELLED_STATUS.equals(reservationStatus)) {
+                    throw new IllegalStateException("이미 취소된 예약입니다.");
+                } else if (CONFIRMATION_STATUS.equals(reservationStatus)) {
+                    throw new IllegalStateException("이미 확정된 예약입니다: " + reservationId);
+                }
 
-            // 예약 가능 여부 확인
-            checkAvailabilityBeforeConfirming(reservationDTO);
+                ReservationDTO reservationDTO = mapToReservationDTO(reservationInfo);
 
-            // 예약 상태 업데이트
-            redisCommands.hset(key, "reservationStatus", CONFIRMATION_STATUS);
+                // 재고 확인
+                checkAvailabilityBeforeConfirming(reservationDTO);
 
-            // 예약 정보 db에 저장
-            saveReservationToDatabase(reservationDTO);
+                // Redis 상태 업데이트
+                redisCommands.hset(key, "reservationStatus", CONFIRMATION_STATUS);
 
-            // 예약 가능 개수 차감
-            updateAvailability(reservationDTO, true);
+                // 예약 정보 저장
+                saveReservationToDatabase(reservationDTO);
 
-            return reservationDTO;
+                // 예약 가능 개수 차감
+                updateAvailability(reservationDTO, true);
+
+                return reservationDTO; // 결과 반환
+            });
+            // 트랜잭션 커밋 완료 (이 시점에 DB 반영됨)
+
         } finally {
-            releaseLock(lockKey);
+            // 락 해제 (획득의 역순)
             if (campLockKey != null) {
                 releaseLock(campLockKey);
             }
+            releaseLock(lockKey);
         }
     }
 
