@@ -68,8 +68,6 @@ public class ReservationServiceImpl implements ReservationService {
         String key = "reservationInfo:" + reservationId;
 
         log.info("Redis key = {}", key);
-
-        // 예약 정보를 redis에 저장
         saveToRedis(key, reservationDTO, reservationId);
 
         return reservationId;
@@ -153,22 +151,12 @@ public class ReservationServiceImpl implements ReservationService {
         for (Availability availability : availabilityList) {
             int availableCount;
             switch (campFacsType) {
-                case 1:
-                    availableCount = availability.getGeneralSiteAvail();
-                    break;
-                case 2:
-                    availableCount = availability.getCarSiteAvail();
-                    break;
-                case 3:
-                    availableCount = availability.getGlampingSiteAvail();
-                    break;
-                case 4:
-                    availableCount = availability.getCaravanSiteAvail();
-                    break;
-                default:
-                    throw new IllegalArgumentException("잘못된 시설 유형입니다: " + campFacsType);
+                case 1: availableCount = availability.getGeneralSiteAvail(); break;
+                case 2: availableCount = availability.getCarSiteAvail(); break;
+                case 3: availableCount = availability.getGlampingSiteAvail(); break;
+                case 4: availableCount = availability.getCaravanSiteAvail(); break;
+                default: throw new IllegalArgumentException("잘못된 시설 유형입니다: " + campFacsType);
             }
-
             if (availableCount <= 0) {
                 throw new IllegalStateException("해당 캠핑장의 예약이 마감되었습니다..");
             }
@@ -176,8 +164,66 @@ public class ReservationServiceImpl implements ReservationService {
     }
 
     @Override
-    @Transactional
+//    @Transactional // TODO: 취소는 빈도가 낮아 충돌이 적으므로 일단 @Transactional 유지해도 무방하지만 원칙적으로는 이것도 템플릿을 쓰는게 좋음
     public void cancelReservation(String reservationId) {
+        String lockKey = "lock:reservation:" + reservationId;
+        String campLockKey = null; // 캠핑장 락 키 변수
+
+        try {
+            // 1. 락 획득 (DB 트랜잭션 밖)
+            if (!acquireLock(lockKey)) {
+                throw new ConcurrentModificationException("해당 예약은 현재 처리 중입니다.");
+            }
+
+            // 2. Redis 조회 및 검증 (DB 트랜잭션 밖)
+            String reservationKey = "reservationInfo:" + reservationId;
+            Map<String, String> reservationInfo = redisCommands.hgetall(reservationKey);
+
+            if (reservationInfo.isEmpty()) {
+                throw new IllegalArgumentException("해당 예약이 존재하지 않습니다.");
+            }
+
+            // 캠핑장 락 획득
+            String campId = reservationInfo.get("campId");
+            campLockKey = "lock:camp:" + campId;
+            if (!acquireLock(campLockKey)) {
+                throw new ConcurrentModificationException("다른 처리가 진행 중입니다.");
+            }
+
+            // 3. 트랜잭션 시작 (DB 작업 구간)
+            transactionTemplate.execute(status -> {
+                String currentStatus = reservationInfo.get("reservationStatus");
+                if (CANCELLED_STATUS.equals(currentStatus)) {
+                    throw new IllegalStateException("이미 취소된 예약입니다.");
+                }
+
+                // DTO 변환
+                ReservationDTO reservationDTO = mapToReservationDTO(reservationInfo);
+
+                // 3-1. DB 상태 동기화 (취소 처리)
+                syncCancellationToDatabase(reservationDTO);
+
+                // 3-2. 재고(Availability) 복구
+                updateAvailability(reservationDTO, false);
+
+                return null; // void 반환
+            });
+
+            // 4. Redis 상태 업데이트 (DB 성공 후 실행)
+            // (트랜잭션 밖에서 Redis 업데이트 하는 것이 안전함)
+            redisCommands.hset(reservationKey, "reservationStatus", CANCELLED_STATUS);
+            redisCommands.hset(reservationKey, "updatedAt", LocalDateTime.now().toString());
+
+        } finally {
+            // 5. 락 해제
+            if (campLockKey != null) releaseLock(campLockKey);
+            releaseLock(lockKey);
+        }
+    }
+
+
+    private void superCancelReservationLogic(String reservationId) {
+        // 기존 작성하신 cancelReservation 내용
         String lockKey = "lock:reservation:" + reservationId;
         String campLockKey = null;
         String reservationKey = "reservationInfo:" + reservationId;
@@ -228,20 +274,6 @@ public class ReservationServiceImpl implements ReservationService {
         }
     }
 
-    private void syncCancellationToDatabase(ReservationDTO reservationDTO) {
-        Reservation reservation = reservationRepository.findById(reservationDTO.getReservationId())
-                .orElseThrow(() -> new EntityNotFoundException("예약을 찾을 수 없습니다: " + reservationDTO.getReservationId()));
-
-        Reservation updatedReservation = reservation.toBuilder()
-                .reservationStatus(CANCELLED_STATUS)
-                .updatedAt(LocalDateTime.now())
-                .build();
-
-        reservationRepository.save(updatedReservation);
-    }
-
-    /* 예약 등록 */
-    // 예약아이디 생성 (예약날짜 + 인덱스)
     private String createReservationId(LocalDateTime reservationDate) {
         DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("yyMMddHHmmss");
         String formattedDate = reservationDate.format(dateFormat);
@@ -249,7 +281,6 @@ public class ReservationServiceImpl implements ReservationService {
         return formattedDate + indexCode;
     }
 
-    // 예약 정보를 redis에 저장
     private void saveToRedis(String key, ReservationDTO reservationDTO, String reservationId) {
         redisCommands.expire(key, DEFAULT_TTL_SECONDS);
         redisCommands.hset(key, "reservationId", reservationId);
@@ -263,7 +294,6 @@ public class ReservationServiceImpl implements ReservationService {
         redisCommands.hset(key, "campFacsType", reservationDTO.getCampFacsType().toString());
     }
 
-    /* 예약 확정 */
     private ReservationDTO mapToReservationDTO(Map<String, String> reservationInfo) {
         return ReservationDTO.builder()
                 .reservationId(Long.valueOf(reservationInfo.get("reservationId")))
@@ -295,34 +325,24 @@ public class ReservationServiceImpl implements ReservationService {
         reservationRepository.save(reservation);
     }
 
-    // 예약 가능 테이블 업데이트(데이터 추가, 이용가능 개수 변경)
     private void updateAvailability(ReservationDTO reservationDTO, boolean isDecrease) {
         LocalDate currentDate = reservationDTO.getEntryDate();
         LocalDate endDate = reservationDTO.getLeavingDate();
 
-        // 예약한 캠핑장의 입실날짜 ~ 퇴실날짜의 예약 가능 현황 가져오기
         List<Availability> availabilityList = availabilityRepository.findByCampIdAndDateBetween(
                 reservationDTO.getCampId(),
                 reservationDTO.getEntryDate(),
                 reservationDTO.getLeavingDate());
         log.info("findByCampIdAndDateBetween 실행됨");
-        log.info("availabilityList = {}", availabilityList);
 
         int index = 0;
-
-        // availability의 date 컬럼에 입실일자 ~ 퇴실일자 정보가 있는지 점검
         while (!currentDate.isAfter(endDate)) {
-            log.info("while문 동작 중: " + index);
             index++;
-            // 해당 날짜의 데이터가 availability 테이블에 있는지 판별
             Availability availability = checkAvailabilityDate(currentDate, availabilityList);
 
-            // 들어온 데이터가 없다면 해당 날짜의 데이터가 존재하지 않으므로 새로 생성
             if (availability == null) {
-                log.info("일치하는 데이터 없음");
                 long campId = reservationDTO.getCampId();
                 availability = createAvailability(campId, currentDate);
-                log.info("{} 날짜로 예약 가능 현황 생성", currentDate);
             }
 
             if (isDecrease) {
@@ -334,23 +354,12 @@ public class ReservationServiceImpl implements ReservationService {
         }
     }
 
-    // 예약 가능 여부 판별
     private Availability checkAvailabilityDate(LocalDate currentDate, List<Availability> availabilityList) {
-        log.info("checkAvailabilityDate 실행됨");
-
         String currentDateStr = DATE_FORMAT.format(currentDate);
-        log.info("currentDateStr = {}", currentDateStr);
-
-        // 스트림을 사용하여 조건을 확인하고 로깅
-        Availability availability = availabilityList.stream()
+        return availabilityList.stream()
                 .filter(avail -> DATE_FORMAT.format(avail.getDate()).equals(currentDateStr))
-                .peek(avail -> log.info("Checking date: " + DATE_FORMAT.format(avail.getDate())))
                 .findFirst()
                 .orElse(null);
-
-        log.info("avail = {}", availability);
-
-        return availability;
     }
 
     private Availability createAvailability(long campId, LocalDate availDate) {
@@ -365,62 +374,62 @@ public class ReservationServiceImpl implements ReservationService {
                 .glampingSiteAvail(camping.getGlampingSiteCnt())
                 .caravanSiteAvail(camping.getCaravanSiteCnt())
                 .build();
-
-        log.info("createAvailability 실행 완료");
-
         availabilityRepository.save(newAvailability);
-        log.info("newAvailability = {}", newAvailability);
-
         return newAvailability;
     }
 
     private void updateAvailabilityCount(ReservationDTO reservationDTO, Availability availability, int changeCount) {
         int campFacsType = reservationDTO.getCampFacsType();
-
         switch (campFacsType) {
-            case 1:
-                availability = availability.toBuilder()
-                        .generalSiteAvail(availability.getGeneralSiteAvail() + changeCount)
-                        .build();
-                break;
-
-            case 2:
-                availability = availability.toBuilder()
-                        .carSiteAvail(availability.getCarSiteAvail() + changeCount)
-                        .build();
-                break;
-
-            case 3:
-                availability = availability.toBuilder()
-                        .glampingSiteAvail(availability.getGlampingSiteAvail() + changeCount)
-                        .build();
-                break;
-
-            case 4:
-                availability = availability.toBuilder()
-                        .caravanSiteAvail(availability.getCaravanSiteAvail() + changeCount)
-                        .build();
-                break;
-
-            default:
-                throw new IllegalArgumentException("잘못된 시설 유형입니다. : " + campFacsType);
+            case 1: availability = availability.toBuilder().generalSiteAvail(availability.getGeneralSiteAvail() + changeCount).build(); break;
+            case 2: availability = availability.toBuilder().carSiteAvail(availability.getCarSiteAvail() + changeCount).build(); break;
+            case 3: availability = availability.toBuilder().glampingSiteAvail(availability.getGlampingSiteAvail() + changeCount).build(); break;
+            case 4: availability = availability.toBuilder().caravanSiteAvail(availability.getCaravanSiteAvail() + changeCount).build(); break;
+            default: throw new IllegalArgumentException("잘못된 시설 유형입니다. : " + campFacsType);
         }
-
-        log.info("카운트 변경됨");
-        log.info("availability = {}", availability);
-
         availabilityRepository.save(availability);
     }
 
-    // Redis 락 획득
+    private void syncCancellationToDatabase(ReservationDTO reservationDTO) {
+        Reservation reservation = reservationRepository.findById(reservationDTO.getReservationId())
+                .orElseThrow(() -> new EntityNotFoundException("예약을 찾을 수 없습니다: " + reservationDTO.getReservationId()));
+
+        Reservation updatedReservation = reservation.toBuilder()
+                .reservationStatus(CANCELLED_STATUS)
+                .updatedAt(LocalDateTime.now())
+                .build();
+        reservationRepository.save(updatedReservation);
+    }
+
+//    private boolean acquireLock(String lockKey) {
+//        String result = redisCommands.set(
+//                lockKey, "locked", SetArgs.Builder.nx().ex(LOCK_TIMEOUT_SECONDS)
+//        );
+//        log.info("락 획득 시도: {} -> 결과: {}", lockKey, result);
+//        return "OK".equals(result);
+//    }
+//
+//    private void releaseLock(String lockKey) {
+//        redisCommands.del(lockKey);
+//    }
+
     private boolean acquireLock(String lockKey) {
-        String result = redisCommands.set(
-                lockKey, "locked", SetArgs.Builder.nx().ex(LOCK_TIMEOUT_SECONDS)
-        );
-        return "OK".equals(result); // "OK"인지 확인하여 락이 성공적으로 설정되었는지 확인
+        RLock lock = redissonClient.getLock(lockKey);
+        try {
+            boolean acquired = lock.tryLock(LOCK_WAIT_TIME, LOCK_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            log.info("락 획득 시도: {} -> 결과: {}", lockKey, acquired);
+            return acquired;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
     }
 
     private void releaseLock(String lockKey) {
-        redisCommands.del(lockKey);
+        RLock lock = redissonClient.getLock(lockKey);
+        if (lock.isHeldByCurrentThread()) {
+            lock.unlock();
+            log.info("락 해제: {}", lockKey);
+        }
     }
 }
